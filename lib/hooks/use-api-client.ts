@@ -8,46 +8,79 @@ import { apiClient } from '@/lib/api-client'
  * Automatically includes the token from the session in all requests
  */
 export function useApiClient() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const token = (session as any)?.accessToken as string | undefined
+  const isAuthenticated = status === 'authenticated' && !!token
 
   return {
     apiClient,
     token,
+    isAuthenticated,
+    isLoading: status === 'loading',
     // Helper methods that automatically include the token
     get: <T = unknown>(
       endpoint: string,
       params?: Record<string, string | number | boolean | null | undefined>,
       config?: Parameters<typeof apiClient.get>[2]
-    ) => apiClient.get<T>(endpoint, params, { ...config, token }),
+    ) => {
+      if (!token) {
+        throw new Error('Authentication token is not available')
+      }
+      return apiClient.get<T>(endpoint, params, { ...config, token })
+    },
     
     post: <T = unknown>(
       endpoint: string,
       body?: unknown,
       config?: Parameters<typeof apiClient.post>[2]
-    ) => apiClient.post<T>(endpoint, body, { ...config, token }),
+    ) => {
+      if (!token) {
+        throw new Error('Authentication token is not available')
+      }
+      return apiClient.post<T>(endpoint, body, { ...config, token })
+    },
     
     put: <T = unknown>(
       endpoint: string,
       body?: unknown,
       config?: Parameters<typeof apiClient.put>[2]
-    ) => apiClient.put<T>(endpoint, body, { ...config, token }),
+    ) => {
+      if (!token) {
+        throw new Error('Authentication token is not available')
+      }
+      return apiClient.put<T>(endpoint, body, { ...config, token })
+    },
     
     patch: <T = unknown>(
       endpoint: string,
       body?: unknown,
       config?: Parameters<typeof apiClient.patch>[2]
-    ) => apiClient.patch<T>(endpoint, body, { ...config, token }),
+    ) => {
+      if (!token) {
+        throw new Error('Authentication token is not available')
+      }
+      return apiClient.patch<T>(endpoint, body, { ...config, token })
+    },
     
     delete: <T = unknown>(
       endpoint: string,
       config?: Parameters<typeof apiClient.delete>[1]
-    ) => apiClient.delete<T>(endpoint, { ...config, token }),
+    ) => {
+      if (!token) {
+        throw new Error('Authentication token is not available')
+      }
+      return apiClient.delete<T>(endpoint, { ...config, token })
+    },
     
     postFormData: <T = unknown>(
       endpoint: string,
       formData: FormData,
       config?: Parameters<typeof apiClient.postFormData>[2]
-    ) => apiClient.postFormData<T>(endpoint, formData, { ...config, token }),
+    ) => {
+      if (!token) {
+        throw new Error('Authentication token is not available')
+      }
+      return apiClient.postFormData<T>(endpoint, formData, { ...config, token })
+    },
   }
 }

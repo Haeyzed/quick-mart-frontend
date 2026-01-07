@@ -15,7 +15,7 @@ type BrandsParams = {
 }
 
 export function useBrands(params?: BrandsParams) {
-  const { get } = useApiClient()
+  const { get, isAuthenticated, isLoading: isSessionLoading } = useApiClient()
   
   return useQuery({
     queryKey: ['brands', params],
@@ -42,11 +42,12 @@ export function useBrands(params?: BrandsParams) {
         links: response.links,
       }
     },
+    enabled: isAuthenticated && !isSessionLoading, // Only run query when session is loaded and authenticated
   })
 }
 
 export function useBrand(id: number) {
-  const { get } = useApiClient()
+  const { get, isAuthenticated, isLoading: isSessionLoading } = useApiClient()
   
   return useQuery({
     queryKey: ['brands', id],
@@ -57,7 +58,7 @@ export function useBrand(id: number) {
       }
       throw new Error('Brand not found')
     },
-    enabled: !!id,
+    enabled: !!id && isAuthenticated && !isSessionLoading,
   })
 }
 
