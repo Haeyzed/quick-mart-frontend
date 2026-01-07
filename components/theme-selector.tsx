@@ -48,11 +48,11 @@ export function ThemeSelector({ className }: React.ComponentProps<"div">) {
                   />
                   <div className="flex-1">
                     <div className="text-sm font-medium">{theme.label}</div>
-                    {themeColor?.description && (
+                    {/* {themeColor?.description && (
                       <div className="text-xs text-muted-foreground">
                         {themeColor.description}
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </SelectItem>
