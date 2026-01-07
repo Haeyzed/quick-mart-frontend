@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
@@ -50,4 +48,3 @@ export function Header({ className, fixed, children, ...props }: HeaderProps) {
     </header>
   )
 }
-
