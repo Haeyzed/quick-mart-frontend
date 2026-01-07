@@ -26,6 +26,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Check authentication for protected routes
+  // auth() automatically reads cookies from the request context
   const session = await auth()
 
   // If no session and trying to access protected route, redirect to sign-in
