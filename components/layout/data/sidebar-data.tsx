@@ -1,53 +1,52 @@
+"use client"
+
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Home01Icon,
-  Task01Icon,
-  AppStoreIcon,
-  Chat01Icon,
-  UserIcon,
-  ShieldCheck,
-  Bug01Icon,
-  LockPasswordFreeIcons,
-  UserRemove01Icon,
+  Package02Icon,
+  ShoppingCart01Icon,
+  Invoice04Icon,
+  ExchangeDollarIcon,
   File01Icon,
-  CloudOff,
-  Building,
+  ArrowDataTransferHorizontalIcon,
+  TruckReturnIcon,
+  Calculator01Icon,
+  Briefcase01Icon,
+  UserIcon,
+  AnalyticsUpIcon,
+  Factory01Icon,
+  ShoppingBag01Icon,
+  Store01Icon,
+  Tag01Icon,
   Settings01Icon,
-  UserSettings01Icon,
-  Wrench01Icon,
-  Palette,
-  Notification01Icon,
-  Monitor,
   HelpCircleIcon,
   CommandIcon,
-  GripVertical,
-  AudioWaveIcon,
+  // AppWindow01Icon,
+  // Volume2Icon,
 } from "@hugeicons/core-free-icons"
-import { type SidebarData } from '../types'
+import type { SidebarData } from "../types"
 
-// Icon wrapper components for HugeIcons
 const DashboardIcon = () => <HugeiconsIcon icon={Home01Icon} className="size-4" />
-const TasksIcon = () => <HugeiconsIcon icon={Task01Icon} className="size-4" />
-const AppsIconComponent = () => <HugeiconsIcon icon={AppStoreIcon} className="size-4" />
-const ChatsIcon = () => <HugeiconsIcon icon={Chat01Icon} className="size-4" />
-const UsersIcon = () => <HugeiconsIcon icon={UserIcon} className="size-4" />
-const ShieldIcon = () => <HugeiconsIcon icon={ShieldCheck} className="size-4" />
-const BugIcon = () => <HugeiconsIcon icon={Bug01Icon} className="size-4" />
-const LockIcon = () => <HugeiconsIcon icon={LockPasswordFreeIcons} className="size-4" />
-const UserXIcon = () => <HugeiconsIcon icon={UserRemove01Icon} className="size-4" />
-const FileXIcon = () => <HugeiconsIcon icon={File01Icon} className="size-4" />
-const ServerOffIconComponent = () => <HugeiconsIcon icon={CloudOff} className="size-4" />
-const ConstructionIcon = () => <HugeiconsIcon icon={Building} className="size-4" />
+const ProductIcon = () => <HugeiconsIcon icon={Package02Icon} className="size-4" />
+const PurchaseIcon = () => <HugeiconsIcon icon={ShoppingCart01Icon} className="size-4" />
+const SaleIcon = () => <HugeiconsIcon icon={Invoice04Icon} className="size-4" />
+const ExpenseIcon = () => <HugeiconsIcon icon={ExchangeDollarIcon} className="size-4" />
+const QuotationIcon = () => <HugeiconsIcon icon={File01Icon} className="size-4" />
+const TransferIcon = () => <HugeiconsIcon icon={ArrowDataTransferHorizontalIcon} className="size-4" />
+const ReturnIcon = () => <HugeiconsIcon icon={TruckReturnIcon} className="size-4" />
+const AccountingIcon = () => <HugeiconsIcon icon={Calculator01Icon} className="size-4" />
+const HRMIcon = () => <HugeiconsIcon icon={Briefcase01Icon} className="size-4" />
+const PeopleIcon = () => <HugeiconsIcon icon={UserIcon} className="size-4" />
+const ReportsIcon = () => <HugeiconsIcon icon={AnalyticsUpIcon} className="size-4" />
+const ManufacturingIcon = () => <HugeiconsIcon icon={Factory01Icon} className="size-4" />
+const WooCommerceIcon = () => <HugeiconsIcon icon={ShoppingBag01Icon} className="size-4" />
+const EcommerceIcon = () => <HugeiconsIcon icon={Store01Icon} className="size-4" />
+const SupportIcon = () => <HugeiconsIcon icon={Tag01Icon} className="size-4" />
 const SettingsIcon = () => <HugeiconsIcon icon={Settings01Icon} className="size-4" />
-const UserCogIcon = () => <HugeiconsIcon icon={UserSettings01Icon} className="size-4" />
-const WrenchIcon = () => <HugeiconsIcon icon={Wrench01Icon} className="size-4" />
-const PaletteIcon = () => <HugeiconsIcon icon={Palette} className="size-4" />
-const BellIcon = () => <HugeiconsIcon icon={Notification01Icon} className="size-4" />
-const MonitorIcon = () => <HugeiconsIcon icon={Monitor} className="size-4" />
-const HelpCircleIconComponent = () => <HugeiconsIcon icon={HelpCircleIcon} className="size-4" />
+const HelpIcon = () => <HugeiconsIcon icon={HelpCircleIcon} className="size-4" />
 const CommandIconComponent = () => <HugeiconsIcon icon={CommandIcon} className="size-4" />
-const GalleryIcon = () => <HugeiconsIcon icon={GripVertical} className="size-4" />
-const AudioIcon = () => <HugeiconsIcon icon={AudioWaveIcon} className="size-4" />
+// const AppWindowIcon = () => <HugeiconsIcon icon={AppWindow01Icon} className="size-4" />
+// const VolumeIcon = () => <HugeiconsIcon icon={Volume2Icon} className="size-4" />
 
 export const sidebarData: SidebarData = {
   user: {
@@ -61,154 +60,617 @@ export const sidebarData: SidebarData = {
       logo: CommandIconComponent,
       plan: 'Next.js + ShadcnUI',
     },
-    {
-      name: 'Acme Inc',
-      logo: GalleryIcon,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioIcon,
-      plan: 'Startup',
-    },
+    // {
+    //   name: 'Acme Inc',
+    //   logo: AppWindowIcon,
+    //   plan: 'Enterprise',
+    // },
+    // {
+    //   name: 'Acme Corp.',
+    //   logo: VolumeIcon,
+    //   plan: 'Startup',
+    // },
   ],
+  
   navGroups: [
     {
-      title: 'General',
+      title: "General",
       items: [
         {
-          title: 'Dashboard',
-          url: '/',
+          title: "Dashboard",
+          url: "/dashboard",
           icon: DashboardIcon,
         },
         {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: TasksIcon,
-        },
-        {
-          title: 'Apps',
-          url: '/apps',
-          icon: AppsIconComponent,
-        },
-        {
-          title: 'Chats',
-          url: '/chats',
-          badge: '3',
-          icon: ChatsIcon,
-        },
-        {
-          title: 'Users',
-          url: '/users',
-          icon: UsersIcon,
-        },
-        {
-          title: 'Brands',
-          url: '/brands',
-          icon: CommandIconComponent,
-        },
-      ],
-    },
-    {
-      title: 'Pages',
-      items: [
-        {
-          title: 'Auth',
-          icon: ShieldIcon,
+          title: "Product",
+          icon: ProductIcon,
           items: [
             {
-              title: 'Sign In',
-              url: '/sign-in',
+              title: "Categories",
+              url: "/products/categories",
             },
             {
-              title: 'Sign In (2 Col)',
-              url: '/sign-in-2',
+              title: "Brands",
+              url: "/products/brands",
             },
             {
-              title: 'Sign Up',
-              url: '/sign-up',
+              title: "Units",
+              url: "/products/units",
             },
             {
-              title: 'Forgot Password',
-              url: '/forgot-password',
+              title: "Products",
+              url: "/products",
             },
             {
-              title: 'OTP',
-              url: '/otp',
+              title: "Add Product",
+              url: "/products/create",
+            },
+            {
+              title: "Print Barcode",
+              url: "/products/print-barcode",
+            },
+            {
+              title: "Adjustments",
+              url: "/products/adjustment",
+            },
+            {
+              title: "Add Adjustment",
+              url: "/products/adjustment/create",
+            },
+            {
+              title: "Stock Count",
+              url: "/products/stock-count",
             },
           ],
         },
         {
-          title: 'Errors',
-          icon: BugIcon,
+          title: "Purchase",
+          icon: PurchaseIcon,
           items: [
             {
-              title: 'Unauthorized',
-              url: '/errors/unauthorized',
-              icon: LockIcon,
+              title: "Purchases",
+              url: "/purchases",
             },
             {
-              title: 'Forbidden',
-              url: '/errors/forbidden',
-              icon: UserXIcon,
+              title: "Add Purchase",
+              url: "/purchases/create",
             },
             {
-              title: 'Not Found',
-              url: '/errors/not-found',
-              icon: FileXIcon,
+              title: "Import Purchase By CSV",
+              url: "/purchases/import-csv",
+            },
+          ],
+        },
+        {
+          title: "Sale",
+          icon: SaleIcon,
+          items: [
+            {
+              title: "Sales",
+              url: "/sales",
             },
             {
-              title: 'Internal Server Error',
-              url: '/errors/internal-server-error',
-              icon: ServerOffIconComponent,
+              title: "POS",
+              url: "/pos",
             },
             {
-              title: 'Maintenance Error',
-              url: '/errors/maintenance-error',
-              icon: ConstructionIcon,
+              title: "Add Sale",
+              url: "/sales/create",
+            },
+            {
+              title: "Import Sale By CSV",
+              url: "/sales/import-csv",
+            },
+            {
+              title: "Packing Slips",
+              url: "/sales/packing-slips",
+            },
+            {
+              title: "Challans",
+              url: "/sales/challans",
+            },
+            {
+              title: "Deliveries",
+              url: "/sales/delivery",
+            },
+            {
+              title: "Gift Cards",
+              url: "/sales/gift-cards",
+            },
+            {
+              title: "Coupons",
+              url: "/sales/coupons",
+            },
+            {
+              title: "Couriers",
+              url: "/sales/couriers",
+            },
+          ],
+        },
+        {
+          title: "Expense",
+          icon: ExpenseIcon,
+          items: [
+            {
+              title: "Expense Categories",
+              url: "/expenses/categories",
+            },
+            {
+              title: "Expenses",
+              url: "/expenses",
+            },
+            {
+              title: "Add Expense",
+              url: "/expenses/create",
+            },
+          ],
+        },
+        {
+          title: "Quotation",
+          icon: QuotationIcon,
+          items: [
+            {
+              title: "Quotations",
+              url: "/quotations",
+            },
+            {
+              title: "Add Quotation",
+              url: "/quotations/create",
+            },
+          ],
+        },
+        {
+          title: "Transfer",
+          icon: TransferIcon,
+          items: [
+            {
+              title: "Transfers",
+              url: "/transfers",
+            },
+            {
+              title: "Add Transfer",
+              url: "/transfers/create",
+            },
+            {
+              title: "Import Transfer By CSV",
+              url: "/transfers/import-csv",
+            },
+          ],
+        },
+        {
+          title: "Return",
+          icon: ReturnIcon,
+          items: [
+            {
+              title: "Sale Return",
+              url: "/returns/sale",
+            },
+            {
+              title: "Purchase Return",
+              url: "/returns/purchase",
             },
           ],
         },
       ],
     },
     {
-      title: 'Other',
+      title: "Business",
       items: [
         {
-          title: 'Settings',
+          title: "Accounting",
+          icon: AccountingIcon,
+          items: [
+            {
+              title: "Accounts",
+              url: "/accounting/accounts",
+            },
+            {
+              title: "Add Account",
+              url: "/accounting/accounts/create",
+            },
+            {
+              title: "Money Transfers",
+              url: "/accounting/money-transfers",
+            },
+            {
+              title: "Balance Sheet",
+              url: "/accounting/balance-sheet",
+            },
+            {
+              title: "Account Statement",
+              url: "/accounting/account-statement",
+            },
+          ],
+        },
+        {
+          title: "HRM",
+          icon: HRMIcon,
+          items: [
+            {
+              title: "Department",
+              url: "/hrm/departments",
+            },
+            {
+              title: "Employee",
+              url: "/hrm/employees",
+            },
+            {
+              title: "Attendance",
+              url: "/hrm/attendance",
+            },
+            {
+              title: "Payroll",
+              url: "/hrm/payroll",
+            },
+            {
+              title: "Holiday",
+              url: "/hrm/holidays",
+            },
+          ],
+        },
+        {
+          title: "People",
+          icon: PeopleIcon,
+          items: [
+            {
+              title: "Users",
+              url: "/people/users",
+            },
+            {
+              title: "Add User",
+              url: "/people/users/create",
+            },
+            {
+              title: "Customers",
+              url: "/people/customers",
+            },
+            {
+              title: "Add Customer",
+              url: "/people/customers/create",
+            },
+            {
+              title: "Billers",
+              url: "/people/billers",
+            },
+            {
+              title: "Add Biller",
+              url: "/people/billers/create",
+            },
+            {
+              title: "Suppliers",
+              url: "/people/suppliers",
+            },
+            {
+              title: "Add Supplier",
+              url: "/people/suppliers/create",
+            },
+          ],
+        },
+        {
+          title: "Reports",
+          icon: ReportsIcon,
+          items: [
+            {
+              title: "Activity Log",
+              url: "/reports/activity-log",
+            },
+            {
+              title: "Summary Report",
+              url: "/reports/summary",
+            },
+            {
+              title: "Best Seller",
+              url: "/reports/best-seller",
+            },
+            {
+              title: "Product Report",
+              url: "/reports/product",
+            },
+            {
+              title: "Daily Sale",
+              url: "/reports/daily-sale",
+            },
+            {
+              title: "Monthly Sale",
+              url: "/reports/monthly-sale",
+            },
+            {
+              title: "Daily Purchase",
+              url: "/reports/daily-purchase",
+            },
+            {
+              title: "Monthly Purchase",
+              url: "/reports/monthly-purchase",
+            },
+            {
+              title: "Sale Report",
+              url: "/reports/sale",
+            },
+            {
+              title: "Challan Report",
+              url: "/reports/challan",
+            },
+            {
+              title: "Sale Report Chart",
+              url: "/reports/sale-chart",
+            },
+            {
+              title: "Payment Report",
+              url: "/reports/payment",
+            },
+            {
+              title: "Purchase Report",
+              url: "/reports/purchase",
+            },
+            {
+              title: "Customer Report",
+              url: "/reports/customer",
+            },
+            {
+              title: "Customer Group Report",
+              url: "/reports/customer-group",
+            },
+            {
+              title: "Customer Due Report",
+              url: "/reports/customer-due",
+            },
+            {
+              title: "Supplier Report",
+              url: "/reports/supplier",
+            },
+            {
+              title: "Supplier Due Report",
+              url: "/reports/supplier-due",
+            },
+            {
+              title: "Warehouse Report",
+              url: "/reports/warehouse",
+            },
+            {
+              title: "Warehouse Stock Chart",
+              url: "/reports/warehouse-stock",
+            },
+            {
+              title: "Product Expiry Report",
+              url: "/reports/product-expiry",
+            },
+            {
+              title: "Product Quantity Alert",
+              url: "/reports/product-quantity-alert",
+            },
+            {
+              title: "Daily Sale Objective Report",
+              url: "/reports/daily-sale-objective",
+            },
+            {
+              title: "User Report",
+              url: "/reports/user",
+            },
+            {
+              title: "Cash Register",
+              url: "/reports/cash-register",
+            },
+          ],
+        },
+        {
+          title: "Manufacturing",
+          icon: ManufacturingIcon,
+          items: [
+            {
+              title: "Productions",
+              url: "/manufacturing/productions",
+            },
+            {
+              title: "Add Production",
+              url: "/manufacturing/productions/create",
+            },
+            {
+              title: "Recipes",
+              url: "/manufacturing/recipes",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: "E-commerce",
+      items: [
+        {
+          title: "WooCommerce",
+          url: "/woocommerce",
+          icon: WooCommerceIcon,
+        },
+        {
+          title: "eCommerce",
+          icon: EcommerceIcon,
+          items: [
+            {
+              title: "Sliders",
+              url: "/ecommerce/sliders",
+            },
+            {
+              title: "Menu",
+              url: "/ecommerce/menu",
+            },
+            {
+              title: "Collections",
+              url: "/ecommerce/collections",
+            },
+            {
+              title: "Pages",
+              url: "/ecommerce/pages",
+            },
+            {
+              title: "Widgets",
+              url: "/ecommerce/widgets",
+            },
+            {
+              title: "Faq Category",
+              url: "/ecommerce/faq-categories",
+            },
+            {
+              title: "Faqs",
+              url: "/ecommerce/faqs",
+            },
+            {
+              title: "Social Links",
+              url: "/ecommerce/social-links",
+            },
+            {
+              title: "Blog",
+              url: "/ecommerce/blog",
+            },
+            {
+              title: "Payment Gateways",
+              url: "/ecommerce/payment-gateways",
+            },
+            {
+              title: "Settings",
+              url: "/ecommerce/settings",
+            },
+            {
+              title: "Product Review",
+              url: "/ecommerce/product-review",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: "Support",
+      items: [
+        {
+          title: "Support Tickets",
+          url: "/support/tickets",
+          icon: SupportIcon,
+        },
+      ],
+    },
+    {
+      title: "Settings",
+      items: [
+        {
+          title: "Settings",
           icon: SettingsIcon,
           items: [
             {
-              title: 'Profile',
-              url: '/settings',
-              icon: UserCogIcon,
+              title: "Receipt Printers",
+              url: "/settings/printers",
             },
             {
-              title: 'Account',
-              url: '/settings/account',
-              icon: WrenchIcon,
+              title: "Invoice Settings",
+              url: "/settings/invoice",
             },
             {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: PaletteIcon,
+              title: "Role Permission",
+              url: "/settings/role-permission",
             },
             {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: BellIcon,
+              title: "SMS Template",
+              url: "/settings/sms-template",
             },
             {
-              title: 'Display',
-              url: '/settings/display',
-              icon: MonitorIcon,
+              title: "Custom Fields",
+              url: "/settings/custom-fields",
+            },
+            {
+              title: "Discount Plan",
+              url: "/settings/discount-plan",
+            },
+            {
+              title: "Discount",
+              url: "/settings/discount",
+            },
+            {
+              title: "All Notification",
+              url: "/settings/notifications",
+            },
+            {
+              title: "Send Notification",
+              url: "/settings/send-notification",
+            },
+            {
+              title: "Warehouse",
+              url: "/settings/warehouse",
+            },
+            {
+              title: "Tables",
+              url: "/settings/tables",
+            },
+            {
+              title: "Customer Group",
+              url: "/settings/customer-group",
+            },
+            {
+              title: "Brand",
+              url: "/settings/brand",
+            },
+            {
+              title: "Unit",
+              url: "/settings/unit",
+            },
+            {
+              title: "Currency",
+              url: "/settings/currency",
+            },
+            {
+              title: "Tax",
+              url: "/settings/tax",
+            },
+            {
+              title: "User Profile",
+              url: "/settings/profile",
+            },
+            {
+              title: "Create SMS",
+              url: "/settings/create-sms",
+            },
+            {
+              title: "Backup Database",
+              url: "/settings/backup",
+            },
+            {
+              title: "General Setting",
+              url: "/settings/general",
+            },
+            {
+              title: "Mail Setting",
+              url: "/settings/mail",
+            },
+            {
+              title: "Reward Point Setting",
+              url: "/settings/reward-point",
+            },
+            {
+              title: "SMS Setting",
+              url: "/settings/sms",
+            },
+            {
+              title: "Payment Gateways",
+              url: "/settings/payment-gateways",
+            },
+            {
+              title: "POS Settings",
+              url: "/settings/pos",
+            },
+            {
+              title: "HRM Setting",
+              url: "/settings/hrm",
+            },
+            {
+              title: "Barcode Settings",
+              url: "/settings/barcode",
+            },
+            {
+              title: "Languages",
+              url: "/settings/languages",
             },
           ],
         },
         {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: HelpCircleIconComponent,
+          title: "Help Center",
+          url: "/help-center",
+          icon: HelpIcon,
         },
       ],
     },
