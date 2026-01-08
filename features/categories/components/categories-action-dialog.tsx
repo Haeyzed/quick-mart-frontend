@@ -1,0 +1,431 @@
+"use client"
+
+import { useEffect } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldError,
+  FieldDescription,
+} from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useCreateCategory, useUpdateCategory, useRootCategories } from '../api/use-categories'
+import { toast } from 'sonner'
+import { handleApiError } from '@/lib/handle-api-error'
+import { type Category } from '../data/schema'
+
+const categorySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
+  slug: z.string().max(255).optional().nullable(),
+  short_description: z.string().max(1000).optional().nullable(),
+  page_title: z.string().max(255).optional().nullable(),
+  image: z.instanceof(File).optional().nullable(),
+  icon: z.string().max(255).optional().nullable(),
+  parent_id: z.number().nullable().optional(),
+  is_active: z.boolean(),
+  featured: z.boolean(),
+  is_sync_disable: z.boolean(),
+  woocommerce_category_id: z.number().nullable().optional(),
+})
+
+type CategoriesActionDialogProps = {
+  currentRow?: Category
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function CategoriesActionDialog({
+  currentRow,
+  open,
+  onOpenChange,
+}: CategoriesActionDialogProps) {
+  const createCategory = useCreateCategory()
+  const updateCategory = useUpdateCategory()
+  const { data: rootCategories = [] } = useRootCategories()
+  const isEdit = !!currentRow
+
+  const form = useForm<z.infer<typeof categorySchema>>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: isEdit
+      ? {
+          name: currentRow.name,
+          slug: currentRow.slug || '',
+          short_description: currentRow.short_description || '',
+          page_title: currentRow.page_title || '',
+          image: null,
+          icon: currentRow.icon || '',
+          parent_id: currentRow.parent_id || null,
+          is_active: currentRow.is_active,
+          featured: currentRow.featured,
+          is_sync_disable: currentRow.is_sync_disable,
+          woocommerce_category_id: currentRow.woocommerce_category_id || null,
+        }
+      : {
+          name: '',
+          slug: '',
+          short_description: '',
+          page_title: '',
+          image: null,
+          icon: '',
+          parent_id: null,
+          is_active: true,
+          featured: false,
+          is_sync_disable: false,
+          woocommerce_category_id: null,
+        },
+  })
+
+  useEffect(() => {
+    if (currentRow) {
+      form.reset({
+        name: currentRow.name,
+        slug: currentRow.slug || '',
+        short_description: currentRow.short_description || '',
+        page_title: currentRow.page_title || '',
+        image: null,
+        icon: currentRow.icon || '',
+        parent_id: currentRow.parent_id || null,
+        is_active: currentRow.is_active,
+        featured: currentRow.featured,
+        is_sync_disable: currentRow.is_sync_disable,
+        woocommerce_category_id: currentRow.woocommerce_category_id || null,
+      })
+    } else {
+      form.reset({
+        name: '',
+        slug: '',
+        short_description: '',
+        page_title: '',
+        image: null,
+        icon: '',
+        parent_id: null,
+        is_active: true,
+        featured: false,
+        is_sync_disable: false,
+        woocommerce_category_id: null,
+      })
+    }
+  }, [currentRow, form, open])
+
+  const onSubmit = async (data: z.infer<typeof categorySchema>) => {
+    const formData = new FormData()
+    formData.append('name', data.name)
+    if (data.slug) formData.append('slug', data.slug)
+    if (data.short_description) formData.append('short_description', data.short_description)
+    if (data.page_title) formData.append('page_title', data.page_title)
+    if (data.image) formData.append('image', data.image)
+    if (data.icon) formData.append('icon', data.icon)
+    if (data.parent_id !== null && data.parent_id !== undefined) {
+      formData.append('parent_id', String(data.parent_id))
+    }
+    formData.append('is_active', String(data.is_active))
+    formData.append('featured', String(data.featured))
+    formData.append('is_sync_disable', String(data.is_sync_disable))
+    if (data.woocommerce_category_id !== null && data.woocommerce_category_id !== undefined) {
+      formData.append('woocommerce_category_id', String(data.woocommerce_category_id))
+    }
+
+    try {
+      let response
+      if (isEdit && currentRow) {
+        response = await updateCategory.mutateAsync({ id: currentRow.id, data: formData })
+      } else {
+        response = await createCategory.mutateAsync(formData)
+      }
+      
+      const message = (response as any)?.message || (isEdit ? 'Category updated successfully' : 'Category created successfully')
+      toast.success(message)
+      onOpenChange(false)
+      form.reset()
+    } catch (error: any) {
+      handleApiError(error, form.setError)
+    }
+  }
+
+  // Filter out current category and its children from parent options
+  const availableParentCategories = rootCategories.filter(
+    (cat) => !isEdit || (cat.id !== currentRow?.id && cat.parent_id !== currentRow?.id)
+  )
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(state) => {
+        form.reset()
+        onOpenChange(state)
+      }}
+    >
+      <DialogContent className='sm:max-w-lg'>
+        <DialogHeader className='text-start'>
+          <DialogTitle>{isEdit ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+          <DialogDescription>
+            {isEdit ? 'Update the category here. ' : 'Create new category here. '}
+            Click save when you&apos;re done.
+          </DialogDescription>
+        </DialogHeader>
+        <div className='h-105 w-[calc(100%+0.75rem)] overflow-y-auto py-1 pe-3'>
+          <form
+            id='category-form'
+            onSubmit={form.handleSubmit(onSubmit)}
+            className='space-y-4 px-0.5'
+          >
+            <FieldGroup>
+              <Controller
+                control={form.control}
+                name='name'
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='category-name'>Name *</FieldLabel>
+                    <Input
+                      id='category-name'
+                      placeholder='Category name'
+                      autoComplete='off'
+                      {...field}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='slug'
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='category-slug'>Slug</FieldLabel>
+                    <Input
+                      id='category-slug'
+                      placeholder='category-slug'
+                      autoComplete='off'
+                      {...field}
+                      value={field.value || ''}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldDescription>
+                      URL-friendly version of the name (auto-generated if left empty)
+                    </FieldDescription>
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='parent_id'
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='category-parent'>Parent Category</FieldLabel>
+                    <Select
+                      value={field.value ? String(field.value) : undefined}
+                      onValueChange={(value) => {
+                        field.onChange(value ? Number(value) : null)
+                      }}
+                    >
+                      <SelectTrigger id='category-parent' data-invalid={!!fieldState.error}>
+                        <SelectValue placeholder='Select parent category (optional)' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableParentCategories.length === 0 ? (
+                          <div className='text-muted-foreground px-2 py-1.5 text-sm'>No parent categories available</div>
+                        ) : (
+                          availableParentCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={String(cat.id)}>
+                              {cat.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FieldDescription>
+                      Select a parent category to create a subcategory
+                    </FieldDescription>
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='short_description'
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='category-description'>Description</FieldLabel>
+                    <Textarea
+                      id='category-description'
+                      placeholder='Category description'
+                      rows={3}
+                      className='resize-none'
+                      {...field}
+                      value={field.value || ''}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='page_title'
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='category-page-title'>Page Title</FieldLabel>
+                    <Input
+                      id='category-page-title'
+                      placeholder='Page title'
+                      autoComplete='off'
+                      {...field}
+                      value={field.value || ''}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='icon'
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='category-icon'>Icon</FieldLabel>
+                    <Input
+                      id='category-icon'
+                      placeholder='Icon class or identifier'
+                      autoComplete='off'
+                      {...field}
+                      value={field.value || ''}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldDescription>
+                      Icon class name or identifier (e.g., fa fa-electronics)
+                    </FieldDescription>
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='image'
+                render={({ field: { onChange, value, ...field }, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='category-image'>Image</FieldLabel>
+                    <Input
+                      id='category-image'
+                      type='file'
+                      accept='image/*'
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        onChange(file || null)
+                      }}
+                      data-invalid={!!fieldState.error}
+                      {...field}
+                    />
+                    <FieldDescription>
+                      JPEG, PNG, JPG, GIF, or WebP. Max 5MB.
+                    </FieldDescription>
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='woocommerce_category_id'
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='category-woocommerce-id'>WooCommerce Category ID</FieldLabel>
+                    <Input
+                      id='category-woocommerce-id'
+                      type='number'
+                      placeholder='WooCommerce category ID'
+                      autoComplete='off'
+                      {...field}
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        field.onChange(value === '' ? null : Number(value))
+                      }}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='is_active'
+                render={({ field, fieldState }) => (
+                  <Field orientation='horizontal'>
+                    <FieldLabel htmlFor='category-active'>Active</FieldLabel>
+                    <Switch
+                      id='category-active'
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='featured'
+                render={({ field, fieldState }) => (
+                  <Field orientation='horizontal'>
+                    <FieldLabel htmlFor='category-featured'>Featured</FieldLabel>
+                    <Switch
+                      id='category-featured'
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='is_sync_disable'
+                render={({ field, fieldState }) => (
+                  <Field orientation='horizontal'>
+                    <FieldLabel htmlFor='category-sync-disable'>Disable Sync</FieldLabel>
+                    <Switch
+                      id='category-sync-disable'
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </form>
+        </div>
+        <DialogFooter>
+          <Button
+            type='submit'
+            form='category-form'
+            disabled={createCategory.isPending || updateCategory.isPending}
+          >
+            {createCategory.isPending || updateCategory.isPending
+              ? 'Saving...'
+              : 'Save changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+

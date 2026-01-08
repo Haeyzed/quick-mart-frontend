@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect } from 'react'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useEffect } from "react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
   Dialog,
   DialogContent,
@@ -11,33 +11,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldError,
-  FieldDescription,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import {
-  Combobox,
-  ComboboxInput,
-  ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
-  ComboboxEmpty,
-} from '@/components/ui/combobox'
-import { useCreateUnit, useUpdateUnit, useBaseUnits } from '../api/use-units'
-import { toast } from 'sonner'
-import { handleApiError } from '@/lib/handle-api-error'
-import { type Unit } from '../data/schema'
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Field, FieldGroup, FieldLabel, FieldError, FieldDescription } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useCreateUnit, useUpdateUnit, useBaseUnits } from "../api/use-units"
+import { toast } from "sonner"
+import { handleApiError } from "@/lib/handle-api-error"
+import type { Unit } from "../data/schema"
 
 const unitSchema = z.object({
-  code: z.string().min(1, 'Code is required').max(255, 'Code is too long'),
-  name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
+  code: z.string().min(1, "Code is required").max(255, "Code is too long"),
+  name: z.string().min(1, "Name is required").max(255, "Name is too long"),
   base_unit: z.number().nullable().optional(),
   operator: z.string().nullable().optional(),
   operation_value: z.number().nullable().optional(),
@@ -50,11 +37,7 @@ type UnitsActionDialogProps = {
   onOpenChange: (open: boolean) => void
 }
 
-export function UnitsActionDialog({
-  currentRow,
-  open,
-  onOpenChange,
-}: UnitsActionDialogProps) {
+export function UnitsActionDialog({ currentRow, open, onOpenChange }: UnitsActionDialogProps) {
   const createUnit = useCreateUnit()
   const updateUnit = useUpdateUnit()
   const { data: baseUnits = [] } = useBaseUnits()
@@ -72,8 +55,8 @@ export function UnitsActionDialog({
           is_active: currentRow.is_active,
         }
       : {
-          code: '',
-          name: '',
+          code: "",
+          name: "",
           base_unit: null,
           operator: null,
           operation_value: null,
@@ -93,15 +76,15 @@ export function UnitsActionDialog({
       })
     } else {
       form.reset({
-        code: '',
-        name: '',
+        code: "",
+        name: "",
         base_unit: null,
         operator: null,
         operation_value: null,
         is_active: true,
       })
     }
-  }, [currentRow, form])
+  }, [currentRow, form, open])
 
   const onSubmit = async (data: z.infer<typeof unitSchema>) => {
     const payload: Record<string, unknown> = {
@@ -125,8 +108,8 @@ export function UnitsActionDialog({
       } else {
         response = await createUnit.mutateAsync(payload)
       }
-      
-      const message = (response as any)?.message || (isEdit ? 'Unit updated successfully' : 'Unit created successfully')
+
+      const message = (response as any)?.message || (isEdit ? "Unit updated successfully" : "Unit created successfully")
       toast.success(message)
       onOpenChange(false)
       form.reset()
@@ -143,31 +126,27 @@ export function UnitsActionDialog({
         onOpenChange(state)
       }}
     >
-      <DialogContent className='sm:max-w-lg'>
-        <DialogHeader className='text-start'>
-          <DialogTitle>{isEdit ? 'Edit Unit' : 'Add New Unit'}</DialogTitle>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader className="text-start">
+          <DialogTitle>{isEdit ? "Edit Unit" : "Add New Unit"}</DialogTitle>
           <DialogDescription>
-            {isEdit ? 'Update the unit here. ' : 'Create new unit here. '}
+            {isEdit ? "Update the unit here. " : "Create new unit here. "}
             Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
-        <div className='h-105 w-[calc(100%+0.75rem)] overflow-y-auto py-1 pe-3'>
-          <form
-            id='unit-form'
-            onSubmit={form.handleSubmit(onSubmit)}
-            className='space-y-4 px-0.5'
-          >
+        <div className="h-105 w-[calc(100%+0.75rem)] overflow-y-auto py-1 pe-3">
+          <form id="unit-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-0.5">
             <FieldGroup>
               <Controller
                 control={form.control}
-                name='code'
+                name="code"
                 render={({ field, fieldState }) => (
                   <Field>
-                    <FieldLabel htmlFor='unit-code'>Code *</FieldLabel>
+                    <FieldLabel htmlFor="unit-code">Code *</FieldLabel>
                     <Input
-                      id='unit-code'
-                      placeholder='Unit code (e.g., KG)'
-                      autoComplete='off'
+                      id="unit-code"
+                      placeholder="Unit code (e.g., KG)"
+                      autoComplete="off"
                       {...field}
                       data-invalid={!!fieldState.error}
                     />
@@ -177,14 +156,14 @@ export function UnitsActionDialog({
               />
               <Controller
                 control={form.control}
-                name='name'
+                name="name"
                 render={({ field, fieldState }) => (
                   <Field>
-                    <FieldLabel htmlFor='unit-name'>Name *</FieldLabel>
+                    <FieldLabel htmlFor="unit-name">Name *</FieldLabel>
                     <Input
-                      id='unit-name'
-                      placeholder='Unit name (e.g., Kilogram)'
-                      autoComplete='off'
+                      id="unit-name"
+                      placeholder="Unit name (e.g., Kilogram)"
+                      autoComplete="off"
                       {...field}
                       data-invalid={!!fieldState.error}
                     />
@@ -194,108 +173,74 @@ export function UnitsActionDialog({
               />
               <Controller
                 control={form.control}
-                name='base_unit'
+                name="base_unit"
                 render={({ field, fieldState }) => {
-                  // Filter out current unit if editing (can't be its own base unit)
-                  const availableBaseUnits = baseUnits.filter(
-                    (unit) => !isEdit || unit.id !== currentRow?.id
-                  )
-                  
-                  const baseUnitOptions = availableBaseUnits.map((unit) => ({
-                    value: unit.id.toString(),
-                    label: `${unit.code} - ${unit.name}`,
-                  }))
-                  
-                  // Add "None" option at the beginning
-                  const allOptions = [
-                    { value: '__none__', label: 'None (Base Unit)' },
-                    ...baseUnitOptions,
-                  ]
-                  
-                  const selectedOption = field.value !== null && field.value !== undefined
-                    ? allOptions.find((opt) => opt.value === String(field.value))
-                    : allOptions[0]
-                  
+                  const availableBaseUnits = baseUnits.filter((unit) => !isEdit || unit.id !== currentRow?.id)
+                  const currentValue = field.value ? String(field.value) : ""
+
                   return (
                     <Field>
-                      <FieldLabel htmlFor='unit-base-unit'>Base Unit</FieldLabel>
-                      <Combobox
-                        items={allOptions}
-                        value={selectedOption?.value || '__none__'}
+                      <FieldLabel htmlFor="unit-base-unit">Base Unit</FieldLabel>
+                      <Select
+                        value={currentValue}
                         onValueChange={(value) => {
-                          field.onChange(value === '__none__' ? null : Number(value))
+                          const numValue = value ? Number(value) : null
+                          field.onChange(numValue)
                         }}
                       >
-                        <ComboboxInput
-                          id='unit-base-unit'
-                          placeholder='Select base unit (optional)'
-                          data-invalid={!!fieldState.error}
-                          showClear
-                        />
-                        <ComboboxContent>
-                          <ComboboxEmpty>No base units found.</ComboboxEmpty>
-                          <ComboboxList>
-                            {(item) => (
-                              <ComboboxItem key={item.value} value={item.value}>
-                                {item.label}
-                              </ComboboxItem>
-                            )}
-                          </ComboboxList>
-                        </ComboboxContent>
-                      </Combobox>
-                      <FieldDescription>
-                        Leave empty if this is a base unit
-                      </FieldDescription>
+                        <SelectTrigger id="unit-base-unit" data-invalid={!!fieldState.error}>
+                          <SelectValue placeholder="Select base unit (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableBaseUnits.length === 0 ? (
+                            <div className="text-muted-foreground px-2 py-1.5 text-sm">No base units found.</div>
+                          ) : (
+                            availableBaseUnits.map((unit) => (
+                              <SelectItem key={unit.id} value={String(unit.id)}>
+                                {unit.code} - {unit.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FieldDescription>Leave empty if this is a base unit</FieldDescription>
                       <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                     </Field>
                   )
                 }}
               />
-              {form.watch('base_unit') && (
+              {form.watch("base_unit") && (
                 <>
                   <Controller
                     control={form.control}
-                    name='operator'
+                    name="operator"
                     render={({ field, fieldState }) => {
                       const operatorOptions = [
-                        { value: '*', label: 'Multiply (*)' },
-                        { value: '/', label: 'Divide (/)' },
+                        { value: "*", label: "Multiply (*)" },
+                        { value: "/", label: "Divide (/)" },
                       ]
-                      
-                      const selectedOption = operatorOptions.find(
-                        (opt) => opt.value === field.value
-                      )
-                      
+
                       return (
                         <Field>
-                          <FieldLabel htmlFor='unit-operator'>Operator</FieldLabel>
-                          <Combobox
-                            items={operatorOptions}
-                            value={selectedOption?.value || ''}
+                          <FieldLabel htmlFor="unit-operator">Operator</FieldLabel>
+                          <Select
+                            value={field.value || ""}
                             onValueChange={(value) => {
                               field.onChange(value || null)
                             }}
                           >
-                            <ComboboxInput
-                              id='unit-operator'
-                              placeholder='Select operator'
-                              data-invalid={!!fieldState.error}
-                              showClear
-                            />
-                            <ComboboxContent>
-                              <ComboboxEmpty>No operators found.</ComboboxEmpty>
-                              <ComboboxList>
-                                {(item) => (
-                                  <ComboboxItem key={item.value} value={item.value}>
-                                    {item.label}
-                                  </ComboboxItem>
-                                )}
-                              </ComboboxList>
-                            </ComboboxContent>
-                          </Combobox>
-                          <FieldDescription>
-                            Mathematical operator for conversion. Example: 1 Dozen = 1*12 Piece, 1 Gram = 1/1000 KG
-                          </FieldDescription>
+                            <SelectTrigger id="unit-operator" data-invalid={!!fieldState.error}>
+                              <SelectValue placeholder="Select operator" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {operatorOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FieldDescription>Mathematical operator for conversion</FieldDescription>
                           <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                         </Field>
                       )
@@ -303,41 +248,44 @@ export function UnitsActionDialog({
                   />
                   <Controller
                     control={form.control}
-                    name='operation_value'
+                    name="operation_value"
                     render={({ field, fieldState }) => (
                       <Field>
-                        <FieldLabel htmlFor='unit-operation-value'>Operation Value</FieldLabel>
+                        <FieldLabel htmlFor="unit-operation-value">Operation Value</FieldLabel>
                         <Input
-                          id='unit-operation-value'
-                          type='number'
-                          step='any'
-                          placeholder='Operation value'
-                          autoComplete='off'
+                          id="unit-operation-value"
+                          type="number"
+                          step="any"
+                          placeholder="Operation value"
+                          autoComplete="off"
                           {...field}
-                          value={field.value ?? ''}
+                          value={field.value ?? ""}
                           onChange={(e) => {
                             const value = e.target.value
-                            field.onChange(value === '' ? null : Number(value))
+                            field.onChange(value === "" ? null : Number(value))
                           }}
                           data-invalid={!!fieldState.error}
                         />
-                        <FieldDescription>
-                          Value to use with operator for conversion
-                        </FieldDescription>
+                        <FieldDescription>Value to use with operator for conversion</FieldDescription>
                         <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                       </Field>
                     )}
                   />
+                  <div className="text-muted-foreground mt-2 mb-4 text-sm">
+                    <strong>Example conversions:</strong>
+                    <br />1 Dozen = 1<strong>*</strong>12 Piece
+                    <br />1 Gram = 1<strong>/</strong>1000 KG
+                  </div>
                 </>
               )}
               <Controller
                 control={form.control}
-                name='is_active'
+                name="is_active"
                 render={({ field, fieldState }) => (
-                  <Field orientation='horizontal'>
-                    <FieldLabel htmlFor='unit-active'>Active</FieldLabel>
+                  <Field orientation="horizontal">
+                    <FieldLabel htmlFor="unit-active">Active</FieldLabel>
                     <Switch
-                      id='unit-active'
+                      id="unit-active"
                       checked={field.value}
                       onCheckedChange={field.onChange}
                       data-invalid={!!fieldState.error}
@@ -350,18 +298,11 @@ export function UnitsActionDialog({
           </form>
         </div>
         <DialogFooter>
-          <Button
-            type='submit'
-            form='unit-form'
-            disabled={createUnit.isPending || updateUnit.isPending}
-          >
-            {createUnit.isPending || updateUnit.isPending
-              ? 'Saving...'
-              : 'Save changes'}
+          <Button type="submit" form="unit-form" disabled={createUnit.isPending || updateUnit.isPending}>
+            {createUnit.isPending || updateUnit.isPending ? "Saving..." : "Save changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
-

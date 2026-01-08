@@ -45,14 +45,7 @@ export const unitsColumns: ColumnDef<Unit>[] = [
       <DataTableColumnHeader column={column} title='Code' />
     ),
     cell: ({ row }) => (
-      <div className='flex items-center gap-3 ps-3'>
-        <div className='flex size-10 items-center justify-center rounded-md bg-muted'>
-          <span className='text-xs font-medium font-mono'>
-            {row.getValue('code')}
-          </span>
-        </div>
-        <LongText className='max-w-36 font-mono'>{row.getValue('code')}</LongText>
-      </div>
+      <LongText className='max-w-36 font-mono'>{row.getValue('code')}</LongText>
     ),
     meta: {
       className: cn(
