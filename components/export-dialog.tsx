@@ -79,8 +79,8 @@ export function ExportDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-md'>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+      <DialogContent className='sm:max-w-md'  onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className='text-start'>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
