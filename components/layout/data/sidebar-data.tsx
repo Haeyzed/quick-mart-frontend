@@ -48,12 +48,7 @@ const CommandIconComponent = () => <HugeiconsIcon icon={CommandIcon} className="
 // const AppWindowIcon = () => <HugeiconsIcon icon={AppWindow01Icon} className="size-4" />
 // const VolumeIcon = () => <HugeiconsIcon icon={Volume2Icon} className="size-4" />
 
-export const sidebarData: SidebarData = {
-  user: {
-    name: 'satnaing',
-    email: 'satnaingdev@gmail.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
+export const sidebarData: Omit<SidebarData, 'user'> = {
   teams: [
     {
       name: 'Quick Mart',
