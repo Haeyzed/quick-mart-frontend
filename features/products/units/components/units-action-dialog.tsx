@@ -126,8 +126,9 @@ export function UnitsActionDialog({ currentRow, open, onOpenChange }: UnitsActio
         form.reset()
         onOpenChange(state)
       }}
+      modal={true}
     >
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className="text-start">
           <DialogTitle>{isEdit ? "Edit Unit" : "Add New Unit"}</DialogTitle>
           <DialogDescription>

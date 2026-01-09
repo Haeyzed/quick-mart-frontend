@@ -189,8 +189,9 @@ export function CategoriesActionDialog({
         form.reset()
         onOpenChange(state)
       }}
+      modal={true}
     >
-      <DialogContent className='sm:max-w-lg'>
+      <DialogContent className='sm:max-w-lg' onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className='text-start'>
           <DialogTitle>{isEdit ? 'Edit Category' : 'Add New Category'}</DialogTitle>
           <DialogDescription>

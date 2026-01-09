@@ -35,8 +35,8 @@ export function CategoriesViewDialog({
   const StatusIcon = status?.icon
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-lg'>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
+      <DialogContent className='sm:max-w-lg' onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className='text-start'>
           <DialogTitle>Category Details</DialogTitle>
           <DialogDescription>

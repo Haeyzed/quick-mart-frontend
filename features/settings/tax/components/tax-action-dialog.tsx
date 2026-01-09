@@ -110,8 +110,9 @@ export function TaxesActionDialog({ currentRow, open, onOpenChange }: TaxesActio
         form.reset()
         onOpenChange(state)
       }}
+      modal={true}
     >
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className="text-start">
           <DialogTitle>{isEdit ? "Edit Tax" : "Add New Tax"}</DialogTitle>
           <DialogDescription>

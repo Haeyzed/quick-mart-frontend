@@ -74,8 +74,9 @@ export function UnitsImportDialog({
         form.reset()
         onOpenChange(state)
       }}
+      modal={true}
     >
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent className='sm:max-w-md' onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className='text-start'>
           <DialogTitle>Import Units</DialogTitle>
           <DialogDescription>
