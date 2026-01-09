@@ -220,3 +220,39 @@ export function useBulkDeactivateUnits() {
   })
 }
 
+export function useExportUnits() {
+  const { post } = useApiClient()
+
+  return useMutation({
+    mutationFn: async (data: {
+      ids?: number[]
+      format: 'excel' | 'pdf'
+      method: 'download' | 'email'
+      user_id?: number
+    }) => {
+      if (data.method === 'download') {
+        const blob = await post('/units/export', data, {
+          responseType: 'blob',
+        }) as Blob
+        
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        const fileName = `units-export-${Date.now()}.${data.format === 'pdf' ? 'pdf' : 'xlsx'}`
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        return { message: 'Export downloaded successfully' }
+      } else {
+        const response = await post('/units/export', data, {
+          responseType: 'json',
+        })
+        return response
+      }
+    },
+  })
+}
+

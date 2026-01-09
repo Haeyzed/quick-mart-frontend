@@ -202,3 +202,39 @@ export function useBulkDeactivateTaxes() {
   })
 }
 
+export function useExportTaxes() {
+  const { post } = useApiClient()
+
+  return useMutation({
+    mutationFn: async (data: {
+      ids?: number[]
+      format: 'excel' | 'pdf'
+      method: 'download' | 'email'
+      user_id?: number
+    }) => {
+      if (data.method === 'download') {
+        const blob = await post('/taxes/export', data, {
+          responseType: 'blob',
+        }) as Blob
+        
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        const fileName = `taxes-export-${Date.now()}.${data.format === 'pdf' ? 'pdf' : 'xlsx'}`
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        return { message: 'Export downloaded successfully' }
+      } else {
+        const response = await post('/taxes/export', data, {
+          responseType: 'json',
+        })
+        return response
+      }
+    },
+  })
+}
+

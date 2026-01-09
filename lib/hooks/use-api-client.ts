@@ -32,7 +32,7 @@ export function useApiClient() {
     post: <T = unknown>(
       endpoint: string,
       body?: unknown,
-      config?: Parameters<typeof apiClient.post>[2]
+      config?: Parameters<typeof apiClient.post>[2] & { responseType?: 'blob' | 'json' }
     ) => {
       if (!token) {
         throw new Error('Authentication token is not available')

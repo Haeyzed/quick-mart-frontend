@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { type Table } from '@tanstack/react-table'
-import { Delete01Icon, MultiplicationSignIcon, CheckmarkCircle02Icon, MultiplicationSignCircleIcon } from '@hugeicons/core-free-icons'
+import { Delete01Icon, MultiplicationSignIcon, CheckmarkCircle02Icon, MultiplicationSignCircleIcon, Download01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,7 +13,9 @@ import {
 import { DataTableBulkActions as BulkActionsToolbar } from '@/components/data-table'
 import { type Category } from '../data/schema'
 import { CategoriesMultiDeleteDialog } from './categories-multi-delete-dialog'
-import { useBulkDeleteCategories, useBulkActivateCategories, useBulkDeactivateCategories, useBulkEnableFeatured, useBulkDisableFeatured, useBulkEnableSync, useBulkDisableSync } from '../api/use-categories'
+import { ExportDialog } from '@/components/export-dialog'
+import { useBulkDeleteCategories, useBulkActivateCategories, useBulkDeactivateCategories, useBulkEnableFeatured, useBulkDisableFeatured, useBulkEnableSync, useBulkDisableSync, useExportCategories } from '../api/use-categories'
+import { useUsers } from '@/lib/hooks/use-users'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
 import { StarIcon, CloudUploadIcon, CancelCircleIcon } from '@hugeicons/core-free-icons'
@@ -27,6 +29,7 @@ export function DataTableBulkActions<TData>({
   table,
 }: DataTableBulkActionsProps<TData>) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showExportDialog, setShowExportDialog] = useState(false)
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const bulkDelete = useBulkDeleteCategories()
   const bulkActivate = useBulkActivateCategories()
@@ -35,6 +38,8 @@ export function DataTableBulkActions<TData>({
   const bulkDisableFeatured = useBulkDisableFeatured()
   const bulkEnableSync = useBulkEnableSync()
   const bulkDisableSync = useBulkDisableSync()
+  const exportCategories = useExportCategories()
+  const { data: users = [] } = useUsers()
 
   const selectedCategories = selectedRows.map((row) => row.original as Category)
   const ids = selectedCategories.map((category) => category.id)
@@ -111,6 +116,24 @@ export function DataTableBulkActions<TData>({
       const response = await bulkDisableSync.mutateAsync(ids)
       table.resetRowSelection()
       const message = (response as any)?.message || `Disabled sync for ${ids.length} categor${ids.length > 1 ? 'ies' : 'y'}`
+      toast.success(message)
+    } catch (error: any) {
+      handleApiError(error)
+    }
+  }
+
+  const handleExport = async (data: {
+    format: 'excel' | 'pdf'
+    method: 'download' | 'email'
+    user_id?: number
+  }) => {
+    try {
+      const response = await exportCategories.mutateAsync({
+        ids,
+        ...data,
+      })
+      table.resetRowSelection()
+      const message = (response as any)?.message || 'Export completed successfully'
       toast.success(message)
     } catch (error: any) {
       handleApiError(error)
@@ -209,8 +232,22 @@ export function DataTableBulkActions<TData>({
               <Button
                 variant='outline'
                 size='sm'
+                onClick={() => setShowExportDialog(true)}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || bulkEnableFeatured.isPending || bulkDisableFeatured.isPending || bulkEnableSync.isPending || bulkDisableSync.isPending || exportCategories.isPending}
+              >
+                <HugeiconsIcon icon={Download01Icon} className='size-4' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export selected</TooltipContent>
+          </Tooltip>
+          <Separator orientation='vertical'/>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='outline'
+                size='sm'
                 onClick={() => setShowDeleteConfirm(true)}
-                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || bulkEnableFeatured.isPending || bulkDisableFeatured.isPending || bulkEnableSync.isPending || bulkDisableSync.isPending}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || bulkEnableFeatured.isPending || bulkDisableFeatured.isPending || bulkEnableSync.isPending || bulkDisableSync.isPending || exportCategories.isPending}
               >
                 <HugeiconsIcon icon={Delete01Icon} className='size-4' />
               </Button>
@@ -236,6 +273,14 @@ export function DataTableBulkActions<TData>({
         onOpenChange={setShowDeleteConfirm}
         onConfirm={handleBulkDelete}
         count={selectedRows.length}
+      />
+      <ExportDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        onExport={handleExport}
+        isExporting={exportCategories.isPending}
+        title='Export Categories'
+        users={users}
       />
     </>
   )

@@ -132,13 +132,80 @@ class ApiClient {
   async post<T = unknown>(
     endpoint: string,
     body?: unknown,
-    config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
+    config?: RequestConfig & { responseType?: 'blob' | 'json' }
+  ): Promise<ApiResponse<T> | Blob> {
+    const { responseType, ...restConfig } = config || {}
+    
+    if (responseType === 'blob') {
+      return this.requestBlob(endpoint, {
+        ...restConfig,
+        method: 'POST',
+        body: body ? JSON.stringify(body) : undefined,
+      })
+    }
+    
     return this.request<T>(endpoint, {
-      ...config,
+      ...restConfig,
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     })
+  }
+  
+  private async requestBlob(
+    endpoint: string,
+    config: RequestConfig = {}
+  ): Promise<Blob> {
+    const { params, token: explicitToken, ...fetchConfig } = config
+    const url = this.buildUrl(endpoint, params)
+
+    // Get token - prefer explicit token
+    let token = explicitToken
+    
+    if (!token && typeof window === 'undefined') {
+      // Server-side: get token from NextAuth session
+      const session = await auth()
+      token = (session as any)?.accessToken as string | undefined
+    }
+
+    const headers: Record<string, string> = {
+      ...(fetchConfig.headers as Record<string, string>),
+    }
+
+    // Only add Content-Type for JSON body (not FormData)
+    if (fetchConfig.body && typeof fetchConfig.body === 'string') {
+      headers['Content-Type'] = 'application/json'
+    }
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(url, {
+      ...fetchConfig,
+      headers,
+    })
+
+    if (!response.ok) {
+      // Try to parse error as JSON
+      const contentType = response.headers.get('content-type')
+      if (contentType?.includes('application/json')) {
+        const data = await response.json()
+        const error = new Error(data.message || 'An error occurred')
+        ;(error as any).status = response.status
+        ;(error as any).errors = data.errors
+        throw error
+      }
+      
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/sign-in'
+        }
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    return response.blob()
   }
 
   async postFormData<T = unknown>(

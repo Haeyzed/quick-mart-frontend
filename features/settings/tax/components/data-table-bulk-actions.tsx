@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { type Table } from '@tanstack/react-table'
-import { Delete01Icon, MultiplicationSignIcon, CheckmarkCircle02Icon, MultiplicationSignCircleIcon } from '@hugeicons/core-free-icons'
+import { Delete01Icon, MultiplicationSignIcon, CheckmarkCircle02Icon, MultiplicationSignCircleIcon, Download01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,9 +13,12 @@ import {
 import { DataTableBulkActions as BulkActionsToolbar } from '@/components/data-table'
 import { type Tax } from '../data/schema'
 import { TaxesMultiDeleteDialog } from './tax-multi-delete-dialog'
-import { useBulkDeleteTaxes, useBulkActivateTaxes, useBulkDeactivateTaxes } from '../api/use-taxes'
+import { ExportDialog } from '@/components/export-dialog'
+import { useBulkDeleteTaxes, useBulkActivateTaxes, useBulkDeactivateTaxes, useExportTaxes } from '../api/use-taxes'
+import { useUsers } from '@/lib/hooks/use-users'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
+import { Separator } from '@/components/ui/separator'
 
 type DataTableBulkActionsProps<TData> = {
   table: Table<TData>
@@ -25,10 +28,13 @@ export function DataTableBulkActions<TData>({
   table,
 }: DataTableBulkActionsProps<TData>) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showExportDialog, setShowExportDialog] = useState(false)
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const bulkDelete = useBulkDeleteTaxes()
   const bulkActivate = useBulkActivateTaxes()
   const bulkDeactivate = useBulkDeactivateTaxes()
+  const exportTaxes = useExportTaxes()
+  const { data: users = [] } = useUsers()
 
   const selectedTaxes = selectedRows.map((row) => row.original as Tax)
   const ids = selectedTaxes.map((tax) => tax.id)
@@ -67,6 +73,24 @@ export function DataTableBulkActions<TData>({
     }
   }
 
+  const handleExport = async (data: {
+    format: 'excel' | 'pdf'
+    method: 'download' | 'email'
+    user_id?: number
+  }) => {
+    try {
+      const response = await exportTaxes.mutateAsync({
+        ids,
+        ...data,
+      })
+      table.resetRowSelection()
+      const message = (response as any)?.message || 'Export completed successfully'
+      toast.success(message)
+    } catch (error: any) {
+      handleApiError(error)
+    }
+  }
+
   if (selectedRows.length === 0) return null
 
   return (
@@ -99,13 +123,28 @@ export function DataTableBulkActions<TData>({
             </TooltipTrigger>
             <TooltipContent>Deactivate selected</TooltipContent>
           </Tooltip>
+          <Separator orientation='vertical'/>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setShowExportDialog(true)}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || exportTaxes.isPending}
+              >
+                <HugeiconsIcon icon={Download01Icon} className='size-4' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export selected</TooltipContent>
+          </Tooltip>
+          <Separator orientation='vertical'/>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant='outline'
                 size='sm'
                 onClick={() => setShowDeleteConfirm(true)}
-                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || exportTaxes.isPending}
               >
                 <HugeiconsIcon icon={Delete01Icon} className='size-4' />
               </Button>
@@ -131,6 +170,14 @@ export function DataTableBulkActions<TData>({
         onOpenChange={setShowDeleteConfirm}
         onConfirm={handleBulkDelete}
         count={selectedRows.length}
+      />
+      <ExportDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        onExport={handleExport}
+        isExporting={exportTaxes.isPending}
+        title='Export Taxes'
+        users={users}
       />
     </>
   )

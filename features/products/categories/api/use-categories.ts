@@ -304,3 +304,42 @@ export function useBulkDisableSync() {
   })
 }
 
+export function useExportCategories() {
+  const { post } = useApiClient()
+
+  return useMutation({
+    mutationFn: async (data: {
+      ids?: number[]
+      format: 'excel' | 'pdf'
+      method: 'download' | 'email'
+      user_id?: number
+    }) => {
+      if (data.method === 'download') {
+        // For download, get blob and trigger download
+        const blob = await post('/categories/export', data, {
+          responseType: 'blob',
+        }) as Blob
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        const fileName = `categories-export-${Date.now()}.${data.format === 'pdf' ? 'pdf' : 'xlsx'}`
+        link.download = fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        return { message: 'Export downloaded successfully' }
+      } else {
+        // For email, get JSON response
+        const response = await post('/categories/export', data, {
+          responseType: 'json',
+        })
+        return response
+      }
+    },
+  })
+}
+

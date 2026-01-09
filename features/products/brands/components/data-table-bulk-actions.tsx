@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { type Table } from '@tanstack/react-table'
-import { Delete01Icon, MultiplicationSignIcon, CheckmarkCircle02Icon, MultiplicationSignCircleIcon } from '@hugeicons/core-free-icons'
+import { Delete01Icon, MultiplicationSignIcon, CheckmarkCircle02Icon, MultiplicationSignCircleIcon, Download01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,7 +13,9 @@ import {
 import { DataTableBulkActions as BulkActionsToolbar } from '@/components/data-table'
 import { type Brand } from '../data/schema'
 import { BrandsMultiDeleteDialog } from './brands-multi-delete-dialog'
-import { useBulkDeleteBrands, useBulkActivateBrands, useBulkDeactivateBrands } from '../api/use-brands'
+import { ExportDialog } from '@/components/export-dialog'
+import { useBulkDeleteBrands, useBulkActivateBrands, useBulkDeactivateBrands, useExportBrands } from '../api/use-brands'
+import { useUsers } from '@/lib/hooks/use-users'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
 import { Separator } from '@/components/ui/separator'
@@ -26,10 +28,13 @@ export function DataTableBulkActions<TData>({
   table,
 }: DataTableBulkActionsProps<TData>) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showExportDialog, setShowExportDialog] = useState(false)
   const selectedRows = table.getFilteredSelectedRowModel().rows
   const bulkDelete = useBulkDeleteBrands()
   const bulkActivate = useBulkActivateBrands()
   const bulkDeactivate = useBulkDeactivateBrands()
+  const exportBrands = useExportBrands()
+  const { data: users = [] } = useUsers()
 
   const selectedBrands = selectedRows.map((row) => row.original as Brand)
   const ids = selectedBrands.map((brand) => brand.id)
@@ -62,6 +67,24 @@ export function DataTableBulkActions<TData>({
       const response = await bulkDeactivate.mutateAsync(ids)
       table.resetRowSelection()
       const message = (response as any)?.message || `Deactivated ${ids.length} brand${ids.length > 1 ? 's' : ''}`
+      toast.success(message)
+    } catch (error: any) {
+      handleApiError(error)
+    }
+  }
+
+  const handleExport = async (data: {
+    format: 'excel' | 'pdf'
+    method: 'download' | 'email'
+    user_id?: number
+  }) => {
+    try {
+      const response = await exportBrands.mutateAsync({
+        ids,
+        ...data,
+      })
+      table.resetRowSelection()
+      const message = (response as any)?.message || 'Export completed successfully'
       toast.success(message)
     } catch (error: any) {
       handleApiError(error)
@@ -106,8 +129,22 @@ export function DataTableBulkActions<TData>({
               <Button
                 variant='outline'
                 size='sm'
+                onClick={() => setShowExportDialog(true)}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || exportBrands.isPending}
+              >
+                <HugeiconsIcon icon={Download01Icon} className='size-4' />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export selected</TooltipContent>
+          </Tooltip>
+          <Separator orientation='vertical'/>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='outline'
+                size='sm'
                 onClick={() => setShowDeleteConfirm(true)}
-                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || exportBrands.isPending}
               >
                 <HugeiconsIcon icon={Delete01Icon} className='size-4' />
               </Button>
@@ -133,6 +170,14 @@ export function DataTableBulkActions<TData>({
         onOpenChange={setShowDeleteConfirm}
         onConfirm={handleBulkDelete}
         count={selectedRows.length}
+      />
+      <ExportDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        onExport={handleExport}
+        isExporting={exportBrands.isPending}
+        title='Export Brands'
+        users={users}
       />
     </>
   )

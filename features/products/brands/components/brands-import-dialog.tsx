@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,8 +19,14 @@ import {
   FieldGroup,
   FieldLabel,
   FieldError,
+  FieldDescription,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Download01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { CSVPreviewDialog } from '@/components/csv-preview-dialog'
+import { downloadCSV, parseCSV } from '@/lib/utils/csv-utils'
+import { SAMPLE_BRANDS_CSV } from '@/lib/constants/sample-data'
 import { useImportBrands } from '../api/use-brands'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
@@ -34,10 +41,9 @@ const importSchema = z.object({
     )
     .refine(
       (file) =>
-        ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(
-          file.type
-        ),
-      'File must be a CSV or Excel file'
+        file.type === 'text/csv' || 
+        file.name.endsWith('.csv'),
+      'File must be a CSV file'
     ),
 })
 
@@ -51,20 +57,55 @@ export function BrandsImportDialog({
   onOpenChange,
 }: BrandsImportDialogProps) {
   const importBrands = useImportBrands()
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewData, setPreviewData] = useState<string[][]>([])
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  
   const form = useForm<z.infer<typeof importSchema>>({
     resolver: zodResolver(importSchema),
   })
 
-  const onSubmit = async (data: z.infer<typeof importSchema>) => {
+  const handleDownloadSample = () => {
+    downloadCSV(SAMPLE_BRANDS_CSV, 'brands-sample.csv')
+  }
+
+  const handleFileChange = async (file: File | null) => {
+    if (!file) return
+    
     try {
-      const response = await importBrands.mutateAsync(data.file)
+      const text = await file.text()
+      const parsed = parseCSV(text)
+      if (parsed.length > 0) {
+        setPreviewData(parsed)
+        setSelectedFile(file)
+        setPreviewOpen(true)
+      } else {
+        toast.error('CSV file is empty or invalid')
+      }
+    } catch (error) {
+      toast.error('Failed to parse CSV file')
+    }
+  }
+
+  const handleConfirmImport = async () => {
+    if (!selectedFile) return
+    
+    try {
+      const response = await importBrands.mutateAsync(selectedFile)
       const message = (response as any)?.message || 'Brands imported successfully'
       toast.success(message)
       form.reset()
+      setSelectedFile(null)
+      setPreviewOpen(false)
       onOpenChange(false)
     } catch (error: any) {
       handleApiError(error, form.setError)
+      setPreviewOpen(false)
     }
+  }
+
+  const onSubmit = async (data: z.infer<typeof importSchema>) => {
+    // Preview will be shown via handleFileChange in the file input onChange
   }
 
   return (
@@ -80,7 +121,7 @@ export function BrandsImportDialog({
         <DialogHeader className='text-start'>
           <DialogTitle>Import Brands</DialogTitle>
           <DialogDescription>
-            Upload a CSV or Excel file to import brands.
+            Upload a CSV file to import brands. Required fields are marked with *.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -89,23 +130,55 @@ export function BrandsImportDialog({
           className='space-y-4'
         >
           <FieldGroup>
+            <div className='space-y-2 rounded-md border bg-muted/50 p-3 text-sm'>
+              <div className='font-medium'>Required Fields:</div>
+              <ul className='list-disc list-inside space-y-1 text-muted-foreground'>
+                <li><code className='rounded bg-background px-1 py-0.5 text-xs'>name*</code> - Brand name (required)</li>
+              </ul>
+              <div className='font-medium mt-3'>Optional Fields:</div>
+              <ul className='list-disc list-inside space-y-1 text-muted-foreground'>
+                <li><code className='rounded bg-background px-1 py-0.5 text-xs'>short_description</code> - Brand description</li>
+                <li><code className='rounded bg-background px-1 py-0.5 text-xs'>image_url</code> - Image URL</li>
+                <li><code className='rounded bg-background px-1 py-0.5 text-xs'>page_title</code> - Page title</li>
+              </ul>
+            </div>
+            <div className='flex items-center justify-between'>
+              <div className='text-sm text-muted-foreground'>
+                Download sample CSV file to see the format
+              </div>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={handleDownloadSample}
+              >
+                <HugeiconsIcon icon={Download01Icon} className='size-4 mr-2' />
+                Download Sample
+              </Button>
+            </div>
             <Controller
               control={form.control}
               name='file'
               render={({ field: { onChange, value, ...field }, fieldState }) => (
                 <Field>
-                  <FieldLabel htmlFor='import-file'>File</FieldLabel>
+                  <FieldLabel htmlFor='import-file'>CSV File *</FieldLabel>
                   <Input
                     id='import-file'
                     type='file'
-                    accept='.csv,.xlsx,.xls'
-                    onChange={(e) => {
+                    accept='.csv,text/csv'
+                    onChange={async (e) => {
                       const file = e.target.files?.[0]
-                      if (file) onChange(file)
+                      if (file) {
+                        onChange(file)
+                        await handleFileChange(file)
+                      }
                     }}
                     data-invalid={!!fieldState.error}
                     {...field}
                   />
+                  <FieldDescription>
+                    Only CSV files are supported. Max file size: 5MB
+                  </FieldDescription>
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 </Field>
               )}
@@ -116,11 +189,19 @@ export function BrandsImportDialog({
           <DialogClose asChild>
             <Button variant='outline'>Cancel</Button>
           </DialogClose>
-          <Button type='submit' form='brand-import-form' disabled={importBrands.isPending}>
-            {importBrands.isPending ? 'Importing...' : 'Import'}
+          <Button type='submit' form='brand-import-form' disabled={importBrands.isPending || !form.watch('file')}>
+            Preview
           </Button>
         </DialogFooter>
       </DialogContent>
+      <CSVPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        data={previewData}
+        onConfirm={handleConfirmImport}
+        isImporting={importBrands.isPending}
+        title='Preview Brands Import'
+      />
     </Dialog>
   )
 }
