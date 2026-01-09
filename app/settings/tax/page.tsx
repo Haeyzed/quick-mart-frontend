@@ -1,12 +1,12 @@
 "use client"
 
 import { AuthenticatedLayout } from "@/components/layout/authenticated-layout";
-import { Units } from "@/features/products/units";
+import { Taxes } from "@/features/settings/tax";
 
-export default function UnitsPage() {
+export default function TaxPage() {
   return (
     <AuthenticatedLayout>
-      <Units />
+      <Taxes />
     </AuthenticatedLayout>
   );
 }

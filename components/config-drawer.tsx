@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from 'react'
 import { type SVGProps } from 'react'
 import { Root as Radio, Item } from '@radix-ui/react-radio-group'
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -229,40 +230,81 @@ function DirConfig() {
 
 function ThemeConfig() {
   const { defaultTheme, theme, setTheme } = useTheme()
+  const [clickEvent, setClickEvent] = React.useState<React.MouseEvent | null>(null)
+
+  const handleThemeChange = (newTheme: string) => {
+    const root = document.documentElement
+
+    if (!document.startViewTransition) {
+      setTheme(newTheme as 'light' | 'dark' | 'system')
+      return
+    }
+
+    // Set coordinates from the click event
+    if (clickEvent) {
+      root.style.setProperty('--x', `${clickEvent.clientX}px`)
+      root.style.setProperty('--y', `${clickEvent.clientY}px`)
+    }
+
+    document.startViewTransition(() => {
+      setTheme(newTheme as 'light' | 'dark' | 'system')
+    })
+    
+    setClickEvent(null)
+  }
+
   return (
     <div>
       <SectionTitle
         title='Theme'
         showReset={theme !== defaultTheme}
-        onReset={() => setTheme(defaultTheme)}
+        onReset={() => {
+          const root = document.documentElement
+          if (document.startViewTransition) {
+            document.startViewTransition(() => {
+              setTheme(defaultTheme)
+            })
+          } else {
+            setTheme(defaultTheme)
+          }
+        }}
       />
-      <Radio
-        value={theme}
-        onValueChange={setTheme}
-        className='grid w-full max-w-md grid-cols-3 gap-4'
-        aria-label='Select theme preference'
-        aria-describedby='theme-description'
+      <div
+        onClick={(e) => setClickEvent(e)}
+        onMouseDown={(e) => setClickEvent(e)}
       >
-        {[
-          {
-            value: 'system',
-            label: 'System',
-            icon: IconThemeSystem,
-          },
-          {
-            value: 'light',
-            label: 'Light',
-            icon: IconThemeLight,
-          },
-          {
-            value: 'dark',
-            label: 'Dark',
-            icon: IconThemeDark,
-          },
-        ].map((item) => (
-          <RadioGroupItem key={item.value} item={item} isTheme />
-        ))}
-      </Radio>
+        <Radio
+          value={theme}
+          onValueChange={handleThemeChange}
+          className='grid w-full max-w-md grid-cols-3 gap-4'
+          aria-label='Select theme preference'
+          aria-describedby='theme-description'
+        >
+          {[
+            {
+              value: 'system',
+              label: 'System',
+              icon: IconThemeSystem,
+            },
+            {
+              value: 'light',
+              label: 'Light',
+              icon: IconThemeLight,
+            },
+            {
+              value: 'dark',
+              label: 'Dark',
+              icon: IconThemeDark,
+            },
+          ].map((item) => (
+            <RadioGroupItem 
+              key={item.value} 
+              item={item} 
+              isTheme 
+            />
+          ))}
+        </Radio>
+      </div>
       <div id='theme-description' className='sr-only'>
         Choose between system preference, light mode, or dark mode
       </div>

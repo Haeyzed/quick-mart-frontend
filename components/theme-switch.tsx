@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Checkmark,
@@ -18,15 +18,37 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export function ThemeSwitch() {
-  const { theme, setTheme } = useTheme()
+  const { theme, resolvedTheme, setTheme } = useTheme()
 
   /* Update theme-color meta tag
    * when theme is updated */
   useEffect(() => {
-    const themeColor = theme === 'dark' ? '#020817' : '#fff'
+    const themeColor = resolvedTheme === 'dark' ? '#020817' : '#fff'
     const metaThemeColor = document.querySelector("meta[name='theme-color']")
     if (metaThemeColor) metaThemeColor.setAttribute('content', themeColor)
-  }, [theme])
+  }, [resolvedTheme])
+
+  const handleThemeChange = useCallback(
+    (newTheme: 'light' | 'dark' | 'system', e?: React.MouseEvent) => {
+      const root = document.documentElement
+
+      if (!document.startViewTransition) {
+        setTheme(newTheme)
+        return
+      }
+
+      // Set coordinates from the click event
+      if (e) {
+        root.style.setProperty('--x', `${e.clientX}px`)
+        root.style.setProperty('--y', `${e.clientY}px`)
+      }
+
+      document.startViewTransition(() => {
+        setTheme(newTheme)
+      })
+    },
+    [setTheme]
+  )
 
   return (
     <DropdownMenu modal={false}>
@@ -38,21 +60,21 @@ export function ThemeSwitch() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
-        <DropdownMenuItem onClick={() => setTheme('light')}>
+        <DropdownMenuItem onClick={(e) => handleThemeChange('light', e)}>
           Light{' '}
           <HugeiconsIcon
             icon={Checkmark}
             className={cn('ms-auto size-3.5', theme !== 'light' && 'hidden')}
           />
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('dark')}>
+        <DropdownMenuItem onClick={(e) => handleThemeChange('dark', e)}>
           Dark
           <HugeiconsIcon
             icon={Checkmark}
             className={cn('ms-auto size-3.5', theme !== 'dark' && 'hidden')}
           />
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('system')}>
+        <DropdownMenuItem onClick={(e) => handleThemeChange('system', e)}>
           System
           <HugeiconsIcon
             icon={Checkmark}

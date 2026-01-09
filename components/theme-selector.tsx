@@ -1,17 +1,13 @@
 "use client"
 
+import type React from "react"
+
 import { THEMES } from "@/lib/themes"
 import { themeColors } from "@/lib/theme-colors"
 import { cn } from "@/lib/utils"
 import { useThemeConfig } from "@/components/active-theme"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function ThemeSelector({ className }: React.ComponentProps<"div">) {
   const { activeTheme, setActiveTheme } = useThemeConfig()
@@ -26,7 +22,7 @@ export function ThemeSelector({ className }: React.ComponentProps<"div">) {
       <Select value={value} onValueChange={setActiveTheme}>
         <SelectTrigger
           id="theme-selector"
-          className="bg-secondary text-secondary-foreground border-secondary justify-start shadow-none w-full"
+          className="bg-secondary text-secondary-foreground border-secondary justify-start shadow-none w-full flex-1"
         >
           <span className="font-medium">Theme:</span>
           <SelectValue placeholder="Select a theme" />
@@ -36,11 +32,7 @@ export function ThemeSelector({ className }: React.ComponentProps<"div">) {
             const themeColor = themeColors[theme.name]
             const isSelected = activeTheme === theme.name
             return (
-              <SelectItem
-                key={theme.name}
-                value={theme.name}
-                className="cursor-pointer"
-              >
+              <SelectItem key={theme.name} value={theme.name} className="cursor-pointer">
                 <div className="flex items-center gap-2 w-full">
                   <div
                     className="size-4 rounded-full border border-border"
@@ -48,11 +40,6 @@ export function ThemeSelector({ className }: React.ComponentProps<"div">) {
                   />
                   <div className="flex-1">
                     <div className="text-sm font-medium">{theme.label}</div>
-                    {/* {themeColor?.description && (
-                      <div className="text-xs text-muted-foreground">
-                        {themeColor.description}
-                      </div>
-                    )} */}
                   </div>
                 </div>
               </SelectItem>
@@ -63,4 +50,3 @@ export function ThemeSelector({ className }: React.ComponentProps<"div">) {
     </div>
   )
 }
-

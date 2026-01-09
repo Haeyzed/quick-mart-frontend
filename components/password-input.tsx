@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react'
-import { EyeIcon, EyeOff } from '@hugeicons/core-free-icons'
+import { ViewIcon, ViewOffSlashIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
@@ -34,7 +34,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
           className='absolute end-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md text-muted-foreground'
           onClick={() => setShowPassword((prev) => !prev)}
         >
-          <HugeiconsIcon icon={showPassword ? EyeIcon : EyeOff} size={18} />
+          <HugeiconsIcon icon={showPassword ? ViewIcon : ViewOffSlashIcon} size={18} />
         </Button>
       </div>
     )
