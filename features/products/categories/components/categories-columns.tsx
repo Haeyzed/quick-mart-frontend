@@ -10,7 +10,31 @@ import { activeStatusMap, activeStatuses, featuredStatuses, featuredStatusMap, s
 import { type Category } from '../data/schema'
 import { DataTableRowActions } from './data-table-row-actions'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { ImageZoom } from '@/components/ui/shadcn-io/image-zoom'
+import { useTheme } from '@/context/theme-provider'
 import Image from 'next/image'
+
+function ImageZoomCell({ src, alt }: { src: string; alt: string }) {
+  const { resolvedTheme } = useTheme()
+  return (
+    <ImageZoom
+      backdropClassName={cn(
+        resolvedTheme === 'dark'
+          ? '[&_[data-rmiz-modal-overlay="visible"]]:bg-white/80'
+          : '[&_[data-rmiz-modal-overlay="visible"]]:bg-black/80'
+      )}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        width={40}
+        height={40}
+        className='size-10 rounded-md object-cover'
+        unoptimized
+      />
+    </ImageZoom>
+  )
+}
 
 export const categoriesColumns: ColumnDef<Category>[] = [
   {
@@ -48,12 +72,9 @@ export const categoriesColumns: ColumnDef<Category>[] = [
     cell: ({ row }) => (
       <div className='flex items-center gap-3 ps-3'>
         {row.original.image_url ? (
-          <Image
+          <ImageZoomCell
             src={row.original.image_url}
             alt={row.original.name}
-            width={40}
-            height={40}
-            className='size-10 rounded-md object-cover'
           />
         ) : (
           <div className='flex size-10 items-center justify-center rounded-md bg-muted'>
