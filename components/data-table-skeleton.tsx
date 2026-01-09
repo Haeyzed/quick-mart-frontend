@@ -19,7 +19,7 @@ export function DataTableSkeleton({ columnCount, rowCount = 10 }: DataTableSkele
         <TableRow key={rowIndex}>
           {Array.from({ length: columnCount }).map((_, colIndex) => (
             <TableCell key={colIndex}>
-              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-8 w-full" />
             </TableCell>
           ))}
         </TableRow>
