@@ -10,6 +10,10 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { ImageZoom } from '@/components/ui/shadcn-io/image-zoom'
+import { useTheme } from '@/context/theme-provider'
+import { cn } from '@/lib/utils'
+import Image from 'next/image'
 import { type Category } from '../data/schema'
 import { activeStatuses } from '../data/data'
 
@@ -26,6 +30,7 @@ export function CategoriesViewDialog({
 }: CategoriesViewDialogProps) {
   if (!currentRow) return null
 
+  const { resolvedTheme } = useTheme()
   const status = activeStatuses.find((s) => s.value === (currentRow.is_active ? 'active' : 'inactive'))
   const StatusIcon = status?.icon
 
@@ -44,11 +49,22 @@ export function CategoriesViewDialog({
               <div className='space-y-2'>
                 <div className='text-sm font-medium text-muted-foreground'>Image</div>
                 <div className='relative h-48 w-full overflow-hidden rounded-md border'>
-                  <img
-                    src={currentRow.image_url}
-                    alt={currentRow.name}
-                    className='h-full w-full object-cover'
-                  />
+                  <ImageZoom
+                    backdropClassName={cn(
+                      resolvedTheme === 'dark'
+                        ? '[&_[data-rmiz-modal-overlay="visible"]]:bg-white/80'
+                        : '[&_[data-rmiz-modal-overlay="visible"]]:bg-black/80'
+                    )}
+                  >
+                    <Image
+                      src={currentRow.image_url}
+                      alt={currentRow.name}
+                      width={800}
+                      height={400}
+                      className='h-full w-full object-cover'
+                      unoptimized
+                    />
+                  </ImageZoom>
                 </div>
               </div>
             )}

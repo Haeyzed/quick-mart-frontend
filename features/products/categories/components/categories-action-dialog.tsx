@@ -36,6 +36,9 @@ import {
 } from '@/components/ui/file-upload'
 import { CloudUploadIcon, CancelCircleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { ImageZoom } from '@/components/ui/shadcn-io/image-zoom'
+import { useTheme } from '@/context/theme-provider'
+import { cn } from '@/lib/utils'
 import Image from 'next/image'
 import { useCreateCategory, useUpdateCategory, useRootCategories } from '../api/use-categories'
 import { toast } from 'sonner'
@@ -71,6 +74,7 @@ export function CategoriesActionDialog({
   const createCategory = useCreateCategory()
   const updateCategory = useUpdateCategory()
   const { data: rootCategories = [] } = useRootCategories()
+  const { resolvedTheme } = useTheme()
   const isEdit = !!currentRow
 
   const form = useForm<z.infer<typeof categorySchema>>({
@@ -344,12 +348,22 @@ export function CategoriesActionDialog({
                       {existingImageUrl && !hasNewImage && (
                         <div className='mb-3 flex items-center gap-3 rounded-md border p-3'>
                           <div className='relative size-16 overflow-hidden rounded-md'>
-                            <Image
-                              src={existingImageUrl}
-                              alt={currentRow?.name || 'Category image'}
-                              fill
-                              className='object-cover'
-                            />
+                            <ImageZoom
+                              backdropClassName={cn(
+                                resolvedTheme === 'dark'
+                                  ? '[&_[data-rmiz-modal-overlay="visible"]]:bg-white/80'
+                                  : '[&_[data-rmiz-modal-overlay="visible"]]:bg-black/80'
+                              )}
+                            >
+                              <Image
+                                src={existingImageUrl}
+                                alt={currentRow?.name || 'Category image'}
+                                width={64}
+                                height={64}
+                                className='object-cover'
+                                unoptimized
+                              />
+                            </ImageZoom>
                           </div>
                           <div className='flex-1'>
                             <p className='text-sm font-medium'>Current Image</p>
