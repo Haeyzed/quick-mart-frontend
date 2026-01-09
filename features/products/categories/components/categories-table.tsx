@@ -24,7 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
-import { DataTableSkeleton } from '@/components/data-table-skeleton'
+import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
 import { activeStatuses, featuredStatuses, syncStatuses } from '../data/data'
 import { useCategories } from '../api/use-categories'
 import { DataTableBulkActions } from './data-table-bulk-actions'

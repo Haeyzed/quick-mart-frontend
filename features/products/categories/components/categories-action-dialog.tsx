@@ -24,6 +24,19 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  FileUpload,
+  FileUploadDropzone,
+  FileUploadItem,
+  FileUploadItemDelete,
+  FileUploadItemMetadata,
+  FileUploadItemPreview,
+  FileUploadList,
+  FileUploadTrigger,
+} from '@/components/ui/file-upload'
+import { CloudUploadIcon, CancelCircleIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import Image from 'next/image'
 import { useCreateCategory, useUpdateCategory, useRootCategories } from '../api/use-categories'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
@@ -35,7 +48,7 @@ const categorySchema = z.object({
   slug: z.string().max(255).optional().nullable(),
   short_description: z.string().max(1000).optional().nullable(),
   page_title: z.string().max(255).optional().nullable(),
-  image: z.instanceof(File).optional().nullable(),
+  image: z.array(z.custom<File>()).max(1, 'Please select only one image').optional(),
   icon: z.string().max(255).optional().nullable(),
   parent_id: z.number().nullable().optional(),
   is_active: z.boolean(),
@@ -68,7 +81,7 @@ export function CategoriesActionDialog({
           slug: currentRow.slug || '',
           short_description: currentRow.short_description || '',
           page_title: currentRow.page_title || '',
-          image: null,
+          image: [],
           icon: currentRow.icon || '',
           parent_id: currentRow.parent_id || null,
           is_active: currentRow.is_active,
@@ -81,7 +94,7 @@ export function CategoriesActionDialog({
           slug: '',
           short_description: '',
           page_title: '',
-          image: null,
+          image: [],
           icon: '',
           parent_id: null,
           is_active: true,
@@ -98,7 +111,7 @@ export function CategoriesActionDialog({
         slug: currentRow.slug || '',
         short_description: currentRow.short_description || '',
         page_title: currentRow.page_title || '',
-        image: null,
+        image: [],
         icon: currentRow.icon || '',
         parent_id: currentRow.parent_id || null,
         is_active: currentRow.is_active,
@@ -112,7 +125,7 @@ export function CategoriesActionDialog({
         slug: '',
         short_description: '',
         page_title: '',
-        image: null,
+        image: [],
         icon: '',
         parent_id: null,
         is_active: true,
@@ -129,7 +142,9 @@ export function CategoriesActionDialog({
     if (data.slug) formData.append('slug', data.slug)
     if (data.short_description) formData.append('short_description', data.short_description)
     if (data.page_title) formData.append('page_title', data.page_title)
-    if (data.image) formData.append('image', data.image)
+    if (data.image && data.image.length > 0) {
+      formData.append('image', data.image[0])
+    }
     if (data.icon) formData.append('icon', data.icon)
     if (data.parent_id !== null && data.parent_id !== undefined) {
       formData.append('parent_id', String(data.parent_id))
@@ -319,26 +334,79 @@ export function CategoriesActionDialog({
               <Controller
                 control={form.control}
                 name='image'
-                render={({ field: { onChange, value, ...field }, fieldState }) => (
-                  <Field>
-                    <FieldLabel htmlFor='category-image'>Image</FieldLabel>
-                    <Input
-                      id='category-image'
-                      type='file'
-                      accept='image/*'
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        onChange(file || null)
-                      }}
-                      data-invalid={!!fieldState.error}
-                      {...field}
-                    />
-                    <FieldDescription>
-                      JPEG, PNG, JPG, GIF, or WebP. Max 5MB.
-                    </FieldDescription>
-                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                  </Field>
-                )}
+                render={({ field: { onChange, value, ...field }, fieldState }) => {
+                  const existingImageUrl = isEdit && currentRow?.image_url ? currentRow.image_url : null
+                  const hasNewImage = value && value.length > 0
+                  
+                  return (
+                    <Field>
+                      <FieldLabel htmlFor='category-image'>Image</FieldLabel>
+                      {existingImageUrl && !hasNewImage && (
+                        <div className='mb-3 flex items-center gap-3 rounded-md border p-3'>
+                          <div className='relative size-16 overflow-hidden rounded-md'>
+                            <Image
+                              src={existingImageUrl}
+                              alt={currentRow?.name || 'Category image'}
+                              fill
+                              className='object-cover'
+                            />
+                          </div>
+                          <div className='flex-1'>
+                            <p className='text-sm font-medium'>Current Image</p>
+                            <p className='text-xs text-muted-foreground'>
+                              Upload a new image to replace this one
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      <FileUpload
+                        value={value || []}
+                        onValueChange={onChange}
+                        accept='image/*'
+                        maxFiles={1}
+                        maxSize={5 * 1024 * 1024}
+                        onFileReject={(_, message) => {
+                          form.setError('image', {
+                            message,
+                          })
+                        }}
+                      >
+                        <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                          <HugeiconsIcon icon={CloudUploadIcon} className='size-4' />
+                          Drag and drop or
+                          <FileUploadTrigger asChild>
+                            <Button variant='link' size='sm' className='p-0'>
+                              choose file
+                            </Button>
+                          </FileUploadTrigger>
+                          to upload
+                        </FileUploadDropzone>
+                        <FileUploadList>
+                          {value?.map((file, index) => (
+                            <FileUploadItem key={index} value={file}>
+                              <FileUploadItemPreview />
+                              <FileUploadItemMetadata />
+                              <FileUploadItemDelete asChild>
+                                <Button
+                                  variant='ghost'
+                                  size='icon'
+                                  className='size-7'
+                                >
+                                  <HugeiconsIcon icon={CancelCircleIcon} className='size-4' />
+                                  <span className='sr-only'>Delete</span>
+                                </Button>
+                              </FileUploadItemDelete>
+                            </FileUploadItem>
+                          ))}
+                        </FileUploadList>
+                      </FileUpload>
+                      <FieldDescription>
+                        JPEG, PNG, JPG, GIF, or WebP. Max 5MB.
+                      </FieldDescription>
+                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                    </Field>
+                  )
+                }}
               />
               <Controller
                 control={form.control}
