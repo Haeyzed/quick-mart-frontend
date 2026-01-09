@@ -27,6 +27,7 @@ import { useCreateBrand, useUpdateBrand } from '../api/use-brands'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
 import { type Brand } from '../data/schema'
+import { Spinner } from '@/components/ui/spinner'
 
 const brandSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
@@ -265,9 +266,14 @@ export function BrandsActionDialog({
             form='brand-form'
             disabled={createBrand.isPending || updateBrand.isPending}
           >
-            {createBrand.isPending || updateBrand.isPending
-              ? 'Saving...'
-              : 'Save changes'}
+            {createBrand.isPending || updateBrand.isPending ? (
+              <>
+                <Spinner className="mr-2 size-4" />
+                Saving...
+              </>
+            ) : (
+              'Save changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

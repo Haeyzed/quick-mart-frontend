@@ -24,7 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
-import { Spinner } from '@/components/ui/spinner'
+import { DataTableSkeleton } from '@/components/data-table-skeleton'
 import { activeStatuses, featuredStatuses, syncStatuses } from '../data/data'
 import { useCategories } from '../api/use-categories'
 import { DataTableBulkActions } from './data-table-bulk-actions'
@@ -154,14 +154,6 @@ export function CategoriesTable() {
     }
   }, [pageCount, ensurePageInRange])
 
-  if (isLoading) {
-    return (
-      <div className='flex h-[400px] items-center justify-center'>
-        <Spinner className='size-8' />
-      </div>
-    )
-  }
-
   if (error) {
     return (
       toast.error(error.message)
@@ -240,42 +232,46 @@ export function CategoriesTable() {
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className='group/row'
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        'bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
-                        (cell.column.columnDef.meta as any)?.className,
-                        (cell.column.columnDef.meta as any)?.tdClassName
-                      )}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+          {isLoading ? (
+            <DataTableSkeleton columnCount={columns.length} />
+          ) : (
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                    className='group/row'
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          'bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted',
+                          (cell.column.columnDef.meta as any)?.className,
+                          (cell.column.columnDef.meta as any)?.tdClassName
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className='h-24 text-center'
+                  >
+                    No results.
+                  </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className='h-24 text-center'
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+              )}
+            </TableBody>
+          )}
         </Table>
       </div>
       <DataTablePagination table={table} className='mt-auto' />

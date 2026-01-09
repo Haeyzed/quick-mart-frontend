@@ -20,6 +20,7 @@ import { useCreateTax, useUpdateTax } from "../api/use-taxes"
 import { toast } from "sonner"
 import { handleApiError } from "@/lib/handle-api-error"
 import type { Tax } from "../data/schema"
+import { Spinner } from '@/components/ui/spinner'
 
 const taxSchema = z.object({
   name: z.string().min(1, "Name is required").max(255, "Name is too long"),
@@ -208,7 +209,14 @@ export function TaxesActionDialog({ currentRow, open, onOpenChange }: TaxesActio
         </div>
         <DialogFooter>
           <Button type="submit" form="tax-form" disabled={createTax.isPending || updateTax.isPending}>
-            {createTax.isPending || updateTax.isPending ? "Saving..." : "Save changes"}
+            {createTax.isPending || updateTax.isPending ? (
+              <>
+                <Spinner className="mr-2 size-4" />
+                Saving...
+              </>
+            ) : (
+              'Save changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

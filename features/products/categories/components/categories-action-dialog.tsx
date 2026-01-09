@@ -28,6 +28,7 @@ import { useCreateCategory, useUpdateCategory, useRootCategories } from '../api/
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
 import { type Category } from '../data/schema'
+import { Spinner } from '@/components/ui/spinner'
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
@@ -419,9 +420,14 @@ export function CategoriesActionDialog({
             form='category-form'
             disabled={createCategory.isPending || updateCategory.isPending}
           >
-            {createCategory.isPending || updateCategory.isPending
-              ? 'Saving...'
-              : 'Save changes'}
+            {createCategory.isPending || updateCategory.isPending ? (
+              <>
+                <Spinner className="mr-2 size-4" />
+                Saving...
+              </>
+            ) : (
+              'Save changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

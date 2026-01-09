@@ -21,6 +21,7 @@ import { useCreateUnit, useUpdateUnit, useBaseUnits } from "../api/use-units"
 import { toast } from "sonner"
 import { handleApiError } from "@/lib/handle-api-error"
 import type { Unit } from "../data/schema"
+import { Spinner } from '@/components/ui/spinner'
 
 const unitSchema = z.object({
   code: z.string().min(1, "Code is required").max(255, "Code is too long"),
@@ -299,7 +300,14 @@ export function UnitsActionDialog({ currentRow, open, onOpenChange }: UnitsActio
         </div>
         <DialogFooter>
           <Button type="submit" form="unit-form" disabled={createUnit.isPending || updateUnit.isPending}>
-            {createUnit.isPending || updateUnit.isPending ? "Saving..." : "Save changes"}
+            {createUnit.isPending || updateUnit.isPending ? (
+              <>
+                <Spinner className="mr-2 size-4" />
+                Saving...
+              </>
+            ) : (
+              'Save changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
