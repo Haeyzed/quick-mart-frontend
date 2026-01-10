@@ -45,23 +45,27 @@ export const taxesColumns: ColumnDef<Tax>[] = [
       <DataTableColumnHeader column={column} title='Name' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-36'>
-        {row.getValue('name')}
-      </LongText>
+        <LongText className='max-w-36'>{row.getValue('name')}</LongText>
     ),
-    meta: { className: 'w-36' },
+    meta: {
+      className: cn(
+        'drop-shadow-[0_1px_2px_rgb(0_0_0_/_0.1)] dark:drop-shadow-[0_1px_2px_rgb(255_255_255_/_0.1)]',
+        'ps-0.5 max-md:sticky start-6 @4xl/content:table-cell @4xl/content:drop-shadow-none'
+      ),
+    },
+    enableHiding: false,
   },
   {
     accessorKey: 'rate',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Rate (%)' />
+      <DataTableColumnHeader column={column} title='Rate' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-24'>
-        {row.getValue('rate')}%
+      <LongText className='max-w-36'>
+        {row.original.rate || '-'}
       </LongText>
     ),
-    meta: { className: 'w-24' },
+    meta: { className: 'w-36' },
   },
   {
     accessorKey: 'is_active',
