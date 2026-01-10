@@ -85,14 +85,20 @@ export function useCreateUnit() {
 
   return useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      const response = await post<Unit>('/units', data)
-      if (response.data) {
+      const response = await post<Unit>('/units', data, {
+        responseType: 'json',
+      })
+      // Type guard: if response is Blob, it won't have data property
+      if ('data' in response && response.data) {
         return {
           data: unitSchema.parse(response.data),
           message: response.message,
         }
       }
-      throw new Error(response.message || 'Failed to create unit')
+      if ('message' in response) {
+        throw new Error(response.message || 'Failed to create unit')
+      }
+      throw new Error('Failed to create unit')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['units'] })
