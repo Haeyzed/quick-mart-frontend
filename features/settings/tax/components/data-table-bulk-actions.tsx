@@ -13,9 +13,8 @@ import {
 import { DataTableBulkActions as BulkActionsToolbar } from '@/components/data-table'
 import { type Tax } from '../data/schema'
 import { TaxesMultiDeleteDialog } from './tax-multi-delete-dialog'
-import { ExportDialog } from '@/components/export-dialog'
-import { useBulkDeleteTaxes, useBulkActivateTaxes, useBulkDeactivateTaxes, useExportTaxes } from '../api/use-taxes'
-import { useUsers } from '@/lib/hooks/use-users'
+import { TaxExportDialog } from './tax-export-dialog'
+import { useBulkDeleteTaxes, useBulkActivateTaxes, useBulkDeactivateTaxes } from '../api/use-taxes'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
 import { Separator } from '@/components/ui/separator'
@@ -33,8 +32,6 @@ export function DataTableBulkActions<TData>({
   const bulkDelete = useBulkDeleteTaxes()
   const bulkActivate = useBulkActivateTaxes()
   const bulkDeactivate = useBulkDeactivateTaxes()
-  const exportTaxes = useExportTaxes()
-  const { data: users = [] } = useUsers()
 
   const selectedTaxes = selectedRows.map((row) => row.original as Tax)
   const ids = selectedTaxes.map((tax) => tax.id)
@@ -67,24 +64,6 @@ export function DataTableBulkActions<TData>({
       const response = await bulkDeactivate.mutateAsync(ids)
       table.resetRowSelection()
       const message = (response as any)?.message || `Deactivated ${ids.length} tax${ids.length > 1 ? 'es' : ''}`
-      toast.success(message)
-    } catch (error: any) {
-      handleApiError(error)
-    }
-  }
-
-  const handleExport = async (data: {
-    format: 'excel' | 'pdf'
-    method: 'download' | 'email'
-    user_id?: number
-  }) => {
-    try {
-      const response = await exportTaxes.mutateAsync({
-        ids,
-        ...data,
-      })
-      table.resetRowSelection()
-      const message = (response as any)?.message || 'Export completed successfully'
       toast.success(message)
     } catch (error: any) {
       handleApiError(error)
@@ -130,7 +109,7 @@ export function DataTableBulkActions<TData>({
                 variant='outline'
                 size='sm'
                 onClick={() => setShowExportDialog(true)}
-                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || exportTaxes.isPending}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending}
               >
                 <HugeiconsIcon icon={Download01Icon} className='size-4' />
               </Button>
@@ -144,7 +123,7 @@ export function DataTableBulkActions<TData>({
                 variant='outline'
                 size='sm'
                 onClick={() => setShowDeleteConfirm(true)}
-                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || exportTaxes.isPending}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending}
               >
                 <HugeiconsIcon icon={Delete01Icon} className='size-4' />
               </Button>
@@ -171,13 +150,10 @@ export function DataTableBulkActions<TData>({
         onConfirm={handleBulkDelete}
         count={selectedRows.length}
       />
-      <ExportDialog
+      <TaxExportDialog
         open={showExportDialog}
         onOpenChange={setShowExportDialog}
-        onExport={handleExport}
-        isExporting={exportTaxes.isPending}
-        title='Export Taxes'
-        users={users}
+        ids={ids}
       />
     </>
   )

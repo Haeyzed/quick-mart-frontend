@@ -213,6 +213,7 @@ export function useExportBrands() {
       ids?: number[]
       format: 'excel' | 'pdf'
       method: 'download' | 'email'
+      columns: string[]
       user_id?: number
     }) => {
       if (data.method === 'download') {

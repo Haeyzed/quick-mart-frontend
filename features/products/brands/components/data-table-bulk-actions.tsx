@@ -13,9 +13,8 @@ import {
 import { DataTableBulkActions as BulkActionsToolbar } from '@/components/data-table'
 import { type Brand } from '../data/schema'
 import { BrandsMultiDeleteDialog } from './brands-multi-delete-dialog'
-import { ExportDialog } from '@/components/export-dialog'
-import { useBulkDeleteBrands, useBulkActivateBrands, useBulkDeactivateBrands, useExportBrands } from '../api/use-brands'
-import { useUsers } from '@/lib/hooks/use-users'
+import { BrandsExportDialog } from './brands-export-dialog'
+import { useBulkDeleteBrands, useBulkActivateBrands, useBulkDeactivateBrands } from '../api/use-brands'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
 import { Separator } from '@/components/ui/separator'
@@ -33,8 +32,6 @@ export function DataTableBulkActions<TData>({
   const bulkDelete = useBulkDeleteBrands()
   const bulkActivate = useBulkActivateBrands()
   const bulkDeactivate = useBulkDeactivateBrands()
-  const exportBrands = useExportBrands()
-  const { data: users = [] } = useUsers()
 
   const selectedBrands = selectedRows.map((row) => row.original as Brand)
   const ids = selectedBrands.map((brand) => brand.id)
@@ -67,24 +64,6 @@ export function DataTableBulkActions<TData>({
       const response = await bulkDeactivate.mutateAsync(ids)
       table.resetRowSelection()
       const message = (response as any)?.message || `Deactivated ${ids.length} brand${ids.length > 1 ? 's' : ''}`
-      toast.success(message)
-    } catch (error: any) {
-      handleApiError(error)
-    }
-  }
-
-  const handleExport = async (data: {
-    format: 'excel' | 'pdf'
-    method: 'download' | 'email'
-    user_id?: number
-  }) => {
-    try {
-      const response = await exportBrands.mutateAsync({
-        ids,
-        ...data,
-      })
-      table.resetRowSelection()
-      const message = (response as any)?.message || 'Export completed successfully'
       toast.success(message)
     } catch (error: any) {
       handleApiError(error)
@@ -130,7 +109,7 @@ export function DataTableBulkActions<TData>({
                 variant='outline'
                 size='sm'
                 onClick={() => setShowExportDialog(true)}
-                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || exportBrands.isPending}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending}
               >
                 <HugeiconsIcon icon={Download01Icon} className='size-4' />
               </Button>
@@ -144,7 +123,7 @@ export function DataTableBulkActions<TData>({
                 variant='outline'
                 size='sm'
                 onClick={() => setShowDeleteConfirm(true)}
-                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending || exportBrands.isPending}
+                disabled={bulkActivate.isPending || bulkDeactivate.isPending || bulkDelete.isPending}
               >
                 <HugeiconsIcon icon={Delete01Icon} className='size-4' />
               </Button>
@@ -171,13 +150,10 @@ export function DataTableBulkActions<TData>({
         onConfirm={handleBulkDelete}
         count={selectedRows.length}
       />
-      <ExportDialog
+      <BrandsExportDialog
         open={showExportDialog}
         onOpenChange={setShowExportDialog}
-        onExport={handleExport}
-        isExporting={exportBrands.isPending}
-        title='Export Brands'
-        users={users}
+        ids={ids}
       />
     </>
   )

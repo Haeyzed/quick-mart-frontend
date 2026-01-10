@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -21,12 +22,18 @@ import {
   FieldDescription,
 } from '@/components/ui/field'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useUsers } from '@/lib/hooks/use-users'
 import { Spinner } from '@/components/ui/spinner'
+import { useExportBrands } from '../api/use-brands'
+import { toast } from 'sonner'
+import { handleApiError } from '@/lib/handle-api-error'
 
 const exportSchema = z.object({
-  format: z.enum(['pdf', 'excel']),
+  format: z.enum(['excel', 'pdf']),
   method: z.enum(['download', 'email']),
+  columns: z.array(z.string()).min(1, 'Please select at least one column'),
   user_id: z.number().optional(),
 }).refine(
   (data) => {
@@ -41,54 +48,94 @@ const exportSchema = z.object({
   }
 )
 
-type ExportDialogProps = {
+const AVAILABLE_COLUMNS = [
+  { value: 'id', label: 'ID' },
+  { value: 'name', label: 'Name' },
+  { value: 'slug', label: 'Slug' },
+  { value: 'short_description', label: 'Short Description' },
+  { value: 'page_title', label: 'Page Title' },
+  { value: 'image_url', label: 'Image URL' },
+  { value: 'is_active', label: 'Is Active' },
+  { value: 'created_at', label: 'Created At' },
+  { value: 'updated_at', label: 'Updated At' },
+] as const
+
+type BrandsExportDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onExport: (data: { format: 'pdf' | 'excel'; method: 'download' | 'email'; user_id?: number }) => Promise<void>
-  isExporting?: boolean
-  title?: string
-  users?: Array<{ id: number; name: string; email: string }>
+  ids?: number[]
 }
 
-export function ExportDialog({
+export function BrandsExportDialog({
   open,
   onOpenChange,
-  onExport,
-  isExporting = false,
-  title = 'Export Data',
-  users = [],
-}: ExportDialogProps) {
+  ids = [],
+}: BrandsExportDialogProps) {
+  const exportBrands = useExportBrands()
+  const { data: users = [], isLoading: isLoadingUsers } = useUsers()
+  
   const form = useForm<z.infer<typeof exportSchema>>({
     resolver: zodResolver(exportSchema),
     defaultValues: {
       format: 'excel',
       method: 'download',
+      columns: ['id', 'name', 'slug', 'is_active'],
     },
   })
 
   const method = form.watch('method')
+  const selectedColumns = form.watch('columns') || []
 
   const onSubmit = async (data: z.infer<typeof exportSchema>) => {
     try {
-      await onExport(data)
+      await exportBrands.mutateAsync({
+        ids: ids.length > 0 ? ids : undefined,
+        format: data.format,
+        method: data.method,
+        columns: data.columns,
+        user_id: data.user_id,
+      } as any)
+      
+      if (data.method === 'download') {
+        toast.success('Export downloaded successfully')
+      } else {
+        toast.success('Export sent via email successfully')
+      }
+      
       form.reset()
       onOpenChange(false)
-    } catch (error) {
-      // Error handling is done in the parent component
+    } catch (error: any) {
+      handleApiError(error, form.setError)
     }
   }
 
+  const handleSelectAll = () => {
+    form.setValue('columns', AVAILABLE_COLUMNS.map(col => col.value))
+  }
+
+  const handleDeselectAll = () => {
+    form.setValue('columns', [])
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent className='sm:max-w-md'  onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+    <Dialog
+      open={open}
+      onOpenChange={(state) => {
+        form.reset()
+        onOpenChange(state)
+      }}
+      modal={false}
+    >
+      <DialogContent className='sm:max-w-2xl max-h-[90vh] overflow-y-auto' onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className='text-start'>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>Export Brands</DialogTitle>
           <DialogDescription>
-            Choose export format and method.
+            Select export format, method, and columns to export.
+            {ids.length > 0 && ` ${ids.length} brand${ids.length > 1 ? 's' : ''} selected.`}
           </DialogDescription>
         </DialogHeader>
         <form
-          id='export-form'
+          id='brand-export-form'
           onSubmit={form.handleSubmit(onSubmit)}
           className='space-y-4'
         >
@@ -107,7 +154,7 @@ export function ExportDialog({
                     <div className='flex items-center space-x-2'>
                       <RadioGroupItem value='excel' id='format-excel' />
                       <label htmlFor='format-excel' className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
-                        Excel
+                        Excel (XLSX)
                       </label>
                     </div>
                     <div className='flex items-center space-x-2'>
@@ -121,6 +168,7 @@ export function ExportDialog({
                 </Field>
               )}
             />
+            
             <Controller
               control={form.control}
               name='method'
@@ -154,6 +202,7 @@ export function ExportDialog({
                 </Field>
               )}
             />
+
             {method === 'email' && (
               <Controller
                 control={form.control}
@@ -192,18 +241,76 @@ export function ExportDialog({
                 }}
               />
             )}
+
+            <Controller
+              control={form.control}
+              name='columns'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <FieldLabel>Select Columns *</FieldLabel>
+                    <div className='flex gap-2'>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        onClick={handleSelectAll}
+                      >
+                        Select All
+                      </Button>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        onClick={handleDeselectAll}
+                      >
+                        Deselect All
+                      </Button>
+                    </div>
+                  </div>
+                  <div className='grid grid-cols-2 gap-3 rounded-md border p-3 max-h-60 overflow-y-auto'>
+                    {AVAILABLE_COLUMNS.map((column) => (
+                      <div key={column.value} className='flex items-center space-x-2'>
+                        <Checkbox
+                          id={`column-${column.value}`}
+                          checked={field.value?.includes(column.value) || false}
+                          onCheckedChange={(checked) => {
+                            const currentColumns = field.value || []
+                            if (checked) {
+                              field.onChange([...currentColumns, column.value])
+                            } else {
+                              field.onChange(currentColumns.filter((col) => col !== column.value))
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`column-${column.value}`}
+                          className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer'
+                        >
+                          {column.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <FieldDescription>
+                    Select the columns you want to include in the export
+                  </FieldDescription>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
           </FieldGroup>
         </form>
-        <DialogFooter>
-          <Button variant='outline' onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+        <DialogFooter className='gap-y-2'>
+          <DialogClose asChild>
+            <Button variant='outline'>Cancel</Button>
+          </DialogClose>
           <Button
             type='submit'
-            form='export-form'
-            disabled={isExporting}
+            form='brand-export-form'
+            disabled={exportBrands.isPending || isLoadingUsers}
           >
-            {isExporting ? (
+            {exportBrands.isPending ? (
               <>
                 <Spinner className='mr-2 size-4' />
                 Exporting...
