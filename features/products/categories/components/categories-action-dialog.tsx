@@ -52,7 +52,7 @@ const categorySchema = z.object({
   short_description: z.string().max(1000).optional().nullable(),
   page_title: z.string().max(255).optional().nullable(),
   image: z.array(z.custom<File>()).max(1, 'Please select only one image').optional(),
-  icon: z.string().max(255).optional().nullable(),
+  icon: z.array(z.custom<File>()).max(1, 'Please select only one icon').optional(),
   parent_id: z.number().nullable().optional(),
   is_active: z.boolean(),
   featured: z.boolean(),
@@ -80,32 +80,32 @@ export function CategoriesActionDialog({
   const form = useForm<z.infer<typeof categorySchema>>({
     resolver: zodResolver(categorySchema),
     defaultValues: isEdit
-      ? {
-          name: currentRow.name,
-          slug: currentRow.slug || '',
-          short_description: currentRow.short_description || '',
-          page_title: currentRow.page_title || '',
-          image: [],
-          icon: currentRow.icon || '',
-          parent_id: currentRow.parent_id || null,
-          is_active: currentRow.is_active,
-          featured: currentRow.featured,
-          is_sync_disable: currentRow.is_sync_disable,
-          woocommerce_category_id: currentRow.woocommerce_category_id || null,
-        }
-      : {
-          name: '',
-          slug: '',
-          short_description: '',
-          page_title: '',
-          image: [],
-          icon: '',
-          parent_id: null,
-          is_active: true,
-          featured: false,
-          is_sync_disable: false,
-          woocommerce_category_id: null,
-        },
+        ? {
+            name: currentRow.name,
+            slug: currentRow.slug || '',
+            short_description: currentRow.short_description || '',
+            page_title: currentRow.page_title || '',
+            image: [],
+            icon: [],
+            parent_id: currentRow.parent_id || null,
+            is_active: currentRow.is_active,
+            featured: currentRow.featured,
+            is_sync_disable: currentRow.is_sync_disable,
+            woocommerce_category_id: currentRow.woocommerce_category_id || null,
+          }
+        : {
+            name: '',
+            slug: '',
+            short_description: '',
+            page_title: '',
+            image: [],
+            icon: [],
+            parent_id: null,
+            is_active: true,
+            featured: false,
+            is_sync_disable: false,
+            woocommerce_category_id: null,
+          },
   })
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export function CategoriesActionDialog({
         short_description: currentRow.short_description || '',
         page_title: currentRow.page_title || '',
         image: [],
-        icon: currentRow.icon || '',
+        icon: [],
         parent_id: currentRow.parent_id || null,
         is_active: currentRow.is_active,
         featured: currentRow.featured,
@@ -130,7 +130,7 @@ export function CategoriesActionDialog({
         short_description: '',
         page_title: '',
         image: [],
-        icon: '',
+        icon: [],
         parent_id: null,
         is_active: true,
         featured: false,
@@ -149,7 +149,9 @@ export function CategoriesActionDialog({
     if (data.image && data.image.length > 0) {
       formData.append('image', data.image[0])
     }
-    if (data.icon) formData.append('icon', data.icon)
+    if (data.icon && data.icon.length > 0) {
+      formData.append('icon', data.icon[0])
+    }
     if (data.parent_id !== null && data.parent_id !== undefined) {
       formData.append('parent_id', String(data.parent_id))
     }
@@ -318,23 +320,89 @@ export function CategoriesActionDialog({
               <Controller
                 control={form.control}
                 name='icon'
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel htmlFor='category-icon'>Icon</FieldLabel>
-                    <Input
-                      id='category-icon'
-                      placeholder='Icon class or identifier'
-                      autoComplete='off'
-                      {...field}
-                      value={field.value || ''}
-                      data-invalid={!!fieldState.error}
-                    />
-                    <FieldDescription>
-                      Icon class name or identifier (e.g., fa fa-electronics)
-                    </FieldDescription>
-                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                  </Field>
-                )}
+                render={({ field: { onChange, value, ...field }, fieldState }) => {
+                  const existingIconUrl = isEdit && currentRow?.icon_url ? currentRow.icon_url : null
+                  const hasNewIcon = value && value.length > 0
+                  
+                  return (
+                    <Field>
+                      <FieldLabel htmlFor='category-icon'>Icon</FieldLabel>
+                      {existingIconUrl && !hasNewIcon && (
+                        <div className='mb-3 flex items-center gap-3 rounded-md border p-3'>
+                          <div className='relative size-16 overflow-hidden rounded-md'>
+                            <ImageZoom
+                              backdropClassName={cn(
+                                resolvedTheme === 'dark'
+                                  ? '[&_[data-rmiz-modal-overlay="visible"]]:bg-white/80'
+                                  : '[&_[data-rmiz-modal-overlay="visible"]]:bg-black/80'
+                              )}
+                            >
+                              <Image
+                                src={existingIconUrl}
+                                alt={currentRow?.name || 'Category icon'}
+                                width={64}
+                                height={64}
+                                className='object-cover'
+                                unoptimized
+                              />
+                            </ImageZoom>
+                          </div>
+                          <div className='flex-1'>
+                            <p className='text-sm font-medium'>Current Icon</p>
+                            <p className='text-xs text-muted-foreground'>
+                              Upload a new icon to replace this one
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      <FileUpload
+                        value={value || []}
+                        onValueChange={onChange}
+                        accept='image/*'
+                        maxFiles={1}
+                        maxSize={5 * 1024 * 1024}
+                        onFileReject={(_, message) => {
+                          form.setError('icon', {
+                            message,
+                          })
+                        }}
+                      >
+                        <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                          <HugeiconsIcon icon={CloudUploadIcon} className='size-4' />
+                          Drag and drop or
+                          <FileUploadTrigger asChild>
+                            <Button variant='link' size='sm' className='p-0'>
+                              choose file
+                            </Button>
+                          </FileUploadTrigger>
+                          to upload
+                        </FileUploadDropzone>
+                        <FileUploadList>
+                          {value?.map((file, index) => (
+                            <FileUploadItem key={index} value={file}>
+                              <FileUploadItemPreview />
+                              <FileUploadItemMetadata />
+                              <FileUploadItemDelete asChild>
+                                <Button
+                                  variant='ghost'
+                                  size='icon'
+                                  className='size-7'
+                                >
+                                  <HugeiconsIcon icon={CancelCircleIcon} className='size-4' />
+                                  <span className='sr-only'>Delete</span>
+                                </Button>
+                              </FileUploadItemDelete>
+                            </FileUploadItem>
+                          ))}
+                        </FileUploadList>
+                      </FileUpload>
+                      <FieldDescription>
+                        Icon image file. JPEG, PNG, JPG, GIF, or WebP. Max 5MB.
+                      </FieldDescription>
+                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                    </Field>
+                  )
+                }}
               />
               <Controller
                 control={form.control}

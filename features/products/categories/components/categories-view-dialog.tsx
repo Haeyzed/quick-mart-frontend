@@ -88,10 +88,27 @@ export function CategoriesViewDialog({
               </div>
             )}
 
-            {currentRow.icon && (
+            {currentRow.icon_url && (
               <div className='space-y-2'>
                 <div className='text-sm font-medium text-muted-foreground'>Icon</div>
-                <div className='text-sm'>{currentRow.icon}</div>
+                <div className='relative h-32 w-32 overflow-hidden rounded-md border'>
+                  <ImageZoom
+                    backdropClassName={cn(
+                      resolvedTheme === 'dark'
+                        ? '[&_[data-rmiz-modal-overlay="visible"]]:bg-white/80'
+                        : '[&_[data-rmiz-modal-overlay="visible"]]:bg-black/80'
+                    )}
+                  >
+                    <Image
+                      src={currentRow.icon_url}
+                      alt={currentRow.name}
+                      width={128}
+                      height={128}
+                      className='h-full w-full object-cover'
+                      unoptimized
+                    />
+                  </ImageZoom>
+                </div>
               </div>
             )}
 

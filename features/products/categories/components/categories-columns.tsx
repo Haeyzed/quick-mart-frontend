@@ -76,15 +76,16 @@ export const categoriesColumns: ColumnDef<Category>[] = [
             src={row.original.image_url}
             alt={row.original.name}
           />
+        ) : row.original.icon_url ? (
+          <ImageZoomCell
+            src={row.original.icon_url}
+            alt={row.original.name}
+          />
         ) : (
           <div className='flex size-10 items-center justify-center rounded-md bg-muted'>
-            {row.original.icon ? (
-              <span className='text-xs'>{row.original.icon}</span>
-            ) : (
-              <span className='text-xs font-medium'>
-                {row.original.name.charAt(0).toUpperCase()}
-              </span>
-            )}
+            <span className='text-xs font-medium'>
+              {row.original.name.charAt(0).toUpperCase()}
+            </span>
           </div>
         )}
         <LongText className='max-w-36'>{row.getValue('name')}</LongText>

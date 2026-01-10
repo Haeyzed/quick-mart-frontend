@@ -9,6 +9,7 @@ export const categorySchema = z.object({
   image: z.string().nullable(),
   image_url: z.string().nullable(),
   icon: z.string().nullable(),
+  icon_url: z.string().nullable(),
   parent_id: z.number().nullable(),
   parent_name: z.string().nullable(),
   is_active: z.boolean(),
