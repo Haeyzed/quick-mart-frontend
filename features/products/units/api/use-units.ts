@@ -81,24 +81,18 @@ export function useBaseUnits() {
 
 export function useCreateUnit() {
   const queryClient = useQueryClient()
-  const { post } = useApiClient()
+  const { postFormData } = useApiClient()
 
   return useMutation({
-    mutationFn: async (data: Record<string, unknown>) => {
-      const response = await post<Unit>('/units', data, {
-        responseType: 'json',
-      })
-      // Type guard: if response is Blob, it won't have data property
-      if ('data' in response && response.data) {
+    mutationFn: async (data: FormData) => {
+      const response = await postFormData<Unit>('/units', data)
+      if (response.data) {
         return {
           data: unitSchema.parse(response.data),
           message: response.message,
         }
       }
-      if ('message' in response) {
-        throw new Error(response.message || 'Failed to create unit')
-      }
-      throw new Error('Failed to create unit')
+      throw new Error(response.message || 'Failed to create unit')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['units'] })
@@ -108,11 +102,13 @@ export function useCreateUnit() {
 
 export function useUpdateUnit() {
   const queryClient = useQueryClient()
-  const { put } = useApiClient()
+  const { postFormData } = useApiClient()
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Record<string, unknown> }) => {
-      const response = await put<Unit>(`/units/${id}`, data)
+    mutationFn: async ({ id, data }: { id: number; data: FormData }) => {
+      // Use PUT with FormData for updates - Laravel expects _method=PUT in FormData
+      data.append('_method', 'PUT')
+      const response = await postFormData<Unit>(`/units/${id}`, data)
       if (response.data) {
         return {
           data: unitSchema.parse(response.data),

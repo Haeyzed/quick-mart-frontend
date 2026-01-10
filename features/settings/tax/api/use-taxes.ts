@@ -64,11 +64,11 @@ export function useTax(id: number) {
 
 export function useCreateTax() {
   const queryClient = useQueryClient()
-  const { post } = useApiClient()
+  const { postFormData } = useApiClient()
 
   return useMutation({
-    mutationFn: async (data: Record<string, unknown>) => {
-      const response = await post<Tax>('/taxes', data)
+    mutationFn: async (data: FormData) => {
+      const response = await postFormData<Tax>('/taxes', data)
       if (response.data) {
         return {
           data: taxSchema.parse(response.data),
@@ -85,11 +85,13 @@ export function useCreateTax() {
 
 export function useUpdateTax() {
   const queryClient = useQueryClient()
-  const { put } = useApiClient()
+  const { postFormData } = useApiClient()
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Record<string, unknown> }) => {
-      const response = await put<Tax>(`/taxes/${id}`, data)
+    mutationFn: async ({ id, data }: { id: number; data: FormData }) => {
+      // Use PUT with FormData for updates - Laravel expects _method=PUT in FormData
+      data.append('_method', 'PUT')
+      const response = await postFormData<Tax>(`/taxes/${id}`, data)
       if (response.data) {
         return {
           data: taxSchema.parse(response.data),

@@ -88,26 +88,27 @@ export function UnitsActionDialog({ currentRow, open, onOpenChange }: UnitsActio
   }, [currentRow, form, open])
 
   const onSubmit = async (data: z.infer<typeof unitSchema>) => {
-    const payload: Record<string, unknown> = {
-      code: data.code,
-      name: data.name,
-      is_active: data.is_active,
-    }
+    const formData = new FormData()
+    formData.append('code', data.code)
+    formData.append('name', data.name)
+    formData.append('is_active', String(data.is_active))
 
-    if (data.base_unit) {
-      payload.base_unit = data.base_unit
-      if (data.operator) payload.operator = data.operator
+    if (data.base_unit !== null && data.base_unit !== undefined) {
+      formData.append('base_unit', String(data.base_unit))
+      if (data.operator) {
+        formData.append('operator', data.operator)
+      }
       if (data.operation_value !== null && data.operation_value !== undefined) {
-        payload.operation_value = data.operation_value
+        formData.append('operation_value', String(data.operation_value))
       }
     }
 
     try {
       let response
       if (isEdit && currentRow) {
-        response = await updateUnit.mutateAsync({ id: currentRow.id, data: payload })
+        response = await updateUnit.mutateAsync({ id: currentRow.id, data: formData })
       } else {
-        response = await createUnit.mutateAsync(payload)
+        response = await createUnit.mutateAsync(formData)
       }
 
       const message = (response as any)?.message || (isEdit ? "Unit updated successfully" : "Unit created successfully")

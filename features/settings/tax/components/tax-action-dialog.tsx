@@ -76,22 +76,21 @@ export function TaxesActionDialog({ currentRow, open, onOpenChange }: TaxesActio
   }, [currentRow, form, open])
 
   const onSubmit = async (data: z.infer<typeof taxSchema>) => {
-    const payload: Record<string, unknown> = {
-      name: data.name,
-      rate: data.rate,
-      is_active: data.is_active,
-    }
+    const formData = new FormData()
+    formData.append('name', data.name)
+    formData.append('rate', String(data.rate))
+    formData.append('is_active', String(data.is_active))
 
     if (data.woocommerce_tax_id !== null && data.woocommerce_tax_id !== undefined) {
-      payload.woocommerce_tax_id = data.woocommerce_tax_id
+      formData.append('woocommerce_tax_id', String(data.woocommerce_tax_id))
     }
 
     try {
       let response
       if (isEdit && currentRow) {
-        response = await updateTax.mutateAsync({ id: currentRow.id, data: payload })
+        response = await updateTax.mutateAsync({ id: currentRow.id, data: formData })
       } else {
-        response = await createTax.mutateAsync(payload)
+        response = await createTax.mutateAsync(formData)
       }
 
       const message = (response as any)?.message || (isEdit ? "Tax updated successfully" : "Tax created successfully")
