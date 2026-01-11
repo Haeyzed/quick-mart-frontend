@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table'
 import { DataTablePagination, DataTableToolbar } from '@/components/data-table'
 import { DataTableSkeleton } from '@/components/data-table/data-table-skeleton'
-import { activeStatuses, productTypes, stockFilters } from '../data/data'
+import { activeStatuses, productTypes } from '../data/data'
 import { useProducts } from '../api/use-products'
 import { DataTableBulkActions } from './data-table-bulk-actions'
 import { productsColumns as columns } from './products-columns'
@@ -178,14 +178,6 @@ export function ProductsTable() {
             options: activeStatuses.map((status) => ({
               label: status.label,
               value: status.value,
-            })),
-          },
-          {
-            columnId: 'stock_filter',
-            title: 'Stock',
-            options: stockFilters.map((filter) => ({
-              label: filter.label,
-              value: filter.value,
             })),
           },
         ]}

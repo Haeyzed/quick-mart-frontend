@@ -15,7 +15,6 @@ export const productVariantSchema = z.object({
 // Brand schema - matches ProductResource (uses title, but API might return null if not loaded properly)
 export const brandSchema = z.object({
   id: z.number(),
-  title: z.string().nullable().optional(), // Handle null when not loaded or wrong field name
   name: z.string().nullable().optional(), // Also handle name in case API returns it
 }).passthrough() // Allow extra fields
 
@@ -28,8 +27,6 @@ export const categorySchema = z.object({
 // Unit schema - matches ProductResource (uses unit_name/unit_code, but API might return null if not loaded properly)
 export const unitSchema = z.object({
   id: z.number(),
-  unit_name: z.string().nullable().optional(), // Handle null when not loaded or wrong field name
-  unit_code: z.string().nullable().optional(),
   name: z.string().nullable().optional(), // Also handle name in case API returns it
   code: z.string().nullable().optional(), // Also handle code in case API returns it
 }).passthrough() // Allow extra fields
