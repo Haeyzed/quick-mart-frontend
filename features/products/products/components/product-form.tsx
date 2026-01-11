@@ -635,11 +635,13 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         {/* Pricing & Units - Only for standard, combo, service */}
         {(productType === 'standard' || productType === 'combo' || productType === 'service') && (
           <>
-              {productType !== 'combo' && (
-                <>
+            {productType !== 'combo' && (
+              <>
+                {/* Row 3: Product Unit, Sale Unit, Purchase Unit */}
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
                   <Field>
                     <FieldLabel>
-                      Unit <span className='text-destructive'>*</span>
+                      Product Unit <span className='text-destructive'>*</span>
                     </FieldLabel>
                     <Controller
                       control={form.control}
@@ -667,68 +669,66 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     <FieldError>{form.formState.errors.unit_id?.message}</FieldError>
                   </Field>
 
-                  {/* Purchase and Sale Units */}
-                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                    <Field>
-                      <FieldLabel>Purchase Unit</FieldLabel>
-                      <Controller
-                        control={form.control}
-                        name='purchase_unit_id'
-                        render={({ field }) => (
-                          <Select
-                            value={field.value ? String(field.value) : undefined}
-                            onValueChange={(value) => {
-                              field.onChange(value ? Number(value) : null)
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder='Select purchase unit (optional)' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {units
-                                .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
-                                .map((unit) => (
-                                  <SelectItem key={unit.id} value={unit.id.toString()}>
-                                    {unit.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      <FieldError>{form.formState.errors.purchase_unit_id?.message}</FieldError>
-                    </Field>
+                  <Field>
+                    <FieldLabel>Sale Unit</FieldLabel>
+                    <Controller
+                      control={form.control}
+                      name='sale_unit_id'
+                      render={({ field }) => (
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(value) => {
+                            field.onChange(value ? Number(value) : null)
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select sale unit (optional)' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {units
+                              .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                              .map((unit) => (
+                                <SelectItem key={unit.id} value={unit.id.toString()}>
+                                  {unit.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <FieldError>{form.formState.errors.sale_unit_id?.message}</FieldError>
+                  </Field>
 
-                    <Field>
-                      <FieldLabel>Sale Unit</FieldLabel>
-                      <Controller
-                        control={form.control}
-                        name='sale_unit_id'
-                        render={({ field }) => (
-                          <Select
-                            value={field.value ? String(field.value) : undefined}
-                            onValueChange={(value) => {
-                              field.onChange(value ? Number(value) : null)
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder='Select sale unit (optional)' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {units
-                                .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
-                                .map((unit) => (
-                                  <SelectItem key={unit.id} value={unit.id.toString()}>
-                                    {unit.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      <FieldError>{form.formState.errors.sale_unit_id?.message}</FieldError>
-                    </Field>
-                  </div>
+                  <Field>
+                    <FieldLabel>Purchase Unit</FieldLabel>
+                    <Controller
+                      control={form.control}
+                      name='purchase_unit_id'
+                      render={({ field }) => (
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(value) => {
+                            field.onChange(value ? Number(value) : null)
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select purchase unit (optional)' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {units
+                              .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                              .map((unit) => (
+                                <SelectItem key={unit.id} value={unit.id.toString()}>
+                                  {unit.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <FieldError>{form.formState.errors.purchase_unit_id?.message}</FieldError>
+                  </Field>
+                </div>
 
                   {/* Cost and Profit Margin */}
                   <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
@@ -781,115 +781,114 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     )}
                   </div>
 
-                  {/* Price and Wholesale */}
-                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                    <Field>
-                      <FieldLabel>
-                        Price <span className='text-destructive'>*</span>
-                      </FieldLabel>
-                      <Input
-                        type='number'
-                        step='0.01'
-                        {...form.register('price', { valueAsNumber: true })}
-                        placeholder='0.00'
-                      />
-                      <FieldError>{form.formState.errors.price?.message}</FieldError>
-                    </Field>
+                {/* Row 5: Price, Wholesale Price, Daily Sale Objective */}
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                  <Field>
+                    <FieldLabel>
+                      Price <span className='text-destructive'>*</span>
+                    </FieldLabel>
+                    <Input
+                      type='number'
+                      step='0.01'
+                      {...form.register('price', { valueAsNumber: true })}
+                      placeholder='0.00'
+                    />
+                    <FieldError>{form.formState.errors.price?.message}</FieldError>
+                  </Field>
 
-                    <Field>
-                      <FieldLabel>Wholesale Price</FieldLabel>
-                      <Input
-                        type='number'
-                        step='0.01'
-                        {...form.register('wholesale_price', { valueAsNumber: true })}
-                        placeholder='0.00'
-                      />
-                      <FieldError>{form.formState.errors.wholesale_price?.message}</FieldError>
-                    </Field>
-                  </div>
+                  <Field>
+                    <FieldLabel>Wholesale Price</FieldLabel>
+                    <Input
+                      type='number'
+                      step='0.01'
+                      {...form.register('wholesale_price', { valueAsNumber: true })}
+                      placeholder='0.00'
+                    />
+                    <FieldError>{form.formState.errors.wholesale_price?.message}</FieldError>
+                  </Field>
 
-                  {/* Tax */}
-                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                    <Field>
-                      <FieldLabel>Tax</FieldLabel>
-                      <Controller
-                        control={form.control}
-                        name='tax_id'
-                        render={({ field }) => (
-                          <Select
-                            value={field.value ? String(field.value) : undefined}
-                            onValueChange={(value) => {
-                              field.onChange(value ? Number(value) : null)
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder='Select tax (optional)' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {taxes.map((tax) => (
-                                <SelectItem key={tax.id} value={tax.id.toString()}>
-                                  {tax.name} ({tax.rate}%)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      <FieldError>{form.formState.errors.tax_id?.message}</FieldError>
-                    </Field>
-
-                    <Field>
-                      <FieldLabel>Tax Method</FieldLabel>
-                      <Controller
-                        control={form.control}
-                        name='tax_method'
-                        render={({ field }) => (
-                          <Select
-                            value={field.value?.toString() || '0'}
-                            onValueChange={(value) => field.onChange(parseInt(value))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value='0'>Exclusive</SelectItem>
-                              <SelectItem value='1'>Inclusive</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      <FieldError>{form.formState.errors.tax_method?.message}</FieldError>
-                    </Field>
-                  </div>
-
-                  {/* Alert Quantity and Daily Sale Objective */}
                   {productType === 'standard' && (
-                    <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-                      <Field>
-                        <FieldLabel>Alert Quantity</FieldLabel>
-                        <Input
-                          type='number'
-                          step='0.01'
-                          {...form.register('alert_quantity', { valueAsNumber: true })}
-                          placeholder='0.00'
-                        />
-                        <FieldDescription>Low stock alert threshold</FieldDescription>
-                        <FieldError>{form.formState.errors.alert_quantity?.message}</FieldError>
-                      </Field>
-
-                      <Field>
-                        <FieldLabel>Daily Sale Objective</FieldLabel>
-                        <Input
-                          type='number'
-                          step='0.01'
-                          {...form.register('daily_sale_objective', { valueAsNumber: true })}
-                          placeholder='0.00'
-                        />
-                        <FieldDescription>Minimum quantity to sell per day</FieldDescription>
-                        <FieldError>{form.formState.errors.daily_sale_objective?.message}</FieldError>
-                      </Field>
-                    </div>
+                    <Field>
+                      <FieldLabel>Daily Sale Objective</FieldLabel>
+                      <Input
+                        type='number'
+                        step='0.01'
+                        {...form.register('daily_sale_objective', { valueAsNumber: true })}
+                        placeholder='0.00'
+                      />
+                      <FieldDescription>Minimum quantity to sell per day</FieldDescription>
+                      <FieldError>{form.formState.errors.daily_sale_objective?.message}</FieldError>
+                    </Field>
                   )}
+                </div>
+
+                {/* Row 6: Alert Quantity, Tax, Tax Method */}
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                  {productType === 'standard' && (
+                    <Field>
+                      <FieldLabel>Alert Quantity</FieldLabel>
+                      <Input
+                        type='number'
+                        step='0.01'
+                        {...form.register('alert_quantity', { valueAsNumber: true })}
+                        placeholder='0.00'
+                      />
+                      <FieldDescription>Low stock alert threshold</FieldDescription>
+                      <FieldError>{form.formState.errors.alert_quantity?.message}</FieldError>
+                    </Field>
+                  )}
+
+                  <Field>
+                    <FieldLabel>Tax</FieldLabel>
+                    <Controller
+                      control={form.control}
+                      name='tax_id'
+                      render={({ field }) => (
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(value) => {
+                            field.onChange(value ? Number(value) : null)
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select tax (optional)' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {taxes.map((tax) => (
+                              <SelectItem key={tax.id} value={tax.id.toString()}>
+                                {tax.name} ({tax.rate}%)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <FieldError>{form.formState.errors.tax_id?.message}</FieldError>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Tax Method</FieldLabel>
+                    <Controller
+                      control={form.control}
+                      name='tax_method'
+                      render={({ field }) => (
+                        <Select
+                          value={field.value?.toString() || '0'}
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='0'>Exclusive</SelectItem>
+                            <SelectItem value='1'>Inclusive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <FieldError>{form.formState.errors.tax_method?.message}</FieldError>
+                  </Field>
+                </div>
                 </>
               )}
           </>
