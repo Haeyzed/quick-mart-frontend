@@ -605,14 +605,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   name='brand_id'
                   render={({ field }) => (
                     <Select
-                      value={field.value?.toString() || ''}
-                      onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                      value={field.value ? String(field.value) : undefined}
+                      onValueChange={(value) => {
+                        field.onChange(value ? Number(value) : null)
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder='Select brand (optional)' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value=''>None</SelectItem>
                         {brands.map((brand) => (
                           <SelectItem key={brand.id} value={brand.id.toString()}>
                             {brand.name}
@@ -679,14 +680,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         name='purchase_unit_id'
                         render={({ field }) => (
                           <Select
-                            value={field.value?.toString() || ''}
-                            onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                            value={field.value ? String(field.value) : undefined}
+                            onValueChange={(value) => {
+                              field.onChange(value ? Number(value) : null)
+                            }}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder='Select purchase unit (optional)' />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value=''>None</SelectItem>
                               {units
                                 .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
                                 .map((unit) => (
@@ -708,14 +710,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         name='sale_unit_id'
                         render={({ field }) => (
                           <Select
-                            value={field.value?.toString() || ''}
-                            onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                            value={field.value ? String(field.value) : undefined}
+                            onValueChange={(value) => {
+                              field.onChange(value ? Number(value) : null)
+                            }}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder='Select sale unit (optional)' />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value=''>None</SelectItem>
                               {units
                                 .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
                                 .map((unit) => (
@@ -818,14 +821,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         name='tax_id'
                         render={({ field }) => (
                           <Select
-                            value={field.value?.toString() || ''}
-                            onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                            value={field.value ? String(field.value) : undefined}
+                            onValueChange={(value) => {
+                              field.onChange(value ? Number(value) : null)
+                            }}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder='Select tax (optional)' />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value=''>No Tax</SelectItem>
                               {taxes.map((tax) => (
                                 <SelectItem key={tax.id} value={tax.id.toString()}>
                                   {tax.name} ({tax.rate}%)
@@ -1541,14 +1545,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 name='kitchen_id'
                 render={({ field }) => (
                   <Select
-                    value={field.value?.toString() || ''}
-                    onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                    value={field.value ? String(field.value) : undefined}
+                    onValueChange={(value) => {
+                      field.onChange(value ? Number(value) : null)
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder='Select kitchen (optional)' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value=''>None</SelectItem>
                       {/* TODO: Add kitchen API integration when available */}
                       <div className='px-2 py-1.5 text-sm text-muted-foreground'>
                         Kitchen selection coming soon. Requires kitchen API integration.
