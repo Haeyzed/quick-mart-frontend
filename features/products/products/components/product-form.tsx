@@ -1,0 +1,1522 @@
+"use client"
+
+import { useEffect } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldError,
+  FieldDescription,
+} from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  FileUpload,
+  FileUploadDropzone,
+  FileUploadItem,
+  FileUploadItemDelete,
+  FileUploadItemMetadata,
+  FileUploadItemPreview,
+  FileUploadList,
+  FileUploadTrigger,
+} from '@/components/ui/file-upload'
+import { useCreateProduct, useUpdateProduct, useProduct } from '../api/use-products'
+import { useBrands } from '../../brands/api/use-brands'
+import { useCategories } from '../../categories/api/use-categories'
+import { useUnits } from '../../units/api/use-units'
+import { useTaxes } from '../../../settings/tax/api/use-taxes'
+import { toast } from 'sonner'
+import { handleApiError } from '@/lib/handle-api-error'
+import { type Product } from '../data/schema'
+import { Spinner } from '@/components/ui/spinner'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+
+// Form schema - simplified for now, will expand
+const productFormSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
+  code: z.string().min(1, 'Code is required').max(255, 'Code is too long'),
+  type: z.enum(['standard', 'combo', 'digital', 'service']),
+  barcode_symbology: z.string().optional(),
+  brand_id: z.number().nullable().optional(),
+  category_id: z.number().min(1, 'Category is required'),
+  unit_id: z.number().min(1, 'Unit is required').optional(),
+  purchase_unit_id: z.number().nullable().optional(),
+  sale_unit_id: z.number().nullable().optional(),
+  cost: z.number().min(0, 'Cost must be positive').optional(),
+  profit_margin: z.number().min(0).optional(),
+  profit_margin_type: z.enum(['percentage', 'fixed']).optional(),
+  price: z.number().min(0, 'Price must be positive'),
+  wholesale_price: z.number().min(0).optional(),
+  alert_quantity: z.number().min(0).optional(),
+  daily_sale_objective: z.number().min(0).optional(),
+  promotion: z.boolean().optional(),
+  promotion_price: z.number().min(0).optional(),
+  starting_date: z.string().optional(),
+  last_date: z.string().optional(),
+  tax_id: z.number().nullable().optional(),
+  tax_method: z.number().optional(),
+  image: z.array(z.custom<File>()).optional(),
+  prev_img: z.array(z.string()).optional(), // For existing images during update
+  file: z.custom<File>().optional(),
+  is_embeded: z.boolean().optional(),
+  is_batch: z.boolean().optional(),
+  is_variant: z.boolean().optional(),
+  is_diffPrice: z.boolean().optional(),
+  is_imei: z.boolean().optional(),
+  featured: z.boolean().optional(),
+  product_details: z.string().optional(),
+  short_description: z.string().optional(),
+  specification: z.string().optional(),
+  related_products: z.string().optional(),
+  is_addon: z.boolean().optional(),
+  extras: z.string().optional(),
+  menu_type: z.array(z.number()).optional(),
+  is_active: z.boolean().optional(),
+  is_online: z.boolean().optional(),
+  kitchen_id: z.number().nullable().optional(),
+  in_stock: z.boolean().optional(),
+  track_inventory: z.boolean().optional(),
+  is_sync_disable: z.boolean().optional(),
+  tags: z.string().optional(),
+  meta_title: z.string().optional(),
+  meta_description: z.string().optional(),
+  warranty: z.number().min(0).optional(),
+  guarantee: z.number().min(0).optional(),
+  warranty_type: z.enum(['days', 'months', 'years']).optional(),
+  guarantee_type: z.enum(['days', 'months', 'years']).optional(),
+  production_cost: z.number().min(0).optional(),
+  is_recipe: z.boolean().optional(),
+  // Initial stock
+  is_initial_stock: z.boolean().optional(),
+  stock_warehouse_id: z.array(z.number()).optional(),
+  stock: z.array(z.number()).optional(),
+  // Variants
+  variant_option: z.array(z.string()).optional(),
+  variant_value: z.array(z.string()).optional(),
+  variant_name: z.array(z.string()).optional(),
+  item_code: z.array(z.string()).optional(),
+  additional_cost: z.array(z.number()).optional(),
+  additional_price: z.array(z.number()).optional(),
+  // Differential pricing
+  warehouse_id: z.array(z.number()).optional(),
+  diff_price: z.array(z.number()).optional(),
+  // Combo products
+  product_id: z.array(z.number()).optional(),
+  product_qty: z.array(z.number()).optional(),
+  unit_price: z.array(z.number()).optional(),
+  wastage_percent: z.string().optional(),
+  combo_unit_id: z.string().optional(),
+}).refine((data) => {
+  // If cost is required for standard products
+  if (data.type === 'standard' && data.cost === undefined) {
+    return false
+  }
+  return true
+}, {
+  message: 'Cost is required for standard products',
+  path: ['cost'],
+})
+
+type ProductFormProps = {
+  productId?: number
+  onSuccess?: () => void
+}
+
+export function ProductForm({ productId, onSuccess }: ProductFormProps) {
+  const router = useRouter()
+  const isEdit = !!productId
+  const createProduct = useCreateProduct()
+  const updateProduct = useUpdateProduct()
+  
+  // Only fetch product if editing
+  const productQuery = useProduct(isEdit && productId ? productId : 0)
+  const product = isEdit ? productQuery.data : undefined
+  const isLoadingProduct = isEdit ? productQuery.isLoading : false
+
+  // Fetch dropdown data
+  const { data: brandsData } = useBrands({ is_active: true, per_page: 100, page: 1 })
+  const { data: categoriesData } = useCategories({ is_active: true, per_page: 100, page: 1 })
+  const { data: unitsData } = useUnits({ is_active: true, per_page: 100, page: 1 })
+  const { data: taxesData } = useTaxes({ is_active: true, per_page: 100, page: 1 })
+
+  const brands = brandsData?.data || []
+  const categories = categoriesData?.data || []
+  const units = unitsData?.data || []
+  const taxes = taxesData?.data || []
+
+  const form = useForm<z.infer<typeof productFormSchema>>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      name: '',
+      code: '',
+      type: 'standard',
+      barcode_symbology: 'EAN13',
+      brand_id: null,
+      category_id: 0,
+      unit_id: undefined,
+      purchase_unit_id: null,
+      sale_unit_id: null,
+      cost: 0,
+      profit_margin: 0,
+      profit_margin_type: 'percentage',
+      price: 0,
+      wholesale_price: undefined,
+      alert_quantity: undefined,
+      daily_sale_objective: undefined,
+      promotion: false,
+      promotion_price: undefined,
+      starting_date: undefined,
+      last_date: undefined,
+      tax_id: null,
+      tax_method: 0,
+      image: [],
+      prev_img: [],
+      file: undefined,
+      is_embeded: false,
+      is_batch: false,
+      is_variant: false,
+      is_diffPrice: false,
+      is_imei: false,
+      featured: false,
+      product_details: undefined,
+      short_description: undefined,
+      specification: undefined,
+      related_products: undefined,
+      is_addon: false,
+      extras: undefined,
+      menu_type: [],
+      is_active: true,
+      is_online: false,
+      kitchen_id: null,
+      in_stock: false,
+      track_inventory: true,
+      is_sync_disable: false,
+      tags: undefined,
+      meta_title: undefined,
+      meta_description: undefined,
+      warranty: undefined,
+      guarantee: undefined,
+      warranty_type: 'months',
+      guarantee_type: 'months',
+      production_cost: undefined,
+      is_recipe: false,
+      is_initial_stock: false,
+      stock_warehouse_id: [],
+      stock: [],
+      variant_option: [],
+      variant_value: [],
+      variant_name: [],
+      item_code: [],
+      additional_cost: [],
+      additional_price: [],
+      warehouse_id: [],
+      diff_price: [],
+      product_id: [],
+      product_qty: [],
+      unit_price: [],
+      wastage_percent: undefined,
+      combo_unit_id: undefined,
+    },
+  })
+
+  const selectedUnitId = form.watch('unit_id')
+
+  // Load product data when editing
+  useEffect(() => {
+    if (isEdit && product) {
+      form.reset({
+        name: product.name,
+        code: product.code,
+        type: product.type,
+        barcode_symbology: product.barcode_symbology || 'EAN13',
+        brand_id: product.brand_id,
+        category_id: product.category_id,
+        unit_id: product.unit_id || undefined,
+        purchase_unit_id: product.purchase_unit_id,
+        sale_unit_id: product.sale_unit_id,
+        cost: product.cost,
+        profit_margin: product.profit_margin || 0,
+        profit_margin_type: (product.profit_margin_type as 'percentage' | 'fixed') || 'percentage',
+        price: product.price,
+        wholesale_price: product.wholesale_price || undefined,
+        alert_quantity: product.alert_quantity || undefined,
+        daily_sale_objective: product.daily_sale_objective || undefined,
+        promotion: product.promotion || false,
+        promotion_price: product.promotion_price || undefined,
+        starting_date: product.starting_date || undefined,
+        last_date: product.last_date || undefined,
+        tax_id: product.tax_id,
+        tax_method: product.tax_method || 0,
+        image: [],
+        prev_img: product.image || [],
+        file: undefined,
+        is_embeded: product.is_embeded || false,
+        is_batch: product.is_batch,
+        is_variant: product.is_variant,
+        is_diffPrice: product.is_diffPrice,
+        is_imei: product.is_imei,
+        featured: product.featured || false,
+        product_details: product.product_details || undefined,
+        short_description: product.short_description || undefined,
+        specification: product.specification || undefined,
+        related_products: product.related_products || undefined,
+        is_addon: product.is_addon || false,
+        extras: product.extras || undefined,
+        menu_type: product.menu_type || [],
+        is_active: product.is_active,
+        is_online: product.is_online || false,
+        kitchen_id: product.kitchen_id,
+        in_stock: product.in_stock || false,
+        track_inventory: product.track_inventory,
+        is_sync_disable: product.is_sync_disable || false,
+        tags: product.tags || undefined,
+        meta_title: product.meta_title || undefined,
+        meta_description: product.meta_description || undefined,
+        warranty: product.warranty || undefined,
+        guarantee: product.guarantee || undefined,
+        warranty_type: (product.warranty_type as 'days' | 'months' | 'years') || 'months',
+        guarantee_type: (product.guarantee_type as 'days' | 'months' | 'years') || 'months',
+        production_cost: product.production_cost || undefined,
+        is_recipe: product.is_recipe || false,
+        is_initial_stock: false,
+        stock_warehouse_id: [],
+        stock: [],
+        variant_option: product.variant_option || [],
+        variant_value: product.variant_value || [],
+        variant_name: product.variant_name || [],
+        item_code: product.item_code || [],
+        additional_cost: product.additional_cost || [],
+        additional_price: product.additional_price || [],
+        warehouse_id: product.warehouse_id || [],
+        diff_price: product.diff_price || [],
+        product_id: product.product_id || [],
+        product_qty: product.product_qty || [],
+        unit_price: product.unit_price || [],
+        wastage_percent: product.wastage_percent || undefined,
+        combo_unit_id: product.combo_unit_id || undefined,
+      })
+    }
+  }, [isEdit, product, form])
+
+  const onSubmit = async (data: z.infer<typeof productFormSchema>) => {
+    try {
+      const formData = new FormData()
+
+      // Append all form fields
+      formData.append('name', data.name)
+      formData.append('code', data.code)
+      formData.append('type', data.type)
+      if (data.barcode_symbology) formData.append('barcode_symbology', data.barcode_symbology)
+      if (data.brand_id) formData.append('brand_id', data.brand_id.toString())
+      formData.append('category_id', data.category_id.toString())
+      if (data.unit_id) formData.append('unit_id', data.unit_id.toString())
+      if (data.purchase_unit_id) formData.append('purchase_unit_id', data.purchase_unit_id.toString())
+      if (data.sale_unit_id) formData.append('sale_unit_id', data.sale_unit_id.toString())
+      if (data.cost !== undefined) formData.append('cost', data.cost.toString())
+      if (data.profit_margin !== undefined) formData.append('profit_margin', data.profit_margin.toString())
+      if (data.profit_margin_type) formData.append('profit_margin_type', data.profit_margin_type)
+      formData.append('price', data.price.toString())
+      if (data.wholesale_price !== undefined) formData.append('wholesale_price', data.wholesale_price.toString())
+      if (data.alert_quantity !== undefined) formData.append('alert_quantity', data.alert_quantity.toString())
+      if (data.daily_sale_objective !== undefined) formData.append('daily_sale_objective', data.daily_sale_objective.toString())
+      if (data.promotion) formData.append('promotion', '1')
+      if (data.promotion_price !== undefined) formData.append('promotion_price', data.promotion_price.toString())
+      if (data.starting_date) formData.append('starting_date', data.starting_date)
+      if (data.last_date) formData.append('last_date', data.last_date)
+      if (data.tax_id) formData.append('tax_id', data.tax_id.toString())
+      if (data.tax_method !== undefined) formData.append('tax_method', data.tax_method.toString())
+
+      // Handle images
+      if (data.image && data.image.length > 0) {
+        data.image.forEach((file) => {
+          formData.append('image[]', file)
+        })
+      }
+      if (isEdit && data.prev_img && data.prev_img.length > 0) {
+        data.prev_img.forEach((img) => {
+          formData.append('prev_img[]', img)
+        })
+      }
+
+      // Handle file
+      if (data.file) {
+        formData.append('file', data.file)
+      }
+
+      // Handle boolean fields
+      if (data.is_embeded) formData.append('is_embeded', '1')
+      if (data.is_batch) formData.append('is_batch', '1')
+      if (data.is_variant) formData.append('is_variant', '1')
+      if (data.is_diffPrice) formData.append('is_diffPrice', '1')
+      if (data.is_imei) formData.append('is_imei', '1')
+      if (data.featured) formData.append('featured', '1')
+      if (data.is_addon) formData.append('is_addon', '1')
+      if (data.is_active) formData.append('is_active', '1')
+      if (data.is_online) formData.append('is_online', '1')
+      if (data.in_stock) formData.append('in_stock', '1')
+      if (data.track_inventory) formData.append('track_inventory', '1')
+      if (data.is_sync_disable) formData.append('is_sync_disable', '1')
+      if (data.is_recipe) formData.append('is_recipe', '1')
+      if (data.is_initial_stock) formData.append('is_initial_stock', '1')
+
+      // Handle text fields
+      if (data.product_details) formData.append('product_details', data.product_details)
+      if (data.short_description) formData.append('short_description', data.short_description)
+      if (data.specification) formData.append('specification', data.specification)
+      if (data.related_products) formData.append('related_products', data.related_products)
+      if (data.extras) formData.append('extras', data.extras)
+      if (data.tags) formData.append('tags', data.tags)
+      if (data.meta_title) formData.append('meta_title', data.meta_title)
+      if (data.meta_description) formData.append('meta_description', data.meta_description)
+      if (data.warranty !== undefined) formData.append('warranty', data.warranty.toString())
+      if (data.guarantee !== undefined) formData.append('guarantee', data.guarantee.toString())
+      if (data.warranty_type) formData.append('warranty_type', data.warranty_type)
+      if (data.guarantee_type) formData.append('guarantee_type', data.guarantee_type)
+      if (data.production_cost !== undefined) formData.append('production_cost', data.production_cost.toString())
+      if (data.wastage_percent) formData.append('wastage_percent', data.wastage_percent)
+      if (data.combo_unit_id) formData.append('combo_unit_id', data.combo_unit_id)
+
+      // Handle arrays
+      if (data.menu_type && data.menu_type.length > 0) {
+        data.menu_type.forEach((id) => {
+          formData.append('menu_type[]', id.toString())
+        })
+      }
+      if (data.stock_warehouse_id && data.stock_warehouse_id.length > 0) {
+        data.stock_warehouse_id.forEach((id) => {
+          formData.append('stock_warehouse_id[]', id.toString())
+        })
+      }
+      if (data.stock && data.stock.length > 0) {
+        data.stock.forEach((qty) => {
+          formData.append('stock[]', qty.toString())
+        })
+      }
+      if (data.variant_option && data.variant_option.length > 0) {
+        data.variant_option.forEach((option) => {
+          formData.append('variant_option[]', option)
+        })
+      }
+      if (data.variant_value && data.variant_value.length > 0) {
+        data.variant_value.forEach((value) => {
+          formData.append('variant_value[]', value)
+        })
+      }
+      if (data.variant_name && data.variant_name.length > 0) {
+        data.variant_name.forEach((name) => {
+          formData.append('variant_name[]', name)
+        })
+      }
+      if (data.item_code && data.item_code.length > 0) {
+        data.item_code.forEach((code) => {
+          formData.append('item_code[]', code)
+        })
+      }
+      if (data.additional_cost && data.additional_cost.length > 0) {
+        data.additional_cost.forEach((cost) => {
+          formData.append('additional_cost[]', cost.toString())
+        })
+      }
+      if (data.additional_price && data.additional_price.length > 0) {
+        data.additional_price.forEach((price) => {
+          formData.append('additional_price[]', price.toString())
+        })
+      }
+      if (data.warehouse_id && data.warehouse_id.length > 0) {
+        data.warehouse_id.forEach((id) => {
+          formData.append('warehouse_id[]', id.toString())
+        })
+      }
+      if (data.diff_price && data.diff_price.length > 0) {
+        data.diff_price.forEach((price) => {
+          formData.append('diff_price[]', price.toString())
+        })
+      }
+      if (data.product_id && data.product_id.length > 0) {
+        data.product_id.forEach((id) => {
+          formData.append('product_id[]', id.toString())
+        })
+      }
+      if (data.product_qty && data.product_qty.length > 0) {
+        data.product_qty.forEach((qty) => {
+          formData.append('product_qty[]', qty.toString())
+        })
+      }
+      if (data.unit_price && data.unit_price.length > 0) {
+        data.unit_price.forEach((price) => {
+          formData.append('unit_price[]', price.toString())
+        })
+      }
+      if (data.kitchen_id) formData.append('kitchen_id', data.kitchen_id.toString())
+
+      if (isEdit && productId) {
+        await updateProduct.mutateAsync({ id: productId, data: formData })
+      } else {
+        await createProduct.mutateAsync(formData)
+      }
+
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.push('/products')
+      }
+    } catch (error) {
+      handleApiError(error)
+    }
+  }
+
+  if (isEdit && isLoadingProduct) {
+    return (
+      <div className='flex items-center justify-center py-12'>
+        <Spinner />
+      </div>
+    )
+  }
+
+  const productType = form.watch('type')
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+      {/* Basic Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Basic Information</CardTitle>
+          <CardDescription>Enter the basic product details</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <FieldGroup>
+            <Field>
+              <FieldLabel>
+                Product Type <span className='text-destructive'>*</span>
+              </FieldLabel>
+              <Controller
+                control={form.control}
+                name='type'
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select product type' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='standard'>Standard</SelectItem>
+                      <SelectItem value='combo'>Combo</SelectItem>
+                      <SelectItem value='digital'>Digital</SelectItem>
+                      <SelectItem value='service'>Service</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError>{form.formState.errors.type?.message}</FieldError>
+            </Field>
+
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+              <Field>
+                <FieldLabel>
+                  Product Name <span className='text-destructive'>*</span>
+                </FieldLabel>
+                <Input {...form.register('name')} placeholder='Enter product name' />
+                <FieldError>{form.formState.errors.name?.message}</FieldError>
+              </Field>
+
+              <Field>
+                <FieldLabel>
+                  Product Code <span className='text-destructive'>*</span>
+                </FieldLabel>
+                <div className='flex gap-2'>
+                  <Input {...form.register('code')} placeholder='Enter product code' />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={async () => {
+                      // TODO: Implement generate code
+                      toast.info('Generate code feature coming soon')
+                    }}
+                  >
+                    Generate
+                  </Button>
+                </div>
+                <FieldError>{form.formState.errors.code?.message}</FieldError>
+              </Field>
+
+              <Field>
+                <FieldLabel>Barcode Symbology</FieldLabel>
+                <Controller
+                  control={form.control}
+                  name='barcode_symbology'
+                  render={({ field }) => (
+                    <Select value={field.value || 'EAN13'} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='UPCE'>UPC-E</SelectItem>
+                        <SelectItem value='C128'>Code 128</SelectItem>
+                        <SelectItem value='C39'>Code 39</SelectItem>
+                        <SelectItem value='UPCA'>UPC-A</SelectItem>
+                        <SelectItem value='EAN8'>EAN-8</SelectItem>
+                        <SelectItem value='EAN13'>EAN-13</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FieldError>{form.formState.errors.barcode_symbology?.message}</FieldError>
+              </Field>
+
+              <Field>
+                <FieldLabel>
+                  Category <span className='text-destructive'>*</span>
+                </FieldLabel>
+                <Controller
+                  control={form.control}
+                  name='category_id'
+                  render={({ field }) => (
+                    <Select
+                      value={field.value?.toString() || ''}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select category' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FieldError>{form.formState.errors.category_id?.message}</FieldError>
+              </Field>
+
+              <Field>
+                <FieldLabel>Brand</FieldLabel>
+                <Controller
+                  control={form.control}
+                  name='brand_id'
+                  render={({ field }) => (
+                    <Select
+                      value={field.value?.toString() || ''}
+                      onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select brand (optional)' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=''>None</SelectItem>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id.toString()}>
+                            {brand.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FieldError>{form.formState.errors.brand_id?.message}</FieldError>
+              </Field>
+            </div>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      {/* Pricing & Units - Only for standard, combo, service */}
+      {(productType === 'standard' || productType === 'combo' || productType === 'service') && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Pricing & Units</CardTitle>
+            <CardDescription>Set product pricing and unit information</CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <FieldGroup>
+              {productType !== 'combo' && (
+                <>
+                  <Field>
+                    <FieldLabel>
+                      Unit <span className='text-destructive'>*</span>
+                    </FieldLabel>
+                    <Controller
+                      control={form.control}
+                      name='unit_id'
+                      render={({ field }) => (
+                        <Select
+                          value={field.value?.toString() || ''}
+                          onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select unit' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {units.map((unit) => (
+                              <SelectItem key={unit.id} value={unit.id.toString()}>
+                                {unit.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <FieldError>{form.formState.errors.unit_id?.message}</FieldError>
+                  </Field>
+
+                  {/* Purchase and Sale Units */}
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                    <Field>
+                      <FieldLabel>Purchase Unit</FieldLabel>
+                      <Controller
+                        control={form.control}
+                        name='purchase_unit_id'
+                        render={({ field }) => (
+                          <Select
+                            value={field.value?.toString() || ''}
+                            onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select purchase unit (optional)' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value=''>None</SelectItem>
+                              {units
+                                .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                                .map((unit) => (
+                                  <SelectItem key={unit.id} value={unit.id.toString()}>
+                                    {unit.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      <FieldError>{form.formState.errors.purchase_unit_id?.message}</FieldError>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>Sale Unit</FieldLabel>
+                      <Controller
+                        control={form.control}
+                        name='sale_unit_id'
+                        render={({ field }) => (
+                          <Select
+                            value={field.value?.toString() || ''}
+                            onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select sale unit (optional)' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value=''>None</SelectItem>
+                              {units
+                                .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                                .map((unit) => (
+                                  <SelectItem key={unit.id} value={unit.id.toString()}>
+                                    {unit.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      <FieldError>{form.formState.errors.sale_unit_id?.message}</FieldError>
+                    </Field>
+                  </div>
+
+                  {/* Cost and Profit Margin */}
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                    {productType === 'standard' && (
+                      <>
+                        <Field>
+                          <FieldLabel>
+                            Cost <span className='text-destructive'>*</span>
+                          </FieldLabel>
+                          <Input
+                            type='number'
+                            step='0.01'
+                            {...form.register('cost', { valueAsNumber: true })}
+                            placeholder='0.00'
+                          />
+                          <FieldError>{form.formState.errors.cost?.message}</FieldError>
+                        </Field>
+
+                        <Field>
+                          <FieldLabel>Profit Margin Type</FieldLabel>
+                          <Controller
+                            control={form.control}
+                            name='profit_margin_type'
+                            render={({ field }) => (
+                              <Select value={field.value || 'percentage'} onValueChange={field.onChange}>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value='percentage'>Percentage (%)</SelectItem>
+                                  <SelectItem value='fixed'>Fixed</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          <FieldError>{form.formState.errors.profit_margin_type?.message}</FieldError>
+                        </Field>
+
+                        <Field>
+                          <FieldLabel>Profit Margin</FieldLabel>
+                          <Input
+                            type='number'
+                            step='0.01'
+                            {...form.register('profit_margin', { valueAsNumber: true })}
+                            placeholder='0.00'
+                          />
+                          <FieldError>{form.formState.errors.profit_margin?.message}</FieldError>
+                        </Field>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Price and Wholesale */}
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                    <Field>
+                      <FieldLabel>
+                        Price <span className='text-destructive'>*</span>
+                      </FieldLabel>
+                      <Input
+                        type='number'
+                        step='0.01'
+                        {...form.register('price', { valueAsNumber: true })}
+                        placeholder='0.00'
+                      />
+                      <FieldError>{form.formState.errors.price?.message}</FieldError>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>Wholesale Price</FieldLabel>
+                      <Input
+                        type='number'
+                        step='0.01'
+                        {...form.register('wholesale_price', { valueAsNumber: true })}
+                        placeholder='0.00'
+                      />
+                      <FieldError>{form.formState.errors.wholesale_price?.message}</FieldError>
+                    </Field>
+                  </div>
+
+                  {/* Tax */}
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                    <Field>
+                      <FieldLabel>Tax</FieldLabel>
+                      <Controller
+                        control={form.control}
+                        name='tax_id'
+                        render={({ field }) => (
+                          <Select
+                            value={field.value?.toString() || ''}
+                            onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select tax (optional)' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value=''>No Tax</SelectItem>
+                              {taxes.map((tax) => (
+                                <SelectItem key={tax.id} value={tax.id.toString()}>
+                                  {tax.name} ({tax.rate}%)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      <FieldError>{form.formState.errors.tax_id?.message}</FieldError>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>Tax Method</FieldLabel>
+                      <Controller
+                        control={form.control}
+                        name='tax_method'
+                        render={({ field }) => (
+                          <Select
+                            value={field.value?.toString() || '0'}
+                            onValueChange={(value) => field.onChange(parseInt(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='0'>Exclusive</SelectItem>
+                              <SelectItem value='1'>Inclusive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      <FieldError>{form.formState.errors.tax_method?.message}</FieldError>
+                    </Field>
+                  </div>
+
+                  {/* Alert Quantity and Daily Sale Objective */}
+                  {productType === 'standard' && (
+                    <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                      <Field>
+                        <FieldLabel>Alert Quantity</FieldLabel>
+                        <Input
+                          type='number'
+                          step='0.01'
+                          {...form.register('alert_quantity', { valueAsNumber: true })}
+                          placeholder='0.00'
+                        />
+                        <FieldDescription>Low stock alert threshold</FieldDescription>
+                        <FieldError>{form.formState.errors.alert_quantity?.message}</FieldError>
+                      </Field>
+
+                      <Field>
+                        <FieldLabel>Daily Sale Objective</FieldLabel>
+                        <Input
+                          type='number'
+                          step='0.01'
+                          {...form.register('daily_sale_objective', { valueAsNumber: true })}
+                          placeholder='0.00'
+                        />
+                        <FieldDescription>Minimum quantity to sell per day</FieldDescription>
+                        <FieldError>{form.formState.errors.daily_sale_objective?.message}</FieldError>
+                      </Field>
+                    </div>
+                  )}
+                </>
+              )}
+            </FieldGroup>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Promotional Pricing */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Promotional Pricing</CardTitle>
+          <CardDescription>Set promotional pricing for the product</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <FieldGroup>
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Enable Promotion</FieldLabel>
+                  <FieldDescription>Add promotional pricing for this product</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='promotion'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            {form.watch('promotion') && (
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                <Field>
+                  <FieldLabel>Promotional Price</FieldLabel>
+                  <Input
+                    type='number'
+                    step='0.01'
+                    {...form.register('promotion_price', { valueAsNumber: true })}
+                    placeholder='0.00'
+                  />
+                  <FieldError>{form.formState.errors.promotion_price?.message}</FieldError>
+                </Field>
+
+                <Field>
+                  <FieldLabel>Start Date</FieldLabel>
+                  <Input
+                    type='date'
+                    {...form.register('starting_date')}
+                  />
+                  <FieldError>{form.formState.errors.starting_date?.message}</FieldError>
+                </Field>
+
+                <Field>
+                  <FieldLabel>End Date</FieldLabel>
+                  <Input
+                    type='date'
+                    {...form.register('last_date')}
+                  />
+                  <FieldError>{form.formState.errors.last_date?.message}</FieldError>
+                </Field>
+              </div>
+            )}
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      {/* Warranty & Guarantee */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Warranty & Guarantee</CardTitle>
+          <CardDescription>Set warranty and guarantee information</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <FieldGroup>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+              <div className='grid grid-cols-2 gap-2'>
+                <Field>
+                  <FieldLabel>Warranty</FieldLabel>
+                  <Input
+                    type='number'
+                    min='0'
+                    {...form.register('warranty', { valueAsNumber: true })}
+                    placeholder='0'
+                  />
+                  <FieldError>{form.formState.errors.warranty?.message}</FieldError>
+                </Field>
+
+                <Field>
+                  <FieldLabel>Type</FieldLabel>
+                  <Controller
+                    control={form.control}
+                    name='warranty_type'
+                    render={({ field }) => (
+                      <Select value={field.value || 'months'} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='days'>Days</SelectItem>
+                          <SelectItem value='months'>Months</SelectItem>
+                          <SelectItem value='years'>Years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError>{form.formState.errors.warranty_type?.message}</FieldError>
+                </Field>
+              </div>
+
+              <div className='grid grid-cols-2 gap-2'>
+                <Field>
+                  <FieldLabel>Guarantee</FieldLabel>
+                  <Input
+                    type='number'
+                    min='0'
+                    {...form.register('guarantee', { valueAsNumber: true })}
+                    placeholder='0'
+                  />
+                  <FieldError>{form.formState.errors.guarantee?.message}</FieldError>
+                </Field>
+
+                <Field>
+                  <FieldLabel>Type</FieldLabel>
+                  <Controller
+                    control={form.control}
+                    name='guarantee_type'
+                    render={({ field }) => (
+                      <Select value={field.value || 'months'} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='days'>Days</SelectItem>
+                          <SelectItem value='months'>Months</SelectItem>
+                          <SelectItem value='years'>Years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError>{form.formState.errors.guarantee_type?.message}</FieldError>
+                </Field>
+              </div>
+            </div>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      {/* Digital Product File - Only for digital */}
+      {productType === 'digital' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Digital File</CardTitle>
+            <CardDescription>Upload the digital product file</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Field>
+              <FieldLabel>
+                File <span className='text-destructive'>*</span>
+              </FieldLabel>
+              <Controller
+                control={form.control}
+                name='file'
+                render={({ field: { onChange, value, ...field } }) => (
+                  <FileUpload
+                    {...field}
+                    accept='*/*'
+                    value={value ? [value] : []}
+                    onValueChange={(files) => onChange(files[0] || undefined)}
+                    maxFiles={1}
+                  >
+                    <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                      Drag and drop or
+                      <FileUploadTrigger asChild>
+                        <Button type='button' variant='link' size='sm' className='p-0'>
+                          choose file
+                        </Button>
+                      </FileUploadTrigger>
+                      to upload
+                    </FileUploadDropzone>
+                    <FileUploadList>
+                      {value && (
+                        <FileUploadItem key={value.name} value={value}>
+                          <FileUploadItemPreview />
+                          <FileUploadItemMetadata />
+                          <FileUploadItemDelete asChild>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='size-7'
+                            >
+                              ×
+                              <span className='sr-only'>Delete</span>
+                            </Button>
+                          </FileUploadItemDelete>
+                        </FileUploadItem>
+                      )}
+                    </FileUploadList>
+                  </FileUpload>
+                )}
+              />
+              <FieldError>{form.formState.errors.file?.message}</FieldError>
+            </Field>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Images */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Product Images</CardTitle>
+          <CardDescription>Upload product images (multiple images supported)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Field>
+            <FieldLabel>Images</FieldLabel>
+            <Controller
+              control={form.control}
+              name='image'
+              render={({ field: { onChange, value = [], ...field } }) => (
+                <FileUpload
+                  {...field}
+                  accept='image/*'
+                  value={value}
+                  onValueChange={onChange}
+                >
+                  <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                    Drag and drop or
+                    <FileUploadTrigger asChild>
+                      <Button type='button' variant='link' size='sm' className='p-0'>
+                        choose files
+                      </Button>
+                    </FileUploadTrigger>
+                    to upload
+                  </FileUploadDropzone>
+                  <FileUploadList>
+                    {value.map((file, index) => (
+                      <FileUploadItem key={index} value={file}>
+                        <FileUploadItemPreview />
+                        <FileUploadItemMetadata />
+                        <FileUploadItemDelete asChild>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='size-7'
+                          >
+                            ×
+                            <span className='sr-only'>Delete</span>
+                          </Button>
+                        </FileUploadItemDelete>
+                      </FileUploadItem>
+                    ))}
+                  </FileUploadList>
+                </FileUpload>
+              )}
+            />
+            {isEdit && form.watch('prev_img') && form.watch('prev_img')!.length > 0 && (
+              <div className='mt-4 flex gap-2'>
+                {form.watch('prev_img')!.map((img, index) => (
+                  <div key={index} className='relative'>
+                    <img src={img} alt={`Product ${index + 1}`} className='h-20 w-20 rounded object-cover' />
+                    <Button
+                      type='button'
+                      variant='destructive'
+                      size='sm'
+                      className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0'
+                      onClick={() => {
+                        const current = form.getValues('prev_img') || []
+                        form.setValue(
+                          'prev_img',
+                          current.filter((_, i) => i !== index)
+                        )
+                      }}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <FieldError>{form.formState.errors.image?.message}</FieldError>
+          </Field>
+        </CardContent>
+      </Card>
+
+      {/* Additional Options */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Additional Options</CardTitle>
+          <CardDescription>Configure product options and settings</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <FieldGroup>
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Active</FieldLabel>
+                  <FieldDescription>Product will be visible and available</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_active'
+                  render={({ field }) => (
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Featured</FieldLabel>
+                  <FieldDescription>Featured products will be displayed in POS</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='featured'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            {productType === 'standard' && (
+              <>
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>Has Variants</FieldLabel>
+                      <FieldDescription>This product has variants (size, color, etc.)</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_variant'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>Has Batch/Expiry</FieldLabel>
+                      <FieldDescription>This product has batch and expiry dates</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_batch'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>Has IMEI/Serial</FieldLabel>
+                      <FieldDescription>This product has IMEI or serial numbers</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_imei'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+              </>
+            )}
+
+            <Field>
+              <FieldLabel>Product Details</FieldLabel>
+              <Textarea
+                {...form.register('product_details')}
+                placeholder='Enter product details'
+                rows={4}
+              />
+              <FieldError>{form.formState.errors.product_details?.message}</FieldError>
+            </Field>
+
+            <Field>
+              <FieldLabel>Short Description</FieldLabel>
+              <Textarea
+                {...form.register('short_description')}
+                placeholder='Enter short description'
+                rows={3}
+              />
+              <FieldError>{form.formState.errors.short_description?.message}</FieldError>
+            </Field>
+
+            <Field>
+              <FieldLabel>Specification</FieldLabel>
+              <Textarea
+                {...form.register('specification')}
+                placeholder='Enter product specifications'
+                rows={4}
+              />
+              <FieldError>{form.formState.errors.specification?.message}</FieldError>
+            </Field>
+
+            {productType === 'standard' && (
+              <>
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>Embedded Barcode</FieldLabel>
+                      <FieldDescription>Check this if this product will be used in weight scale machine</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_embeded'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>Differential Pricing</FieldLabel>
+                      <FieldDescription>This product has different price for different warehouse</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_diffPrice'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>Initial Stock</FieldLabel>
+                      <FieldDescription>Add initial stock for this product (Note: This feature will not work for product with variants and batches)</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_initial_stock'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+              </>
+            )}
+
+            {productType === 'combo' && (
+              <Field>
+                <FieldLabel>Production Cost</FieldLabel>
+                <Input
+                  type='number'
+                  step='0.01'
+                  {...form.register('production_cost', { valueAsNumber: true })}
+                  placeholder='0.00'
+                />
+                <FieldDescription>Production cost for combo products</FieldDescription>
+                <FieldError>{form.formState.errors.production_cost?.message}</FieldError>
+              </Field>
+            )}
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Sell Online</FieldLabel>
+                  <FieldDescription>Make this product available for online sales</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_online'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>In Stock</FieldLabel>
+                  <FieldDescription>Mark product as in stock</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='in_stock'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Track Inventory</FieldLabel>
+                  <FieldDescription>Track inventory for this product</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='track_inventory'
+                  render={({ field }) => (
+                    <Switch checked={field.value !== false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Disable WooCommerce Sync</FieldLabel>
+                  <FieldDescription>Disable synchronization with WooCommerce</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_sync_disable'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      {/* Initial Stock Section - Only for standard products without variants/batches */}
+      {productType === 'standard' && form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Initial Stock</CardTitle>
+            <CardDescription>Set initial stock for warehouses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Field>
+              <FieldLabel>Warehouse Stock</FieldLabel>
+              <FieldDescription>
+                Note: You will need to fetch warehouses from API. For now, this is a placeholder section.
+                Initial stock management will require warehouse selection.
+              </FieldDescription>
+              {/* TODO: Implement warehouse selection and stock input when warehouse API is available */}
+              <div className='rounded-md border p-4 text-center text-sm text-muted-foreground'>
+                Warehouse stock management coming soon. This requires warehouse API integration.
+              </div>
+            </Field>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* SEO & Additional Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>SEO & Additional Information</CardTitle>
+          <CardDescription>Set SEO fields and additional product information</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Tags</FieldLabel>
+              <Input
+                {...form.register('tags')}
+                placeholder='Enter tags separated by commas'
+              />
+              <FieldDescription>Product tags for search and categorization</FieldDescription>
+              <FieldError>{form.formState.errors.tags?.message}</FieldError>
+            </Field>
+
+            <Field>
+              <FieldLabel>Meta Title</FieldLabel>
+              <Input
+                {...form.register('meta_title')}
+                placeholder='Enter meta title for SEO'
+                maxLength={255}
+              />
+              <FieldError>{form.formState.errors.meta_title?.message}</FieldError>
+            </Field>
+
+            <Field>
+              <FieldLabel>Meta Description</FieldLabel>
+              <Textarea
+                {...form.register('meta_description')}
+                placeholder='Enter meta description for SEO'
+                rows={3}
+                maxLength={1000}
+              />
+              <FieldError>{form.formState.errors.meta_description?.message}</FieldError>
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      {/* Form Actions */}
+      <div className='flex justify-end gap-4'>
+        <Button
+          type='button'
+          variant='outline'
+          onClick={() => router.back()}
+          disabled={createProduct.isPending || updateProduct.isPending}
+        >
+          Cancel
+        </Button>
+        <Button type='submit' disabled={createProduct.isPending || updateProduct.isPending}>
+          {createProduct.isPending || updateProduct.isPending ? (
+            <>
+              <Spinner className='mr-2' />
+              {isEdit ? 'Updating...' : 'Creating...'}
+            </>
+          ) : (
+            <>{isEdit ? 'Update Product' : 'Create Product'}</>
+          )}
+        </Button>
+      </div>
+    </form>
+  )
+}
+
