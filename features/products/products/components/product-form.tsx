@@ -52,7 +52,7 @@ const productFormSchema = z.object({
   sale_unit_id: z.number().nullable().optional(),
   cost: z.number().min(0, 'Cost must be positive').optional(),
   profit_margin: z.number().min(0).optional(),
-  profit_margin_type: z.enum(['percentage', 'fixed']).optional(),
+  profit_margin_type: z.enum(['percentage', 'flat']).optional(),
   price: z.number().min(0, 'Price must be positive'),
   wholesale_price: z.number().min(0).optional(),
   alert_quantity: z.number().min(0).optional(),
@@ -166,7 +166,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       sale_unit_id: null,
       cost: 0,
       profit_margin: 0,
-      profit_margin_type: 'percentage',
+            profit_margin_type: 'percentage' as const,
       price: 0,
       wholesale_price: undefined,
       alert_quantity: undefined,
@@ -244,7 +244,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         sale_unit_id: product.sale_unit_id,
         cost: product.cost,
         profit_margin: product.profit_margin || 0,
-        profit_margin_type: (product.profit_margin_type as 'percentage' | 'fixed') || 'percentage',
+        profit_margin_type: (product.profit_margin_type as 'percentage' | 'flat') || 'percentage',
         price: product.price,
         wholesale_price: product.wholesale_price || undefined,
         alert_quantity: product.alert_quantity || undefined,
@@ -385,7 +385,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       if (data.combo_unit_id) formData.append('combo_unit_id', data.combo_unit_id)
 
       // Handle arrays
-      if (data.menu_type && data.menu_type.length > 0) {
+      if (data.menu_type && Array.isArray(data.menu_type) && data.menu_type.length > 0) {
         data.menu_type.forEach((id) => {
           formData.append('menu_type[]', id.toString())
         })
@@ -656,11 +656,13 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                             <SelectValue placeholder='Select unit' />
                           </SelectTrigger>
                           <SelectContent>
-                            {units.map((unit) => (
-                              <SelectItem key={unit.id} value={unit.id.toString()}>
-                                {unit.name}
-                              </SelectItem>
-                            ))}
+                            {units
+                              .filter((u) => !u.base_unit) // Only show base units (base_unit is null)
+                              .map((unit) => (
+                                <SelectItem key={unit.id} value={unit.id.toString()}>
+                                  {unit.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       )}
@@ -758,7 +760,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value='percentage'>Percentage (%)</SelectItem>
-                                  <SelectItem value='fixed'>Fixed</SelectItem>
+                                  <SelectItem value='flat'>Flat</SelectItem>
                                 </SelectContent>
                               </Select>
                             )}
@@ -1236,6 +1238,22 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 <Field>
                   <div className='flex items-center justify-between'>
                     <div>
+                      <FieldLabel>This is Topping</FieldLabel>
+                      <FieldDescription>Check this if the item is a topping or extra or add-on only to be served with a main course</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_addon'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
                       <FieldLabel>Has Batch/Expiry</FieldLabel>
                       <FieldDescription>This product has batch and expiry dates</FieldDescription>
                     </div>
@@ -1490,6 +1508,96 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 maxLength={1000}
               />
               <FieldError>{form.formState.errors.meta_description?.message}</FieldError>
+            </Field>
+
+            <Field>
+              <FieldLabel>Related Products</FieldLabel>
+              <Textarea
+                {...form.register('related_products')}
+                placeholder='Comma-separated product IDs (e.g., 1,2,3)'
+                rows={2}
+              />
+              <FieldDescription>
+                Enter related product IDs separated by commas. Full product search integration coming soon.
+              </FieldDescription>
+              <FieldError>{form.formState.errors.related_products?.message}</FieldError>
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      {/* Restaurant Module Fields */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Restaurant Settings (Optional)</CardTitle>
+          <CardDescription>Configure restaurant-specific settings for this product</CardDescription>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Kitchen</FieldLabel>
+              <Controller
+                control={form.control}
+                name='kitchen_id'
+                render={({ field }) => (
+                  <Select
+                    value={field.value?.toString() || ''}
+                    onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select kitchen (optional)' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=''>None</SelectItem>
+                      {/* TODO: Add kitchen API integration when available */}
+                      <div className='px-2 py-1.5 text-sm text-muted-foreground'>
+                        Kitchen selection coming soon. Requires kitchen API integration.
+                      </div>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError>{form.formState.errors.kitchen_id?.message}</FieldError>
+            </Field>
+
+            <Field>
+              <FieldLabel>Menu Type</FieldLabel>
+              <Controller
+                control={form.control}
+                name='menu_type'
+                render={({ field }) => (
+                  <Input
+                    value={Array.isArray(field.value) ? field.value.join(',') : ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (!value) {
+                        field.onChange([])
+                      } else {
+                        const ids = value.split(',').map((id) => parseInt(id.trim())).filter((id) => !isNaN(id))
+                        field.onChange(ids)
+                      }
+                    }}
+                    placeholder='Comma-separated menu type IDs (e.g., 1,2,3)'
+                  />
+                )}
+              />
+              <FieldDescription>
+                Enter menu type IDs separated by commas. Full menu type selection coming soon. Requires menu type API integration.
+              </FieldDescription>
+              <FieldError>{form.formState.errors.menu_type?.message}</FieldError>
+            </Field>
+
+            <Field>
+              <FieldLabel>Extras/Add-ons</FieldLabel>
+              <Textarea
+                {...form.register('extras')}
+                placeholder='Comma-separated addon IDs (e.g., 1,2,3)'
+                rows={2}
+              />
+              <FieldDescription>
+                Enter addon/extra product IDs separated by commas. Full addon search integration coming soon.
+              </FieldDescription>
+              <FieldError>{form.formState.errors.extras?.message}</FieldError>
             </Field>
           </FieldGroup>
         </CardContent>

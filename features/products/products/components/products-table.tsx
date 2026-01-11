@@ -141,6 +141,7 @@ export function ProductsTable() {
   }, [pageCount, ensurePageInRange])
 
   if (error) {
+    console.log(error.message)
     toast.error(error.message || 'Failed to load products')
     return null
   }

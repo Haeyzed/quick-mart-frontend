@@ -12,31 +12,34 @@ export const productVariantSchema = z.object({
   position: z.number(),
 })
 
-// Brand schema
+// Brand schema - matches ProductResource (uses title, but API might return null if not loaded properly)
 export const brandSchema = z.object({
   id: z.number(),
-  title: z.string(),
-})
+  title: z.string().nullable().optional(), // Handle null when not loaded or wrong field name
+  name: z.string().nullable().optional(), // Also handle name in case API returns it
+}).passthrough() // Allow extra fields
 
 // Category schema
 export const categorySchema = z.object({
   id: z.number(),
   name: z.string(),
-})
+}).passthrough()
 
-// Unit schema
+// Unit schema - matches ProductResource (uses unit_name/unit_code, but API might return null if not loaded properly)
 export const unitSchema = z.object({
   id: z.number(),
-  unit_name: z.string(),
-  unit_code: z.string(),
-})
+  unit_name: z.string().nullable().optional(), // Handle null when not loaded or wrong field name
+  unit_code: z.string().nullable().optional(),
+  name: z.string().nullable().optional(), // Also handle name in case API returns it
+  code: z.string().nullable().optional(), // Also handle code in case API returns it
+}).passthrough() // Allow extra fields
 
 // Tax schema
 export const taxSchema = z.object({
   id: z.number(),
   name: z.string(),
   rate: z.number(),
-})
+}).passthrough()
 
 export const productSchema = z.object({
   id: z.number(),
@@ -45,17 +48,17 @@ export const productSchema = z.object({
   type: z.enum(['standard', 'combo', 'digital', 'service']),
   slug: z.string().nullable(),
   barcode_symbology: z.string(),
-  brand: brandSchema.nullable(),
+  brand: brandSchema.nullable().optional(),
   brand_id: z.number().nullable(),
-  category: categorySchema.nullable(),
+  category: categorySchema.nullable().optional(),
   category_id: z.number(),
-  unit: unitSchema.nullable(),
+  unit: unitSchema.nullable().optional(),
   unit_id: z.number().nullable(),
   purchase_unit_id: z.number().nullable(),
   sale_unit_id: z.number().nullable(),
   cost: z.number(),
   profit_margin: z.number().nullable(),
-  profit_margin_type: z.enum(['percentage', 'fixed']).nullable(),
+  profit_margin_type: z.enum(['percentage', 'flat']).nullable(),
   price: z.number(),
   wholesale_price: z.number().nullable(),
   qty: z.number().nullable(),
@@ -65,7 +68,7 @@ export const productSchema = z.object({
   promotion_price: z.number().nullable(),
   starting_date: z.string().nullable(),
   last_date: z.string().nullable(),
-  tax: taxSchema.nullable(),
+  tax: taxSchema.nullable().optional(),
   tax_id: z.number().nullable(),
   tax_method: z.number().nullable(), // 0 = exclusive, 1 = inclusive
   image: z.array(z.string()).nullable(),
@@ -88,9 +91,9 @@ export const productSchema = z.object({
   related_products: z.string().nullable(), // Comma-separated product IDs
   is_addon: z.boolean().nullable(),
   extras: z.string().nullable(), // Comma-separated addon IDs
-  menu_type: z.array(z.number()).nullable(), // Array of menu type IDs
-  variant_option: z.array(z.string()).nullable(),
-  variant_value: z.array(z.string()).nullable(),
+  menu_type: z.union([z.string(), z.array(z.number())]).nullable(), // API returns string, form uses array
+  variant_option: z.array(z.string()).nullable().optional(),
+  variant_value: z.array(z.string()).nullable().optional(),
   is_active: z.boolean(),
   is_online: z.boolean().nullable(),
   kitchen_id: z.number().nullable(),
@@ -110,19 +113,7 @@ export const productSchema = z.object({
   combo_unit_id: z.string().nullable(), // Comma-separated unit IDs for combo products
   production_cost: z.number().nullable(),
   is_recipe: z.boolean().nullable(),
-  is_initial_stock: z.boolean().nullable(),
-  stock_warehouse_id: z.array(z.number()).nullable(),
-  stock: z.array(z.number()).nullable(),
-  warehouse_id: z.array(z.number()).nullable(), // For differential pricing
-  diff_price: z.array(z.number()).nullable(), // For differential pricing
-  product_id: z.array(z.number()).nullable(), // For combo products
-  product_qty: z.array(z.number()).nullable(), // For combo products
-  unit_price: z.array(z.number()).nullable(), // For combo products
-  variant_name: z.array(z.string()).nullable(), // For variants
-  item_code: z.array(z.string()).nullable(), // For variants
-  additional_cost: z.array(z.number()).nullable(), // For variants
-  additional_price: z.array(z.number()).nullable(), // For variants
-  variants: z.array(productVariantSchema).nullable(),
+  variants: z.array(productVariantSchema).nullable().optional(), // Optional when not loaded
   created_at: z.string().nullable(),
   updated_at: z.string().nullable(),
 })
