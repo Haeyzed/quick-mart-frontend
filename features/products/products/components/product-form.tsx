@@ -36,8 +36,6 @@ import { handleApiError } from '@/lib/handle-api-error'
 import { type Product } from '../data/schema'
 import { Spinner } from '@/components/ui/spinner'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 
 // Form schema - simplified for now, will expand
 const productFormSchema = z.object({
@@ -484,15 +482,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   const productType = form.watch('type')
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-      {/* Basic Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-          <CardDescription>Enter the basic product details</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <FieldGroup>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <FieldGroup>
             <Field>
               <FieldLabel>
                 Product Type <span className='text-destructive'>*</span>
@@ -626,19 +617,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 <FieldError>{form.formState.errors.brand_id?.message}</FieldError>
               </Field>
             </div>
-          </FieldGroup>
-        </CardContent>
-      </Card>
 
-      {/* Pricing & Units - Only for standard, combo, service */}
-      {(productType === 'standard' || productType === 'combo' || productType === 'service') && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Pricing & Units</CardTitle>
-            <CardDescription>Set product pricing and unit information</CardDescription>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <FieldGroup>
+        {/* Pricing & Units - Only for standard, combo, service */}
+        {(productType === 'standard' || productType === 'combo' || productType === 'service') && (
+          <>
               {productType !== 'combo' && (
                 <>
                   <Field>
@@ -896,19 +878,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   )}
                 </>
               )}
-            </FieldGroup>
-          </CardContent>
-        </Card>
-      )}
+          </>
+        )}
 
-      {/* Promotional Pricing */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Promotional Pricing</CardTitle>
-          <CardDescription>Set promotional pricing for the product</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <FieldGroup>
+        {/* Promotional Pricing */}
             <Field>
               <div className='flex items-center justify-between'>
                 <div>
@@ -957,18 +930,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 </Field>
               </div>
             )}
-          </FieldGroup>
-        </CardContent>
-      </Card>
 
-      {/* Warranty & Guarantee */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Warranty & Guarantee</CardTitle>
-          <CardDescription>Set warranty and guarantee information</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <FieldGroup>
+        {/* Warranty & Guarantee */}
             <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <div className='grid grid-cols-2 gap-2'>
                 <Field>
@@ -1038,19 +1001,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 </Field>
               </div>
             </div>
-          </FieldGroup>
-        </CardContent>
-      </Card>
 
-      {/* Digital Product File - Only for digital */}
-      {productType === 'digital' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Digital File</CardTitle>
-            <CardDescription>Upload the digital product file</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Field>
+        {/* Digital Product File - Only for digital */}
+        {productType === 'digital' && (
+          <Field>
               <FieldLabel>
                 File <span className='text-destructive'>*</span>
               </FieldLabel>
@@ -1098,17 +1052,9 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               />
               <FieldError>{form.formState.errors.file?.message}</FieldError>
             </Field>
-          </CardContent>
-        </Card>
-      )}
+        )}
 
-      {/* Images */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Product Images</CardTitle>
-          <CardDescription>Upload product images (multiple images supported)</CardDescription>
-        </CardHeader>
-        <CardContent>
+        {/* Images */}
           <Field>
             <FieldLabel>Images</FieldLabel>
             <Controller
@@ -1178,17 +1124,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             )}
             <FieldError>{form.formState.errors.image?.message}</FieldError>
           </Field>
-        </CardContent>
-      </Card>
 
-      {/* Additional Options */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Additional Options</CardTitle>
-          <CardDescription>Configure product options and settings</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <FieldGroup>
+        {/* Additional Options */}
             <Field>
               <div className='flex items-center justify-between'>
                 <div>
@@ -1448,19 +1385,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 />
               </div>
             </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
 
-      {/* Initial Stock Section - Only for standard products without variants/batches */}
-      {productType === 'standard' && form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Initial Stock</CardTitle>
-            <CardDescription>Set initial stock for warehouses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Field>
+        {/* Initial Stock Section - Only for standard products without variants/batches */}
+        {productType === 'standard' && form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && (
+          <Field>
               <FieldLabel>Warehouse Stock</FieldLabel>
               <FieldDescription>
                 Note: You will need to fetch warehouses from API. For now, this is a placeholder section.
@@ -1470,19 +1398,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               <div className='rounded-md border p-4 text-center text-sm text-muted-foreground'>
                 Warehouse stock management coming soon. This requires warehouse API integration.
               </div>
-            </Field>
-          </CardContent>
-        </Card>
-      )}
+          </Field>
+        )}
 
-      {/* SEO & Additional Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>SEO & Additional Information</CardTitle>
-          <CardDescription>Set SEO fields and additional product information</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <FieldGroup>
+        {/* SEO & Additional Information */}
             <Field>
               <FieldLabel>Tags</FieldLabel>
               <Input
@@ -1526,18 +1445,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               </FieldDescription>
               <FieldError>{form.formState.errors.related_products?.message}</FieldError>
             </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
 
-      {/* Restaurant Module Fields */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Restaurant Settings (Optional)</CardTitle>
-          <CardDescription>Configure restaurant-specific settings for this product</CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <FieldGroup>
+        {/* Restaurant Module Fields */}
             <Field>
               <FieldLabel>Kitchen</FieldLabel>
               <Controller
@@ -1604,9 +1513,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               </FieldDescription>
               <FieldError>{form.formState.errors.extras?.message}</FieldError>
             </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
+      </FieldGroup>
 
       {/* Form Actions */}
       <div className='flex justify-end gap-4'>
