@@ -98,9 +98,9 @@ export function ComboProductsTable({ control, watch, setValue, units }: ComboPro
     const newPrice = [...unitPriceArray, product.price]
     const newWastage = [...wastagePercentArray, 0]
 
-    setValue('product_id', newProductIds)
-    setValue('product_qty', newQty)
-    setValue('unit_price', newPrice)
+    ;(setValue as any)('product_id', newProductIds)
+    ;(setValue as any)('product_qty', newQty)
+    ;(setValue as any)('unit_price', newPrice)
     setValue('wastage_percent', newWastage.join(','))
 
     setOpenSearch(false)

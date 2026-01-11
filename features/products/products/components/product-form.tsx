@@ -47,6 +47,8 @@ import {
 } from '@/components/ui/table'
 import { ComboProductsTable } from './combo-products-table'
 import { VariantSection } from './variant-section'
+import { TagInput } from '@/components/tag-input'
+import { DatePickerField } from '@/components/date-picker-field'
 
 // Form schema - simplified for now, will expand
 const productFormSchema = z.object({
@@ -988,23 +990,19 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   <FieldError>{form.formState.errors.promotion_price?.message}</FieldError>
                 </Field>
 
-                <Field>
-                  <FieldLabel>Start Date</FieldLabel>
-                  <Input
-                    type='date'
-                    {...form.register('starting_date')}
-                  />
-                  <FieldError>{form.formState.errors.starting_date?.message}</FieldError>
-                </Field>
+                <DatePickerField
+                  label="Start Date"
+                  value={form.watch('starting_date')}
+                  onChange={(value) => form.setValue('starting_date', value)}
+                  error={form.formState.errors.starting_date?.message}
+                />
 
-                <Field>
-                  <FieldLabel>End Date</FieldLabel>
-                  <Input
-                    type='date'
-                    {...form.register('last_date')}
-                  />
-                  <FieldError>{form.formState.errors.last_date?.message}</FieldError>
-                </Field>
+                <DatePickerField
+                  label="End Date"
+                  value={form.watch('last_date')}
+                  onChange={(value) => form.setValue('last_date', value)}
+                  error={form.formState.errors.last_date?.message}
+                />
               </div>
             )}
 
@@ -1208,6 +1206,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     control={form.control}
                     watch={form.watch}
                     setValue={form.setValue}
+                    productCode={form.watch('code') || ''}
                   />
                 )}
 
@@ -1494,23 +1493,19 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     <FieldError>{form.formState.errors.promotion_price?.message}</FieldError>
                   </Field>
 
-                  <Field>
-                    <FieldLabel>Promotion Starts</FieldLabel>
-                    <Input
-                      type='date'
-                      {...form.register('starting_date')}
-                    />
-                    <FieldError>{form.formState.errors.starting_date?.message}</FieldError>
-                  </Field>
+                  <DatePickerField
+                    label="Promotion Starts"
+                    value={form.watch('starting_date')}
+                    onChange={(value) => form.setValue('starting_date', value)}
+                    error={form.formState.errors.starting_date?.message}
+                  />
 
-                  <Field>
-                    <FieldLabel>Promotion Ends</FieldLabel>
-                    <Input
-                      type='date'
-                      {...form.register('last_date')}
-                    />
-                    <FieldError>{form.formState.errors.last_date?.message}</FieldError>
-                  </Field>
+                  <DatePickerField
+                    label="Promotion Ends"
+                    value={form.watch('last_date')}
+                    onChange={(value) => form.setValue('last_date', value)}
+                    error={form.formState.errors.last_date?.message}
+                  />
                 </div>
               </>
             )}
@@ -1531,27 +1526,47 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {warehouses.map((warehouse, index) => (
-                    <TableRow key={warehouse.id}>
-                      <TableCell>
-                        <input
-                          type='hidden'
-                          {...form.register(`stock_warehouse_id.${index}`, { value: warehouse.id })}
-                        />
-                        {warehouse.name}
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type='number'
-                          min='0'
-                          step='0.01'
-                          {...form.register(`stock.${index}`, { valueAsNumber: true })}
-                          placeholder='0'
-                          className='w-full'
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {warehouses.map((warehouse, index) => {
+                    const stockWarehouseIds = form.watch('stock_warehouse_id') || []
+                    const isDuplicate = stockWarehouseIds.filter(id => id === warehouse.id).length > 1
+                    
+                    return (
+                      <TableRow key={warehouse.id}>
+                        <TableCell>
+                          <input
+                            type='hidden'
+                            {...form.register(`stock_warehouse_id.${index}`, { value: warehouse.id })}
+                          />
+                          {warehouse.name}
+                          {isDuplicate && (
+                            <span className="ml-2 text-xs text-destructive">(Duplicate)</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type='number'
+                            min='0'
+                            step='0.01'
+                            {...form.register(`stock.${index}`, { 
+                              valueAsNumber: true,
+                              validate: (value) => {
+                                const warehouseIds = form.getValues('stock_warehouse_id') || []
+                                const duplicates = warehouseIds.filter((id, idx) => 
+                                  id === warehouse.id && idx !== index
+                                )
+                                if (duplicates.length > 0) {
+                                  return 'Duplicate warehouse detected'
+                                }
+                                return true
+                              }
+                            })}
+                            placeholder='0'
+                            className='w-full'
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -1564,9 +1579,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         {/* SEO & Additional Information */}
             <Field>
               <FieldLabel>Tags</FieldLabel>
-              <Input
-                {...form.register('tags')}
+              <TagInput
+                value={form.watch('tags')?.split(',').map(t => t.trim()).filter(t => t) || []}
+                onChange={(tags) => form.setValue('tags', tags.join(','))}
                 placeholder='Enter tags separated by commas'
+                delimiter=','
               />
               <FieldDescription>Product tags for search and categorization</FieldDescription>
               <FieldError>{form.formState.errors.tags?.message}</FieldError>
