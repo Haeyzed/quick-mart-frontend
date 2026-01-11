@@ -26,7 +26,7 @@ import {
   FileUploadList,
   FileUploadTrigger,
 } from '@/components/ui/file-upload'
-import { useCreateProduct, useUpdateProduct, useProduct } from '../api/use-products'
+import { useCreateProduct, useUpdateProduct, useProduct, useGenerateProductCode } from '../api/use-products'
 import { useBrands } from '../../brands/api/use-brands'
 import { useCategories } from '../../categories/api/use-categories'
 import { useUnits } from '../../units/api/use-units'
@@ -133,6 +133,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   const isEdit = !!productId
   const createProduct = useCreateProduct()
   const updateProduct = useUpdateProduct()
+  const generateCode = useGenerateProductCode()
   
   // Only fetch product if editing
   const productQuery = useProduct(isEdit && productId ? productId : 0)
@@ -527,11 +528,19 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     type='button'
                     variant='outline'
                     onClick={async () => {
-                      // TODO: Implement generate code
-                      toast.info('Generate code feature coming soon')
+                      try {
+                        const { data: code } = await generateCode.refetch()
+                        if (code) {
+                          form.setValue('code', code)
+                          toast.success('Code generated successfully')
+                        }
+                      } catch (error) {
+                        handleApiError(error)
+                      }
                     }}
+                    disabled={generateCode.isFetching}
                   >
-                    Generate
+                    {generateCode.isFetching ? <Spinner className='mr-2' /> : 'Generate'}
                   </Button>
                 </div>
                 <FieldError>{form.formState.errors.code?.message}</FieldError>
