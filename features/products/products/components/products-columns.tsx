@@ -136,7 +136,7 @@ export const productsColumns: ColumnDef<Product>[] = [
     ),
     cell: ({ row }) => (
       <LongText className='max-w-32'>
-        {row.original.brand?.title || '-'}
+        {row.original.brand?.name || '-'}
       </LongText>
     ),
     meta: { className: 'w-32' },
@@ -175,7 +175,7 @@ export const productsColumns: ColumnDef<Product>[] = [
     ),
     cell: ({ row }) => (
       <span className='text-sm'>
-        {row.original.unit?.unit_name || '-'}
+        {row.original.unit?.name || '-'}
       </span>
     ),
     meta: { className: 'w-24' },

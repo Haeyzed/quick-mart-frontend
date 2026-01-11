@@ -15,21 +15,21 @@ export const productVariantSchema = z.object({
 // Brand schema - matches ProductResource (uses title, but API might return null if not loaded properly)
 export const brandSchema = z.object({
   id: z.number(),
-  name: z.string().nullable().optional(), // Also handle name in case API returns it
-}).passthrough() // Allow extra fields
+  name: z.string().nullable().optional(),
+})
 
 // Category schema
 export const categorySchema = z.object({
   id: z.number(),
   name: z.string(),
-}).passthrough()
+})
 
 // Unit schema - matches ProductResource (uses unit_name/unit_code, but API might return null if not loaded properly)
 export const unitSchema = z.object({
   id: z.number(),
-  name: z.string().nullable().optional(), // Also handle name in case API returns it
-  code: z.string().nullable().optional(), // Also handle code in case API returns it
-}).passthrough() // Allow extra fields
+  name: z.string().nullable().optional(),
+  code: z.string().nullable().optional(),
+})
 
 // Tax schema
 export const taxSchema = z.object({
