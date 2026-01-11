@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { X } from "lucide-react"
+import { MultiplicationSignIcon, X } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -97,7 +98,7 @@ export function TagInput({
             className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
             onClick={() => removeTag(index)}
           >
-            <X className="h-3 w-3" />
+            <HugeiconsIcon icon={MultiplicationSignIcon} className="h-3 w-3" />
           </Button>
         </div>
       ))}
