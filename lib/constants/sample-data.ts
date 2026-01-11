@@ -29,3 +29,8 @@ GST,18
 Sales Tax,10
 Service Tax,12`
 
+export const SAMPLE_PRODUCTS_CSV = `name,code,category,unitcode,cost,type,brand,price,profitmargin,productdetails
+Sample Product 1,PRD001,Electronics,PC,100,standard,Brand A,125,25,Sample product description
+Sample Product 2,PRD002,Clothing,PC,50,standard,Brand B,62.5,25,Sample clothing item
+Sample Product 3,PRD003,Food,KG,30,standard,Brand C,37.5,25,Sample food item`
+

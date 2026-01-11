@@ -54,7 +54,7 @@ import { BrandsActionDialog } from '../../brands/components/brands-action-dialog
 import { CategoriesActionDialog } from '../../categories/components/categories-action-dialog'
 import { TaxesActionDialog } from '../../../settings/tax/components/tax-action-dialog'
 import { UnitsActionDialog } from '../../units/components/units-action-dialog'
-import { Plus } from '@hugeicons/core-free-icons'
+import { Plus, Refresh01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 // Form schema - simplified for now, will expand
@@ -569,7 +569,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 }}
                 disabled={generateCode.isFetching}
               >
-                {generateCode.isFetching ? <Spinner className='h-4 w-4' /> : '⟳'}
+                {generateCode.isFetching ? (
+                  <Spinner className='h-4 w-4' />
+                ) : (
+                  <HugeiconsIcon icon={Refresh01Icon} className='h-4 w-4' />
+                )}
               </Button>
             </div>
             <FieldError>{form.formState.errors.code?.message}</FieldError>
@@ -1456,6 +1460,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   control={form.control as any}
                   watch={form.watch as any}
                   setValue={form.setValue as any}
+                  units={units.map(u => ({ id: u.id, unit_name: u.name || '' }))}
                 />
                 
                 <Field>

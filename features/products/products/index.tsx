@@ -6,6 +6,7 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { ProductsDialogs } from './components/products-dialogs'
 import { ProductsPrimaryButtons } from './components/products-primary-buttons'
 import { ProductsProvider } from './components/products-provider'
 import { ProductsTable } from './components/products-table'
@@ -34,6 +35,8 @@ export function Products() {
         </div>
         <ProductsTable />
       </Main>
+
+      <ProductsDialogs />
     </ProductsProvider>
   )
 }

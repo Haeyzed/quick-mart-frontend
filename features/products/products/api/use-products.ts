@@ -214,3 +214,23 @@ export function useGenerateProductCode() {
   })
 }
 
+export function useImportProducts() {
+  const queryClient = useQueryClient()
+  const { postFormData } = useApiClient()
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await postFormData('/products/import', formData)
+      return {
+        ...response,
+        message: response.message,
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+    },
+  })
+}
+

@@ -3,12 +3,14 @@
 import { Download01Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Button } from '@/components/ui/button'
+import { useProducts } from './products-provider'
 import { useProducts as useProductsQuery } from '../api/use-products'
 import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 
 export function ProductsPrimaryButtons() {
   const router = useRouter()
+  const { setOpen } = useProducts()
   const { data } = useProductsQuery({ page: 1, per_page: 10 })
   const hasData = useMemo(() => {
     return data?.pagination?.total && data.pagination.total > 0
@@ -22,7 +24,7 @@ export function ProductsPrimaryButtons() {
       <Button
         variant='outline'
         className='space-x-1'
-        onClick={() => router.push('/products/import')}
+        onClick={() => setOpen('import')}
       >
         <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
       </Button>
