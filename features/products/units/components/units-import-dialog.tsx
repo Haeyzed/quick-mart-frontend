@@ -42,8 +42,12 @@ const importSchema = z.object({
     .refine(
       (file) =>
         file.type === 'text/csv' || 
-        file.name.endsWith('.csv'),
-      'File must be a CSV file'
+        file.type === 'application/vnd.ms-excel' ||
+        file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        file.name.endsWith('.csv') ||
+        file.name.endsWith('.xlsx') ||
+        file.name.endsWith('.xls'),
+      'File must be a CSV, XLSX, or XLS file'
     ),
 })
 
@@ -69,7 +73,8 @@ export function UnitsImportDialog({
     downloadCSV(SAMPLE_UNITS_CSV, 'units-sample.csv')
   }
 
-  const handleFileChange = async (file: File | null) => {
+  const handlePreview = async () => {
+    const file = form.watch('file')
     if (!file) return
     
     try {
@@ -80,10 +85,10 @@ export function UnitsImportDialog({
         setSelectedFile(file)
         setPreviewOpen(true)
       } else {
-        toast.error('CSV file is empty or invalid')
+        toast.error('File is empty or invalid')
       }
     } catch (error) {
-      toast.error('Failed to parse CSV file')
+      toast.error('Failed to parse file')
     }
   }
 
@@ -105,7 +110,7 @@ export function UnitsImportDialog({
   }
 
   const onSubmit = async (data: z.infer<typeof importSchema>) => {
-    // Preview will be shown via handleFileChange in the file input onChange
+    // Preview is shown via handlePreview button click
   }
 
   return (
@@ -166,19 +171,19 @@ export function UnitsImportDialog({
                   <Input
                     id='import-file'
                     type='file'
-                    accept='.csv,text/csv'
-                    onChange={async (e) => {
+                    accept='.csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    onChange={(e) => {
                       const file = e.target.files?.[0]
                       if (file) {
                         onChange(file)
-                        await handleFileChange(file)
+                        setSelectedFile(file)
                       }
                     }}
                     data-invalid={!!fieldState.error}
                     {...field}
                   />
                   <FieldDescription>
-                    Only CSV files are supported. Max file size: 5MB
+                    CSV, XLSX, or XLS files are supported. Max file size: 5MB
                   </FieldDescription>
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 </Field>
@@ -190,7 +195,7 @@ export function UnitsImportDialog({
           <DialogClose asChild>
             <Button variant='outline'>Cancel</Button>
           </DialogClose>
-          <Button type='submit' form='unit-import-form' disabled={importUnits.isPending || !form.watch('file')}>
+          <Button type='button' onClick={handlePreview} disabled={importUnits.isPending || !form.watch('file')}>
             Preview
           </Button>
         </DialogFooter>

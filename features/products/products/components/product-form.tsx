@@ -656,29 +656,42 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
 
           <Field>
             <FieldLabel>Brand</FieldLabel>
-            <Controller
-              control={form.control}
-              name='brand_id'
-              render={({ field }) => (
-                <Select
-                  value={field.value ? String(field.value) : undefined}
-                  onValueChange={(value) => {
-                    field.onChange(value ? Number(value) : null)
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select brand (optional)' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brands.map((brand) => (
-                      <SelectItem key={brand.id} value={brand.id.toString()}>
-                        {brand.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Controller
+                  control={form.control}
+                  name='brand_id'
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ? String(field.value) : undefined}
+                      onValueChange={(value) => {
+                        field.onChange(value ? Number(value) : null)
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select brand (optional)' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id.toString()}>
+                            {brand.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setBrandDialogOpen(true)}
+                title="Add new brand"
+              >
+                <HugeiconsIcon icon={Plus} className="h-4 w-4" />
+              </Button>
+            </div>
             <FieldError>{form.formState.errors.brand_id?.message}</FieldError>
           </Field>
 
@@ -735,29 +748,42 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     <FieldLabel>
                       Product Unit <span className='text-destructive'>*</span>
                     </FieldLabel>
-                    <Controller
-                      control={form.control}
-                      name='unit_id'
-                      render={({ field }) => (
-                        <Select
-                          value={field.value?.toString() || ''}
-                          onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select unit' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {units
-                              .filter((u) => !u.base_unit) // Only show base units (base_unit is null)
-                              .map((unit) => (
-                                <SelectItem key={unit.id} value={unit.id.toString()}>
-                                  {unit.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Controller
+                          control={form.control}
+                          name='unit_id'
+                          render={({ field }) => (
+                            <Select
+                              value={field.value?.toString() || ''}
+                              onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder='Select unit' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {units
+                                  .filter((u) => !u.base_unit) // Only show base units (base_unit is null)
+                                  .map((unit) => (
+                                    <SelectItem key={unit.id} value={unit.id.toString()}>
+                                      {unit.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setUnitDialogOpen(true)}
+                        title="Add new unit"
+                      >
+                        <HugeiconsIcon icon={Plus} className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <FieldError>{form.formState.errors.unit_id?.message}</FieldError>
                   </Field>
 
@@ -1424,17 +1450,26 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             )}
 
             {productType === 'combo' && (
-              <Field>
-                <FieldLabel>Production Cost</FieldLabel>
-                <Input
-                  type='number'
-                  step='0.01'
-                  {...form.register('production_cost', { valueAsNumber: true })}
-                  placeholder='0.00'
+              <>
+                {/* Combo Products Section */}
+                <ComboProductsTable
+                  control={form.control as any}
+                  watch={form.watch as any}
+                  setValue={form.setValue as any}
                 />
-                <FieldDescription>Production cost for combo products</FieldDescription>
-                <FieldError>{form.formState.errors.production_cost?.message}</FieldError>
-              </Field>
+                
+                <Field>
+                  <FieldLabel>Production Cost</FieldLabel>
+                  <Input
+                    type='number'
+                    step='0.01'
+                    {...form.register('production_cost', { valueAsNumber: true })}
+                    placeholder='0.00'
+                  />
+                  <FieldDescription>Production cost for combo products</FieldDescription>
+                  <FieldError>{form.formState.errors.production_cost?.message}</FieldError>
+                </Field>
+              </>
             )}
 
             <Field>
