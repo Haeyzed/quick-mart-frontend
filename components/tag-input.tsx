@@ -84,21 +84,21 @@ export function TagInput({
   }
 
   return (
-    <div className={cn("flex flex-wrap gap-2 rounded-md border border-input bg-background p-2", className)}>
+    <div className={cn("flex flex-wrap gap-1.5 items-center rounded-md border border-input bg-background px-3 py-2 min-h-[40px]", className)}>
       {value.map((tag, index) => (
         <div
           key={index}
-          className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm"
+          className="flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-sm"
         >
           <span>{tag}</span>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+            className="h-3 w-3 p-0 hover:bg-muted"
             onClick={() => removeTag(index)}
           >
-            <HugeiconsIcon icon={MultiplicationSignIcon} className="h-3 w-3" />
+            <HugeiconsIcon icon={MultiplicationSignIcon} className="h-3 w-3 text-muted-foreground" />
           </Button>
         </div>
       ))}
@@ -110,7 +110,7 @@ export function TagInput({
         onKeyDown={handleInputKeyDown}
         onPaste={handlePaste}
         placeholder={value.length === 0 ? placeholder : ""}
-        className="flex-1 border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+        className="flex-1 border-0 bg-transparent p-0 h-auto min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0"
       />
     </div>
   )

@@ -19,22 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import { useProductsWithoutVariant, useProductsWithVariant } from '../api/use-products'
 import { productFormSchema } from '../data/schema'
-import { Tick02Icon, ChevronDown, Delete01Icon } from '@hugeicons/core-free-icons'
+import { Tick02Icon, Delete01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { cn } from '@/lib/utils'
 
@@ -150,51 +137,54 @@ export function ComboProductsTable({ control, watch, setValue, units }: ComboPro
         Search and add products to this combo
       </FieldDescription>
       
-      <Popover open={openSearch} onOpenChange={setOpenSearch}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            role="combobox"
-            className="w-full justify-between"
-          >
-            Search products by code or name...
-            <HugeiconsIcon icon={ChevronDown} className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
-          <Command>
-            <CommandInput
-              placeholder="Search products..."
-              value={searchQuery}
-              onValueChange={setSearchQuery}
-            />
-            <CommandList>
-              <CommandEmpty>No products found.</CommandEmpty>
-              <CommandGroup>
-                {filteredProducts.map((product) => (
-                  <CommandItem
-                    key={product.id}
-                    value={`${product.name} ${product.code}`}
-                    onSelect={() => handleAddProduct(product)}
-                  >
-                    <HugeiconsIcon
-                      icon={Tick02Icon}
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        productIdArray.includes(product.id)
-                          ? "opacity-100"
-                          : "opacity-0"
-                      )}
-                    />
-                    {product.name} [{product.code}]
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      <div className="relative mb-4">
+        <Input
+          type="text"
+          placeholder="Please type product code and select"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value)
+            setOpenSearch(true)
+          }}
+          onBlur={() => {
+            // Delay closing to allow click on dropdown item
+            setTimeout(() => setOpenSearch(false), 200)
+          }}
+        />
+        
+        {openSearch && searchQuery.length >= 2 && filteredProducts.length > 0 && (
+          <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+            <div className="p-1">
+              {filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent rounded-sm",
+                    productIdArray.includes(product.id) && "bg-accent"
+                  )}
+                  onMouseDown={(e) => {
+                    e.preventDefault() // Prevent input blur
+                    handleAddProduct(product)
+                    setSearchQuery('')
+                    setOpenSearch(false)
+                  }}
+                >
+                  <HugeiconsIcon
+                    icon={Tick02Icon}
+                    className={cn(
+                      "h-4 w-4",
+                      productIdArray.includes(product.id)
+                        ? "opacity-100"
+                        : "opacity-0"
+                    )}
+                  />
+                  <span className="flex-1">{product.name} [{product.code}]</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {productIdArray.length > 0 && (
         <div className="mt-4 rounded-md border">

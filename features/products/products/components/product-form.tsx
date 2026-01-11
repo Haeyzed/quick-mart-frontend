@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -49,6 +49,13 @@ import { ComboProductsTable } from './combo-products-table'
 import { VariantSection } from './variant-section'
 import { TagInput } from '@/components/tag-input'
 import { DatePickerField } from '@/components/date-picker-field'
+import { RelatedProducts } from './related-products'
+import { BrandsActionDialog } from '../../brands/components/brands-action-dialog'
+import { CategoriesActionDialog } from '../../categories/components/categories-action-dialog'
+import { TaxesActionDialog } from '../../../settings/tax/components/tax-action-dialog'
+import { UnitsActionDialog } from '../../units/components/units-action-dialog'
+import { Plus } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 
 // Form schema - simplified for now, will expand
 const productFormSchema = z.object({
@@ -148,22 +155,28 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   const updateProduct = useUpdateProduct()
   const generateCode = useGenerateProductCode()
   
+  // Dialog states
+  const [brandDialogOpen, setBrandDialogOpen] = useState(false)
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
+  const [taxDialogOpen, setTaxDialogOpen] = useState(false)
+  const [unitDialogOpen, setUnitDialogOpen] = useState(false)
+  
   // Only fetch product if editing
   const productQuery = useProduct(isEdit && productId ? productId : 0)
   const product = isEdit ? productQuery.data : undefined
   const isLoadingProduct = isEdit ? productQuery.isLoading : false
 
   // Fetch dropdown data
-  const { data: brandsData } = useBrands({ is_active: true, per_page: 100, page: 1 })
-  const { data: categoriesData } = useCategories({ is_active: true, per_page: 100, page: 1 })
-  const { data: unitsData } = useUnits({ is_active: true, per_page: 100, page: 1 })
-  const { data: taxesData } = useTaxes({ is_active: true, per_page: 100, page: 1 })
+  const brandsQuery = useBrands({ is_active: true, per_page: 100, page: 1 })
+  const categoriesQuery = useCategories({ is_active: true, per_page: 100, page: 1 })
+  const unitsQuery = useUnits({ is_active: true, per_page: 100, page: 1 })
+  const taxesQuery = useTaxes({ is_active: true, per_page: 100, page: 1 })
   const { data: warehouses = [] } = useActiveWarehouses()
 
-  const brands = brandsData?.data || []
-  const categories = categoriesData?.data || []
-  const units = unitsData?.data || []
-  const taxes = taxesData?.data || []
+  const brands = brandsQuery.data?.data || []
+  const categories = categoriesQuery.data?.data || []
+  const units = unitsQuery.data?.data || []
+  const taxes = taxesQuery.data?.data || []
 
   const form = useForm<z.infer<typeof productFormSchema>>({
     resolver: zodResolver(productFormSchema),
@@ -304,15 +317,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         stock: [],
         variant_option: product.variant_option || [],
         variant_value: product.variant_value || [],
-        variant_name: product.variant_name || [],
-        item_code: product.item_code || [],
-        additional_cost: product.additional_cost || [],
-        additional_price: product.additional_price || [],
-        warehouse_id: product.warehouse_id || [],
-        diff_price: product.diff_price || [],
-        product_id: product.product_id || [],
-        product_qty: product.product_qty || [],
-        unit_price: product.unit_price || [],
+        variant_name: (product as any).variant_name || [],
+        item_code: (product as any).item_code || [],
+        additional_cost: (product as any).additional_cost || [],
+        additional_price: (product as any).additional_price || [],
+        warehouse_id: (product as any).warehouse_id || [],
+        diff_price: (product as any).diff_price || [],
+        product_id: (product as any).product_id || [],
+        product_qty: (product as any).product_qty || [],
+        unit_price: (product as any).unit_price || [],
         wastage_percent: product.wastage_percent || undefined,
         combo_unit_id: product.combo_unit_id || undefined,
       })
@@ -673,27 +686,40 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             <FieldLabel>
               Category <span className='text-destructive'>*</span>
             </FieldLabel>
-            <Controller
-              control={form.control}
-              name='category_id'
-              render={({ field }) => (
-                <Select
-                  value={field.value?.toString() || ''}
-                  onValueChange={(value) => field.onChange(parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select category' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Controller
+                  control={form.control}
+                  name='category_id'
+                  render={({ field }) => (
+                    <Select
+                      value={field.value?.toString() || ''}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select category (required)' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setCategoryDialogOpen(true)}
+                title="Add new category"
+              >
+                <HugeiconsIcon icon={Plus} className="h-4 w-4" />
+              </Button>
+            </div>
             <FieldError>{form.formState.errors.category_id?.message}</FieldError>
           </Field>
         </div>
@@ -906,29 +932,42 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
 
                   <Field>
                     <FieldLabel>Tax</FieldLabel>
-                    <Controller
-                      control={form.control}
-                      name='tax_id'
-                      render={({ field }) => (
-                        <Select
-                          value={field.value ? String(field.value) : undefined}
-                          onValueChange={(value) => {
-                            field.onChange(value ? Number(value) : null)
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select tax (optional)' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {taxes.map((tax) => (
-                              <SelectItem key={tax.id} value={tax.id.toString()}>
-                                {tax.name} ({tax.rate}%)
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Controller
+                          control={form.control}
+                          name='tax_id'
+                          render={({ field }) => (
+                            <Select
+                              value={field.value ? String(field.value) : undefined}
+                              onValueChange={(value) => {
+                                field.onChange(value ? Number(value) : null)
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder='Select tax (optional)' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {taxes.map((tax) => (
+                                  <SelectItem key={tax.id} value={tax.id.toString()}>
+                                    {tax.name} ({tax.rate}%)
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setTaxDialogOpen(true)}
+                        title="Add new tax"
+                      >
+                        <HugeiconsIcon icon={Plus} className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <FieldError>{form.formState.errors.tax_id?.message}</FieldError>
                   </Field>
 
@@ -1203,9 +1242,9 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 {/* Variant Section - Only for standard products with variants enabled */}
                 {productType === 'standard' && form.watch('is_variant') && (
                   <VariantSection
-                    control={form.control}
-                    watch={form.watch}
-                    setValue={form.setValue}
+                    control={form.control as any}
+                    watch={form.watch as any}
+                    setValue={form.setValue as any}
                     productCode={form.watch('code') || ''}
                   />
                 )}
@@ -1526,47 +1565,27 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {warehouses.map((warehouse, index) => {
-                    const stockWarehouseIds = form.watch('stock_warehouse_id') || []
-                    const isDuplicate = stockWarehouseIds.filter(id => id === warehouse.id).length > 1
-                    
-                    return (
-                      <TableRow key={warehouse.id}>
-                        <TableCell>
-                          <input
-                            type='hidden'
-                            {...form.register(`stock_warehouse_id.${index}`, { value: warehouse.id })}
-                          />
-                          {warehouse.name}
-                          {isDuplicate && (
-                            <span className="ml-2 text-xs text-destructive">(Duplicate)</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type='number'
-                            min='0'
-                            step='0.01'
-                            {...form.register(`stock.${index}`, { 
-                              valueAsNumber: true,
-                              validate: (value) => {
-                                const warehouseIds = form.getValues('stock_warehouse_id') || []
-                                const duplicates = warehouseIds.filter((id, idx) => 
-                                  id === warehouse.id && idx !== index
-                                )
-                                if (duplicates.length > 0) {
-                                  return 'Duplicate warehouse detected'
-                                }
-                                return true
-                              }
-                            })}
-                            placeholder='0'
-                            className='w-full'
-                          />
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
+                  {warehouses.map((warehouse, index) => (
+                    <TableRow key={warehouse.id}>
+                      <TableCell>
+                        <input
+                          type='hidden'
+                          {...form.register(`stock_warehouse_id.${index}`, { value: warehouse.id })}
+                        />
+                        {warehouse.name}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type='number'
+                          min='0'
+                          step='0.01'
+                          {...form.register(`stock.${index}`, { valueAsNumber: true })}
+                          placeholder='0'
+                          className='w-full'
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
@@ -1610,18 +1629,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               <FieldError>{form.formState.errors.meta_description?.message}</FieldError>
             </Field>
 
-            <Field>
-              <FieldLabel>Related Products</FieldLabel>
-              <Textarea
-                {...form.register('related_products')}
-                placeholder='Comma-separated product IDs (e.g., 1,2,3)'
-                rows={2}
-              />
-              <FieldDescription>
-                Enter related product IDs separated by commas. Full product search integration coming soon.
-              </FieldDescription>
-              <FieldError>{form.formState.errors.related_products?.message}</FieldError>
-            </Field>
+            <RelatedProducts
+              setValue={form.setValue}
+              value={form.watch('related_products')}
+            />
 
         {/* Restaurant Module Fields */}
             <Field>
@@ -1691,6 +1702,44 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               <FieldError>{form.formState.errors.extras?.message}</FieldError>
             </Field>
       </FieldGroup>
+
+      {/* Dialogs */}
+      <BrandsActionDialog
+        open={brandDialogOpen}
+        onOpenChange={(open) => {
+          setBrandDialogOpen(open)
+          if (!open) {
+            brandsQuery.refetch()
+          }
+        }}
+      />
+      <CategoriesActionDialog
+        open={categoryDialogOpen}
+        onOpenChange={(open) => {
+          setCategoryDialogOpen(open)
+          if (!open) {
+            categoriesQuery.refetch()
+          }
+        }}
+      />
+      <TaxesActionDialog
+        open={taxDialogOpen}
+        onOpenChange={(open) => {
+          setTaxDialogOpen(open)
+          if (!open) {
+            taxesQuery.refetch()
+          }
+        }}
+      />
+      <UnitsActionDialog
+        open={unitDialogOpen}
+        onOpenChange={(open) => {
+          setUnitDialogOpen(open)
+          if (!open) {
+            unitsQuery.refetch()
+          }
+        }}
+      />
 
       {/* Form Actions */}
       <div className='flex justify-end gap-4'>
