@@ -485,147 +485,152 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
       <FieldGroup>
-            <Field>
-              <FieldLabel>
-                Product Type <span className='text-destructive'>*</span>
-              </FieldLabel>
-              <Controller
-                control={form.control}
-                name='type'
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder='Select product type' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='standard'>Standard</SelectItem>
-                      <SelectItem value='combo'>Combo</SelectItem>
-                      <SelectItem value='digital'>Digital</SelectItem>
-                      <SelectItem value='service'>Service</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError>{form.formState.errors.type?.message}</FieldError>
-            </Field>
+        {/* Row 1: Product Type, Product Name, Product Code */}
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+          <Field>
+            <FieldLabel>
+              Product Type <span className='text-destructive'>*</span>
+            </FieldLabel>
+            <Controller
+              control={form.control}
+              name='type'
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select product type' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='standard'>Standard</SelectItem>
+                    <SelectItem value='combo'>Combo</SelectItem>
+                    <SelectItem value='digital'>Digital</SelectItem>
+                    <SelectItem value='service'>Service</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <FieldError>{form.formState.errors.type?.message}</FieldError>
+          </Field>
 
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-              <Field>
-                <FieldLabel>
-                  Product Name <span className='text-destructive'>*</span>
-                </FieldLabel>
-                <Input {...form.register('name')} placeholder='Enter product name' />
-                <FieldError>{form.formState.errors.name?.message}</FieldError>
-              </Field>
+          <Field>
+            <FieldLabel>
+              Product Name <span className='text-destructive'>*</span>
+            </FieldLabel>
+            <Input {...form.register('name')} placeholder='Enter product name' />
+            <FieldError>{form.formState.errors.name?.message}</FieldError>
+          </Field>
 
-              <Field>
-                <FieldLabel>
-                  Product Code <span className='text-destructive'>*</span>
-                </FieldLabel>
-                <div className='flex gap-2'>
-                  <Input {...form.register('code')} placeholder='Enter product code' />
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={async () => {
-                      try {
-                        const { data: code } = await generateCode.refetch()
-                        if (code) {
-                          form.setValue('code', code)
-                          toast.success('Code generated successfully')
-                        }
-                      } catch (error) {
-                        handleApiError(error)
-                      }
-                    }}
-                    disabled={generateCode.isFetching}
-                  >
-                    {generateCode.isFetching ? <Spinner className='mr-2' /> : 'Generate'}
-                  </Button>
-                </div>
-                <FieldError>{form.formState.errors.code?.message}</FieldError>
-              </Field>
-
-              <Field>
-                <FieldLabel>Barcode Symbology</FieldLabel>
-                <Controller
-                  control={form.control}
-                  name='barcode_symbology'
-                  render={({ field }) => (
-                    <Select value={field.value || 'EAN13'} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='UPCE'>UPC-E</SelectItem>
-                        <SelectItem value='C128'>Code 128</SelectItem>
-                        <SelectItem value='C39'>Code 39</SelectItem>
-                        <SelectItem value='UPCA'>UPC-A</SelectItem>
-                        <SelectItem value='EAN8'>EAN-8</SelectItem>
-                        <SelectItem value='EAN13'>EAN-13</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError>{form.formState.errors.barcode_symbology?.message}</FieldError>
-              </Field>
-
-              <Field>
-                <FieldLabel>
-                  Category <span className='text-destructive'>*</span>
-                </FieldLabel>
-                <Controller
-                  control={form.control}
-                  name='category_id'
-                  render={({ field }) => (
-                    <Select
-                      value={field.value?.toString() || ''}
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select category' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError>{form.formState.errors.category_id?.message}</FieldError>
-              </Field>
-
-              <Field>
-                <FieldLabel>Brand</FieldLabel>
-                <Controller
-                  control={form.control}
-                  name='brand_id'
-                  render={({ field }) => (
-                    <Select
-                      value={field.value ? String(field.value) : undefined}
-                      onValueChange={(value) => {
-                        field.onChange(value ? Number(value) : null)
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select brand (optional)' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {brands.map((brand) => (
-                          <SelectItem key={brand.id} value={brand.id.toString()}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError>{form.formState.errors.brand_id?.message}</FieldError>
-              </Field>
+          <Field>
+            <FieldLabel>
+              Product Code <span className='text-destructive'>*</span>
+            </FieldLabel>
+            <div className='flex gap-2'>
+              <Input {...form.register('code')} placeholder='Enter product code' />
+              <Button
+                type='button'
+                variant='outline'
+                size='icon'
+                onClick={async () => {
+                  try {
+                    const { data: code } = await generateCode.refetch()
+                    if (code) {
+                      form.setValue('code', code)
+                      toast.success('Code generated successfully')
+                    }
+                  } catch (error) {
+                    handleApiError(error)
+                  }
+                }}
+                disabled={generateCode.isFetching}
+              >
+                {generateCode.isFetching ? <Spinner className='h-4 w-4' /> : '⟳'}
+              </Button>
             </div>
+            <FieldError>{form.formState.errors.code?.message}</FieldError>
+          </Field>
+        </div>
+
+        {/* Row 2: Barcode Symbology, Brand, Category */}
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+          <Field>
+            <FieldLabel>Barcode Symbology</FieldLabel>
+            <Controller
+              control={form.control}
+              name='barcode_symbology'
+              render={({ field }) => (
+                <Select value={field.value || 'EAN13'} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='C128'>Code 128</SelectItem>
+                    <SelectItem value='C39'>Code 39</SelectItem>
+                    <SelectItem value='UPCA'>UPC-A</SelectItem>
+                    <SelectItem value='UPCE'>UPC-E</SelectItem>
+                    <SelectItem value='EAN8'>EAN-8</SelectItem>
+                    <SelectItem value='EAN13'>EAN-13</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <FieldError>{form.formState.errors.barcode_symbology?.message}</FieldError>
+          </Field>
+
+          <Field>
+            <FieldLabel>Brand</FieldLabel>
+            <Controller
+              control={form.control}
+              name='brand_id'
+              render={({ field }) => (
+                <Select
+                  value={field.value ? String(field.value) : undefined}
+                  onValueChange={(value) => {
+                    field.onChange(value ? Number(value) : null)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select brand (optional)' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id.toString()}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <FieldError>{form.formState.errors.brand_id?.message}</FieldError>
+          </Field>
+
+          <Field>
+            <FieldLabel>
+              Category <span className='text-destructive'>*</span>
+            </FieldLabel>
+            <Controller
+              control={form.control}
+              name='category_id'
+              render={({ field }) => (
+                <Select
+                  value={field.value?.toString() || ''}
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select category' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <FieldError>{form.formState.errors.category_id?.message}</FieldError>
+          </Field>
+        </div>
 
         {/* Pricing & Units - Only for standard, combo, service */}
         {(productType === 'standard' || productType === 'combo' || productType === 'service') && (
