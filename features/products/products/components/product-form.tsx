@@ -549,8 +549,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           </Field>
         </div>
 
-        {/* Row 2: Barcode Symbology, Brand, Category */}
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+        {/* Row 2: Barcode Symbology, Digital File (conditional), Brand, Category */}
+        <div className={`grid grid-cols-1 gap-4 ${productType === 'digital' ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
           <Field>
             <FieldLabel>Barcode Symbology</FieldLabel>
             <Controller
@@ -574,6 +574,58 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             />
             <FieldError>{form.formState.errors.barcode_symbology?.message}</FieldError>
           </Field>
+
+          {/* Digital File Upload - Only for digital type, appears in Row 2 */}
+          {productType === 'digital' && (
+            <Field>
+              <FieldLabel>
+                Attach File <span className='text-destructive'>*</span>
+              </FieldLabel>
+              <Controller
+                control={form.control}
+                name='file'
+                render={({ field: { onChange, value, ...field } }) => (
+                  <FileUpload
+                    {...field}
+                    accept='*/*'
+                    value={value ? [value] : []}
+                    onValueChange={(files) => onChange(files[0] || undefined)}
+                    maxFiles={1}
+                  >
+                    <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                      Drag and drop or
+                      <FileUploadTrigger asChild>
+                        <Button type='button' variant='link' size='sm' className='p-0'>
+                          choose file
+                        </Button>
+                      </FileUploadTrigger>
+                      to upload
+                    </FileUploadDropzone>
+                    <FileUploadList>
+                      {value && (
+                        <FileUploadItem key={value.name} value={value}>
+                          <FileUploadItemPreview />
+                          <FileUploadItemMetadata />
+                          <FileUploadItemDelete asChild>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='size-7'
+                            >
+                              ×
+                              <span className='sr-only'>Delete</span>
+                            </Button>
+                          </FileUploadItemDelete>
+                        </FileUploadItem>
+                      )}
+                    </FileUploadList>
+                  </FileUpload>
+                )}
+              />
+              <FieldError>{form.formState.errors.file?.message}</FieldError>
+            </Field>
+          )}
 
           <Field>
             <FieldLabel>Brand</FieldLabel>
@@ -1015,57 +1067,6 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               </div>
             </div>
 
-        {/* Digital Product File - Only for digital */}
-        {productType === 'digital' && (
-          <Field>
-              <FieldLabel>
-                File <span className='text-destructive'>*</span>
-              </FieldLabel>
-              <Controller
-                control={form.control}
-                name='file'
-                render={({ field: { onChange, value, ...field } }) => (
-                  <FileUpload
-                    {...field}
-                    accept='*/*'
-                    value={value ? [value] : []}
-                    onValueChange={(files) => onChange(files[0] || undefined)}
-                    maxFiles={1}
-                  >
-                    <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
-                      Drag and drop or
-                      <FileUploadTrigger asChild>
-                        <Button type='button' variant='link' size='sm' className='p-0'>
-                          choose file
-                        </Button>
-                      </FileUploadTrigger>
-                      to upload
-                    </FileUploadDropzone>
-                    <FileUploadList>
-                      {value && (
-                        <FileUploadItem key={value.name} value={value}>
-                          <FileUploadItemPreview />
-                          <FileUploadItemMetadata />
-                          <FileUploadItemDelete asChild>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='icon'
-                              className='size-7'
-                            >
-                              ×
-                              <span className='sr-only'>Delete</span>
-                            </Button>
-                          </FileUploadItemDelete>
-                        </FileUploadItem>
-                      )}
-                    </FileUploadList>
-                  </FileUpload>
-                )}
-              />
-              <FieldError>{form.formState.errors.file?.message}</FieldError>
-            </Field>
-        )}
 
         {/* Images */}
           <Field>
