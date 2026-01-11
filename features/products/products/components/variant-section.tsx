@@ -22,7 +22,7 @@ import {
 import { TagInput } from '@/components/tag-input'
 import { VariantTable } from './variant-table'
 import { productFormSchema } from '../data/schema'
-import { Delete01Icon, Plus01Icon } from '@hugeicons/core-free-icons'
+import { Delete01Icon, Plus } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 type ProductFormData = z.infer<typeof productFormSchema>
@@ -100,7 +100,7 @@ export function VariantSection({ control, watch, setValue, productCode }: Varian
               onClick={handleAddVariant}
               disabled={!newOption.trim() || newValues.length === 0}
             >
-              <HugeiconsIcon icon={Plus01Icon} className="h-4 w-4 mr-2" />
+              <HugeiconsIcon icon={Plus} className="h-4 w-4 mr-2" />
               Add
             </Button>
           </div>
