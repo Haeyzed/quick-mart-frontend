@@ -31,11 +31,22 @@ import { useBrands } from '../../brands/api/use-brands'
 import { useCategories } from '../../categories/api/use-categories'
 import { useUnits } from '../../units/api/use-units'
 import { useTaxes } from '../../../settings/tax/api/use-taxes'
+import { useActiveWarehouses } from '../api/use-warehouses'
 import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
 import { type Product } from '../data/schema'
 import { Spinner } from '@/components/ui/spinner'
 import { useRouter } from 'next/navigation'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { ComboProductsTable } from './combo-products-table'
+import { VariantSection } from './variant-section'
 
 // Form schema - simplified for now, will expand
 const productFormSchema = z.object({
@@ -145,6 +156,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   const { data: categoriesData } = useCategories({ is_active: true, per_page: 100, page: 1 })
   const { data: unitsData } = useUnits({ is_active: true, per_page: 100, page: 1 })
   const { data: taxesData } = useTaxes({ is_active: true, per_page: 100, page: 1 })
+  const { data: warehouses = [] } = useActiveWarehouses()
 
   const brands = brandsData?.data || []
   const categories = categoriesData?.data || []
@@ -1190,6 +1202,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   </div>
                 </Field>
 
+                {/* Variant Section - Only for standard products with variants enabled */}
+                {productType === 'standard' && form.watch('is_variant') && (
+                  <VariantSection
+                    control={form.control}
+                    watch={form.watch}
+                    setValue={form.setValue}
+                  />
+                )}
+
                 <Field>
                   <div className='flex items-center justify-between'>
                     <div>
@@ -1304,6 +1325,48 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   </div>
                 </Field>
 
+                {/* Differential Pricing Table */}
+                {form.watch('is_diffPrice') && (
+                  <Field>
+                    <FieldLabel>Warehouse Prices</FieldLabel>
+                    <div className='rounded-md border'>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Warehouse</TableHead>
+                            <TableHead>Price</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {warehouses.map((warehouse, index) => (
+                            <TableRow key={warehouse.id}>
+                              <TableCell>
+                                <input
+                                  type='hidden'
+                                  {...form.register(`warehouse_id.${index}`, { value: warehouse.id })}
+                                />
+                                {warehouse.name}
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  type='number'
+                                  step='0.01'
+                                  {...form.register(`diff_price.${index}`, { valueAsNumber: true })}
+                                  placeholder='0.00'
+                                  className='w-full'
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <FieldError>
+                      {form.formState.errors.warehouse_id?.message || form.formState.errors.diff_price?.message}
+                    </FieldError>
+                  </Field>
+                )}
+
                 <Field>
                   <div className='flex items-center justify-between'>
                     <div>
@@ -1400,18 +1463,101 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               </div>
             </Field>
 
+            {/* Promotion Section */}
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Add Promotional Price</FieldLabel>
+                  <FieldDescription>Enable promotional pricing for this product</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='promotion'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            {form.watch('promotion') && (
+              <>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                  <Field>
+                    <FieldLabel>Promotional Price</FieldLabel>
+                    <Input
+                      type='number'
+                      step='0.01'
+                      {...form.register('promotion_price', { valueAsNumber: true })}
+                      placeholder='0.00'
+                    />
+                    <FieldError>{form.formState.errors.promotion_price?.message}</FieldError>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Promotion Starts</FieldLabel>
+                    <Input
+                      type='date'
+                      {...form.register('starting_date')}
+                    />
+                    <FieldError>{form.formState.errors.starting_date?.message}</FieldError>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Promotion Ends</FieldLabel>
+                    <Input
+                      type='date'
+                      {...form.register('last_date')}
+                    />
+                    <FieldError>{form.formState.errors.last_date?.message}</FieldError>
+                  </Field>
+                </div>
+              </>
+            )}
+
         {/* Initial Stock Section - Only for standard products without variants/batches */}
         {productType === 'standard' && form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && (
           <Field>
-              <FieldLabel>Warehouse Stock</FieldLabel>
-              <FieldDescription>
-                Note: You will need to fetch warehouses from API. For now, this is a placeholder section.
-                Initial stock management will require warehouse selection.
-              </FieldDescription>
-              {/* TODO: Implement warehouse selection and stock input when warehouse API is available */}
-              <div className='rounded-md border p-4 text-center text-sm text-muted-foreground'>
-                Warehouse stock management coming soon. This requires warehouse API integration.
-              </div>
+            <FieldLabel>Initial Warehouse Stock</FieldLabel>
+            <FieldDescription>
+              Add initial stock quantities for each warehouse. This feature will not work for products with variants and batches.
+            </FieldDescription>
+            <div className='rounded-md border'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Warehouse</TableHead>
+                    <TableHead>Quantity</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {warehouses.map((warehouse, index) => (
+                    <TableRow key={warehouse.id}>
+                      <TableCell>
+                        <input
+                          type='hidden'
+                          {...form.register(`stock_warehouse_id.${index}`, { value: warehouse.id })}
+                        />
+                        {warehouse.name}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type='number'
+                          min='0'
+                          step='0.01'
+                          {...form.register(`stock.${index}`, { valueAsNumber: true })}
+                          placeholder='0'
+                          className='w-full'
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <FieldError>
+              {form.formState.errors.stock_warehouse_id?.message || form.formState.errors.stock?.message}
+            </FieldError>
           </Field>
         )}
 
