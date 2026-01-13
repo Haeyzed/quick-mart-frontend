@@ -266,6 +266,13 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   // Load product data when editing
   useEffect(() => {
     if (isEdit && product) {
+      // Transform menu_type from string | number[] | null to number[]
+      const menuTypeArray: number[] = Array.isArray(product.menu_type) 
+        ? product.menu_type 
+        : typeof product.menu_type === 'string' && product.menu_type
+        ? product.menu_type.split(',').map((id) => parseInt(id.trim())).filter((id) => !isNaN(id))
+        : []
+      
       form.reset({
         name: product.name,
         code: product.code,
@@ -304,7 +311,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         related_products: product.related_products || undefined,
         is_addon: product.is_addon || false,
         extras: product.extras || undefined,
-        menu_type: product.menu_type || [],
+        menu_type: menuTypeArray,
         is_active: product.is_active,
         is_online: product.is_online || false,
         kitchen_id: product.kitchen_id,

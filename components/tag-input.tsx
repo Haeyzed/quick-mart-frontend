@@ -1,11 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { MultiplicationSignIcon, X } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
 
 export interface TagInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
   value: string[]
@@ -23,7 +22,7 @@ export function TagInput({
   delimiter = ",",
   maxTags,
   className,
-  ...props
+  ...inputProps
 }: TagInputProps) {
   const [inputValue, setInputValue] = React.useState("")
 
@@ -32,7 +31,7 @@ export function TagInput({
       e.preventDefault()
       addTag(inputValue.trim())
     } else if (e.key === "Backspace" && inputValue === "" && value.length > 0) {
-      removeTag(value.length - 1)
+      removeTag(value[value.length - 1])
     }
   }
 
@@ -60,8 +59,8 @@ export function TagInput({
     setInputValue("")
   }
 
-  const removeTag = (index: number) => {
-    onChange(value.filter((_, i) => i !== index))
+  const removeTag = (tagToRemove: string) => {
+    onChange(value.filter(tag => tag !== tagToRemove))
   }
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -84,35 +83,42 @@ export function TagInput({
   }
 
   return (
-    <div className={cn("flex flex-wrap gap-1.5 items-center rounded-md border border-input bg-background px-3 py-2 min-h-[40px]", className)}>
-      {value.map((tag, index) => (
+    <div
+      className={cn(
+        "dark:bg-input/30 border-input focus-within:border-ring focus-within:ring-ring/50 has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40 has-aria-invalid:border-destructive dark:has-aria-invalid:border-destructive/50 flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border bg-transparent bg-clip-padding px-2.5 py-1.5 text-sm shadow-xs transition-[color,box-shadow] focus-within:ring-[3px] has-aria-invalid:ring-[3px]",
+        className
+      )}
+      data-invalid={inputProps['aria-invalid'] === 'true' || inputProps['aria-invalid'] === true ? '' : undefined}
+    >
+      {value.map((tag) => (
         <div
-          key={index}
-          className="flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-sm"
+          key={tag}
+          className={cn(
+            "bg-muted text-foreground flex h-[calc(--spacing(5.5))] w-fit items-center justify-center gap-1 rounded-sm px-1.5 text-xs font-medium whitespace-nowrap"
+          )}
         >
-          <span>{tag}</span>
+          {tag}
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            className="h-3 w-3 p-0 hover:bg-muted"
-            onClick={() => removeTag(index)}
+            size="icon-xs"
+            className="-ml-1 opacity-50 hover:opacity-100"
+            onClick={() => removeTag(tag)}
           >
-            <HugeiconsIcon icon={MultiplicationSignIcon} className="h-3 w-3 text-muted-foreground" />
+            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="pointer-events-none" />
           </Button>
         </div>
       ))}
-      <Input
-        {...props}
+      <input
+        {...inputProps}
         type="text"
         value={inputValue}
         onChange={handleInputChange}
         onKeyDown={handleInputKeyDown}
         onPaste={handlePaste}
         placeholder={value.length === 0 ? placeholder : ""}
-        className="flex-1 border-0 bg-transparent p-0 h-auto min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0"
+        className="min-w-16 flex-1 outline-none bg-transparent"
       />
     </div>
   )
 }
-
