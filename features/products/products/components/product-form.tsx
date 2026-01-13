@@ -258,6 +258,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       wastage_percent: undefined,
       combo_unit_id: undefined,
     },
+    shouldFocusError: true,
   })
 
   const selectedUnitId = form.watch('unit_id')
