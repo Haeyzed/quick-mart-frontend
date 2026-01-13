@@ -650,7 +650,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         </div>
 
         {/* Row 2: Barcode Symbology, Digital File (conditional), Brand, Category */}
-        <div className={`grid grid-cols-1 gap-3 ${productType === 'digital' ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+        <div className={`grid grid-cols-1 gap-4 md:grid-cols-3`}>
           <Controller
             control={form.control}
             name='barcode_symbology'
