@@ -161,13 +161,13 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   const createProduct = useCreateProduct()
   const updateProduct = useUpdateProduct()
   const generateCode = useGenerateProductCode()
-  
+
   // Dialog states
   const [brandDialogOpen, setBrandDialogOpen] = useState(false)
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
   const [taxDialogOpen, setTaxDialogOpen] = useState(false)
   const [unitDialogOpen, setUnitDialogOpen] = useState(false)
-  
+
   // Only fetch product if editing
   const productQuery = useProduct(isEdit && productId ? productId : 0)
   const product = isEdit ? productQuery.data : undefined
@@ -199,7 +199,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       sale_unit_id: null,
       cost: 0,
       profit_margin: 0,
-            profit_margin_type: 'percentage' as const,
+      profit_margin_type: 'percentage' as const,
       price: 0,
       wholesale_price: undefined,
       alert_quantity: undefined,
@@ -267,12 +267,12 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   useEffect(() => {
     if (isEdit && product) {
       // Transform menu_type from string | number[] | null to number[]
-      const menuTypeArray: number[] = Array.isArray(product.menu_type) 
-        ? product.menu_type 
+      const menuTypeArray: number[] = Array.isArray(product.menu_type)
+        ? product.menu_type
         : typeof product.menu_type === 'string' && product.menu_type
-        ? product.menu_type.split(',').map((id) => parseInt(id.trim())).filter((id) => !isNaN(id))
-        : []
-      
+          ? product.menu_type.split(',').map((id) => parseInt(id.trim())).filter((id) => !isNaN(id))
+          : []
+
       form.reset({
         name: product.name,
         code: product.code,
@@ -507,7 +507,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
 
       const message = (response as any)?.message || (isEdit ? 'Product updated successfully' : 'Product created successfully')
       toast.success(message)
-      
+
       if (onSuccess) {
         onSuccess()
       } else {
@@ -959,33 +959,33 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       return (
                         <Field>
                           <FieldLabel htmlFor='product-sale-unit'>Sale Unit</FieldLabel>
-                            <Combobox
-                              items={saleUnitItems}
-                              value={selectedSaleUnit || null}
-                              onValueChange={(value) => {
-                                field.onChange(value ? value.id : null)
-                              }}
-                              itemToStringValue={(item) => String(item.id)}
-                            >
-                              <ComboboxInput
-                                id='product-sale-unit'
-                                name="sale_unit_id"
-                                placeholder="Select sale unit (optional)"
-                                showClear
-                                data-invalid={!!fieldState.error}
-                                value={selectedSaleUnit ? selectedSaleUnit.name : ''}
-                              />
-                              <ComboboxContent>
-                                <ComboboxEmpty>No sale units found.</ComboboxEmpty>
-                                <ComboboxList>
-                                  {(item) => (
-                                    <ComboboxItem key={item.id} value={item}>
-                                      {item.name}
-                                    </ComboboxItem>
-                                  )}
-                                </ComboboxList>
-                              </ComboboxContent>
-                            </Combobox>
+                          <Combobox
+                            items={saleUnitItems}
+                            value={selectedSaleUnit || null}
+                            onValueChange={(value) => {
+                              field.onChange(value ? value.id : null)
+                            }}
+                            itemToStringValue={(item) => String(item.id)}
+                          >
+                            <ComboboxInput
+                              id='product-sale-unit'
+                              name="sale_unit_id"
+                              placeholder="Select sale unit (optional)"
+                              showClear
+                              data-invalid={!!fieldState.error}
+                              value={selectedSaleUnit ? selectedSaleUnit.name : ''}
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>No sale units found.</ComboboxEmpty>
+                              <ComboboxList>
+                                {(item) => (
+                                  <ComboboxItem key={item.id} value={item}>
+                                    {item.name}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
                           <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                         </Field>
                       )
@@ -1007,33 +1007,33 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       return (
                         <Field>
                           <FieldLabel htmlFor='product-purchase-unit'>Purchase Unit</FieldLabel>
-                            <Combobox
-                              items={purchaseUnitItems}
-                              value={selectedPurchaseUnit || null}
-                              onValueChange={(value) => {
-                                field.onChange(value ? value.id : null)
-                              }}
-                              itemToStringValue={(item) => String(item.id)}
-                            >
-                              <ComboboxInput
-                                id='product-purchase-unit'
-                                name="purchase_unit_id"
-                                placeholder="Select purchase unit (optional)"
-                                showClear
-                                data-invalid={!!fieldState.error}
-                                value={selectedPurchaseUnit ? selectedPurchaseUnit.name : ''}
-                              />
-                              <ComboboxContent>
-                                <ComboboxEmpty>No purchase units found.</ComboboxEmpty>
-                                <ComboboxList>
-                                  {(item) => (
-                                    <ComboboxItem key={item.id} value={item}>
-                                      {item.name}
-                                    </ComboboxItem>
-                                  )}
-                                </ComboboxList>
-                              </ComboboxContent>
-                            </Combobox>
+                          <Combobox
+                            items={purchaseUnitItems}
+                            value={selectedPurchaseUnit || null}
+                            onValueChange={(value) => {
+                              field.onChange(value ? value.id : null)
+                            }}
+                            itemToStringValue={(item) => String(item.id)}
+                          >
+                            <ComboboxInput
+                              id='product-purchase-unit'
+                              name="purchase_unit_id"
+                              placeholder="Select purchase unit (optional)"
+                              showClear
+                              data-invalid={!!fieldState.error}
+                              value={selectedPurchaseUnit ? selectedPurchaseUnit.name : ''}
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>No purchase units found.</ComboboxEmpty>
+                              <ComboboxList>
+                                {(item) => (
+                                  <ComboboxItem key={item.id} value={item}>
+                                    {item.name}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
                           <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                         </Field>
                       )
@@ -1364,260 +1364,278 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     }}
                   />
                 </div>
-                </>
-              )}
+              </>
+            )}
           </>
         )}
 
         {/* Warranty & Guarantee */}
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-              <div className='grid grid-cols-2 gap-2'>
-                <Controller
-                  control={form.control}
-                  name='warranty'
-                  render={({ field, fieldState }) => (
-                    <Field>
-                      <FieldLabel htmlFor='product-warranty'>Warranty</FieldLabel>
-                      <Input
-                        id='product-warranty'
-                        type='number'
-                        min='0'
-                        placeholder='0'
-                        autoComplete='off'
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          field.onChange(value === '' ? undefined : Number(value))
-                        }}
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <div className='grid grid-cols-2 gap-2'>
+            <Controller
+              control={form.control}
+              name='warranty'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-warranty'>Warranty</FieldLabel>
+                  <Input
+                    id='product-warranty'
+                    type='number'
+                    min='0'
+                    placeholder='0'
+                    autoComplete='off'
+                    {...field}
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      field.onChange(value === '' ? undefined : Number(value))
+                    }}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name='warranty_type'
+              render={({ field, fieldState }) => {
+                const warrantyTypeOptions = [
+                  { value: 'days', label: 'Days' },
+                  { value: 'months', label: 'Months' },
+                  { value: 'years', label: 'Years' },
+                ]
+                const selectedWarrantyType = warrantyTypeOptions.find((opt) => opt.value === (field.value || 'months'))
+
+                return (
+                  <Field>
+                    <FieldLabel htmlFor='product-warranty-type'>Type</FieldLabel>
+                    <Combobox
+                      items={warrantyTypeOptions}
+                      value={selectedWarrantyType || null}
+                      onValueChange={(value) => {
+                        field.onChange(value ? value.value : 'months')
+                      }}
+                      itemToStringValue={(item) => item.value}
+                    >
+                      <ComboboxInput
+                        id='product-warranty-type'
+                        name="warranty_type"
+                        placeholder="Select warranty type"
+                        showClear
                         data-invalid={!!fieldState.error}
+                        value={selectedWarrantyType ? selectedWarrantyType.label : ''}
                       />
-                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                    </Field>
-                  )}
-                />
+                      <ComboboxContent>
+                        <ComboboxEmpty>No warranty types found.</ComboboxEmpty>
+                        <ComboboxList>
+                          {(item) => (
+                            <ComboboxItem key={item.value} value={item}>
+                              {item.label}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )
+              }}
+            />
+          </div>
 
-                <Controller
-                  control={form.control}
-                  name='warranty_type'
-                  render={({ field, fieldState }) => {
-                    const warrantyTypeOptions = [
-                      { value: 'days', label: 'Days' },
-                      { value: 'months', label: 'Months' },
-                      { value: 'years', label: 'Years' },
-                    ]
-                    const selectedWarrantyType = warrantyTypeOptions.find((opt) => opt.value === (field.value || 'months'))
+          <div className='grid grid-cols-2 gap-2'>
+            <Controller
+              control={form.control}
+              name='guarantee'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-guarantee'>Guarantee</FieldLabel>
+                  <Input
+                    id='product-guarantee'
+                    type='number'
+                    min='0'
+                    placeholder='0'
+                    autoComplete='off'
+                    {...field}
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      field.onChange(value === '' ? undefined : Number(value))
+                    }}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor='product-warranty-type'>Type</FieldLabel>
-                        <Combobox
-                          items={warrantyTypeOptions}
-                          value={selectedWarrantyType || null}
-                          onValueChange={(value) => {
-                            field.onChange(value ? value.value : 'months')
-                          }}
-                          itemToStringValue={(item) => item.value}
-                        >
-                          <ComboboxInput
-                            id='product-warranty-type'
-                            name="warranty_type"
-                            placeholder="Select warranty type"
-                            showClear
-                            data-invalid={!!fieldState.error}
-                            value={selectedWarrantyType ? selectedWarrantyType.label : ''}
-                          />
-                          <ComboboxContent>
-                            <ComboboxEmpty>No warranty types found.</ComboboxEmpty>
-                            <ComboboxList>
-                              {(item) => (
-                                <ComboboxItem key={item.value} value={item}>
-                                  {item.label}
-                                </ComboboxItem>
-                              )}
-                            </ComboboxList>
-                          </ComboboxContent>
-                        </Combobox>
-                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                      </Field>
-                    )
-                  }}
-                />
-              </div>
+            <Controller
+              control={form.control}
+              name='guarantee_type'
+              render={({ field, fieldState }) => {
+                const guaranteeTypeOptions = [
+                  { value: 'days', label: 'Days' },
+                  { value: 'months', label: 'Months' },
+                  { value: 'years', label: 'Years' },
+                ]
+                const selectedGuaranteeType = guaranteeTypeOptions.find((opt) => opt.value === (field.value || 'months'))
 
-              <div className='grid grid-cols-2 gap-2'>
-                <Controller
-                  control={form.control}
-                  name='guarantee'
-                  render={({ field, fieldState }) => (
-                    <Field>
-                      <FieldLabel htmlFor='product-guarantee'>Guarantee</FieldLabel>
-                      <Input
-                        id='product-guarantee'
-                        type='number'
-                        min='0'
-                        placeholder='0'
-                        autoComplete='off'
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          field.onChange(value === '' ? undefined : Number(value))
-                        }}
+                return (
+                  <Field>
+                    <FieldLabel htmlFor='product-guarantee-type'>Type</FieldLabel>
+                    <Combobox
+                      items={guaranteeTypeOptions}
+                      value={selectedGuaranteeType || null}
+                      onValueChange={(value) => {
+                        field.onChange(value ? value.value : 'months')
+                      }}
+                      itemToStringValue={(item) => item.value}
+                    >
+                      <ComboboxInput
+                        id='product-guarantee-type'
+                        name="guarantee_type"
+                        placeholder="Select guarantee type"
+                        showClear
                         data-invalid={!!fieldState.error}
+                        value={selectedGuaranteeType ? selectedGuaranteeType.label : ''}
                       />
-                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  control={form.control}
-                  name='guarantee_type'
-                  render={({ field, fieldState }) => {
-                    const guaranteeTypeOptions = [
-                      { value: 'days', label: 'Days' },
-                      { value: 'months', label: 'Months' },
-                      { value: 'years', label: 'Years' },
-                    ]
-                    const selectedGuaranteeType = guaranteeTypeOptions.find((opt) => opt.value === (field.value || 'months'))
-
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor='product-guarantee-type'>Type</FieldLabel>
-                        <Combobox
-                          items={guaranteeTypeOptions}
-                          value={selectedGuaranteeType || null}
-                          onValueChange={(value) => {
-                            field.onChange(value ? value.value : 'months')
-                          }}
-                          itemToStringValue={(item) => item.value}
-                        >
-                          <ComboboxInput
-                            id='product-guarantee-type'
-                            name="guarantee_type"
-                            placeholder="Select guarantee type"
-                            showClear
-                            data-invalid={!!fieldState.error}
-                            value={selectedGuaranteeType ? selectedGuaranteeType.label : ''}
-                          />
-                          <ComboboxContent>
-                            <ComboboxEmpty>No guarantee types found.</ComboboxEmpty>
-                            <ComboboxList>
-                              {(item) => (
-                                <ComboboxItem key={item.value} value={item}>
-                                  {item.label}
-                                </ComboboxItem>
-                              )}
-                            </ComboboxList>
-                          </ComboboxContent>
-                        </Combobox>
-                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                      </Field>
-                    )
-                  }}
-                />
-              </div>
-            </div>
+                      <ComboboxContent>
+                        <ComboboxEmpty>No guarantee types found.</ComboboxEmpty>
+                        <ComboboxList>
+                          {(item) => (
+                            <ComboboxItem key={item.value} value={item}>
+                              {item.label}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )
+              }}
+            />
+          </div>
+        </div>
 
 
         {/* Images */}
-          <Controller
-            control={form.control}
-            name='image'
-            render={({ field: { onChange, value = [], ...field }, fieldState }) => (
-              <Field>
-                <FieldLabel htmlFor='product-images'>Images</FieldLabel>
-                <FileUpload
-                  {...field}
-                  accept='image/*'
-                  value={value}
-                  onValueChange={onChange}
-                >
-                  <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
-                    Drag and drop or
-                    <FileUploadTrigger asChild>
-                      <Button type='button' variant='link' size='sm' className='p-0'>
-                        choose files
-                      </Button>
-                    </FileUploadTrigger>
-                    to upload
-                  </FileUploadDropzone>
-                  <FileUploadList>
-                    {value.map((file, index) => (
-                      <FileUploadItem key={index} value={file}>
-                        <FileUploadItemPreview />
-                        <FileUploadItemMetadata />
-                        <FileUploadItemDelete asChild>
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            size='icon'
-                            className='size-7'
-                          >
-                            ×
-                            <span className='sr-only'>Delete</span>
-                          </Button>
-                        </FileUploadItemDelete>
-                      </FileUploadItem>
-                    ))}
-                  </FileUploadList>
-                </FileUpload>
-                {isEdit && form.watch('prev_img') && form.watch('prev_img')!.length > 0 && (
-                  <div className='mt-4 flex gap-2'>
-                    {form.watch('prev_img')!.map((img, index) => (
-                      <div key={index} className='relative'>
-                        <img src={img} alt={`Product ${index + 1}`} className='h-20 w-20 rounded object-cover' />
+        <Controller
+          control={form.control}
+          name='image'
+          render={({ field: { onChange, value = [], ...field }, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-images'>Images</FieldLabel>
+              <FileUpload
+                {...field}
+                accept='image/*'
+                value={value}
+                onValueChange={onChange}
+              >
+                <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                  Drag and drop or
+                  <FileUploadTrigger asChild>
+                    <Button type='button' variant='link' size='sm' className='p-0'>
+                      choose files
+                    </Button>
+                  </FileUploadTrigger>
+                  to upload
+                </FileUploadDropzone>
+                <FileUploadList>
+                  {value.map((file, index) => (
+                    <FileUploadItem key={index} value={file}>
+                      <FileUploadItemPreview />
+                      <FileUploadItemMetadata />
+                      <FileUploadItemDelete asChild>
                         <Button
                           type='button'
-                          variant='destructive'
-                          size='sm'
-                          className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0'
-                          onClick={() => {
-                            const current = form.getValues('prev_img') || []
-                            form.setValue(
-                              'prev_img',
-                              current.filter((_, i) => i !== index)
-                            )
-                          }}
+                          variant='ghost'
+                          size='icon'
+                          className='size-7'
                         >
                           ×
+                          <span className='sr-only'>Delete</span>
                         </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-              </Field>
-            )}
-          />
+                      </FileUploadItemDelete>
+                    </FileUploadItem>
+                  ))}
+                </FileUploadList>
+              </FileUpload>
+              {isEdit && form.watch('prev_img') && form.watch('prev_img')!.length > 0 && (
+                <div className='mt-4 flex gap-2'>
+                  {form.watch('prev_img')!.map((img, index) => (
+                    <div key={index} className='relative'>
+                      <img src={img} alt={`Product ${index + 1}`} className='h-20 w-20 rounded object-cover' />
+                      <Button
+                        type='button'
+                        variant='destructive'
+                        size='sm'
+                        className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0'
+                        onClick={() => {
+                          const current = form.getValues('prev_img') || []
+                          form.setValue(
+                            'prev_img',
+                            current.filter((_, i) => i !== index)
+                          )
+                        }}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
 
         {/* Additional Options */}
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Active</FieldLabel>
-                  <FieldDescription>Product will be visible and available</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='is_active'
-                  render={({ field }) => (
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
+        <Field>
+          <div className='flex items-center justify-between'>
+            <div>
+              <FieldLabel>Active</FieldLabel>
+              <FieldDescription>Product will be visible and available</FieldDescription>
+            </div>
+            <Controller
+              control={form.control}
+              name='is_active'
+              render={({ field }) => (
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
+              )}
+            />
+          </div>
+        </Field>
 
+        <Field>
+          <div className='flex items-center justify-between'>
+            <div>
+              <FieldLabel>Featured</FieldLabel>
+              <FieldDescription>Featured products will be displayed in POS</FieldDescription>
+            </div>
+            <Controller
+              control={form.control}
+              name='featured'
+              render={({ field }) => (
+                <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+              )}
+            />
+          </div>
+        </Field>
+
+        {productType === 'standard' && (
+          <>
             <Field>
               <div className='flex items-center justify-between'>
                 <div>
-                  <FieldLabel>Featured</FieldLabel>
-                  <FieldDescription>Featured products will be displayed in POS</FieldDescription>
+                  <FieldLabel>Has Variants</FieldLabel>
+                  <FieldDescription>This product has variants (size, color, etc.)</FieldDescription>
                 </div>
                 <Controller
                   control={form.control}
-                  name='featured'
+                  name='is_variant'
                   render={({ field }) => (
                     <Switch checked={field.value || false} onCheckedChange={field.onChange} />
                   )}
@@ -1625,157 +1643,103 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               </div>
             </Field>
 
-            {productType === 'standard' && (
-              <>
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>Has Variants</FieldLabel>
-                      <FieldDescription>This product has variants (size, color, etc.)</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_variant'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
-
-                {/* Variant Section - Only for standard products with variants enabled */}
-                {productType === 'standard' && form.watch('is_variant') && (
-                  <VariantSection
-                    control={form.control as any}
-                    watch={form.watch as any}
-                    setValue={form.setValue as any}
-                    productCode={form.watch('code') || ''}
-                  />
-                )}
-
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>This is Topping</FieldLabel>
-                      <FieldDescription>Check this if the item is a topping or extra or add-on only to be served with a main course</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_addon'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
-
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>Has Batch/Expiry</FieldLabel>
-                      <FieldDescription>This product has batch and expiry dates</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_batch'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
-
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>Has IMEI/Serial</FieldLabel>
-                      <FieldDescription>This product has IMEI or serial numbers</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_imei'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
-              </>
+            {/* Variant Section - Only for standard products with variants enabled */}
+            {productType === 'standard' && form.watch('is_variant') && (
+              <VariantSection
+                control={form.control as any}
+                watch={form.watch as any}
+                setValue={form.setValue as any}
+                productCode={form.watch('code') || ''}
+              />
             )}
 
-            {/* Promotional Pricing */}
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>Enable Promotion</FieldLabel>
-                      <FieldDescription>Add promotional pricing for this product</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='promotion'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
-    
-                {form.watch('promotion') && (
-                  <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                    <Controller
-                      control={form.control}
-                      name='promotion_price'
-                      render={({ field, fieldState }) => (
-                        <Field>
-                          <FieldLabel htmlFor='product-promotion-price'>Promotional Price</FieldLabel>
-                          <Input
-                            id='product-promotion-price'
-                            type='number'
-                            step='0.01'
-                            placeholder='0.00'
-                            autoComplete='off'
-                            {...field}
-                            value={field.value ?? ''}
-                            onChange={(e) => {
-                              const value = e.target.value
-                              field.onChange(value === '' ? undefined : Number(value))
-                            }}
-                            data-invalid={!!fieldState.error}
-                          />
-                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                        </Field>
-                      )}
-                    />
-    
-                    <DatePickerField
-                      label="Start Date"
-                      value={form.watch('starting_date')}
-                      onChange={(value) => form.setValue('starting_date', value)}
-                      error={form.formState.errors.starting_date?.message}
-                    />
-    
-                    <DatePickerField
-                      label="End Date"
-                      value={form.watch('last_date')}
-                      onChange={(value) => form.setValue('last_date', value)}
-                      error={form.formState.errors.last_date?.message}
-                    />
-                  </div>
-                )}
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>This is Topping</FieldLabel>
+                  <FieldDescription>Check this if the item is a topping or extra or add-on only to be served with a main course</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_addon'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
 
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Has Batch/Expiry</FieldLabel>
+                  <FieldDescription>This product has batch and expiry dates</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_batch'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Has IMEI/Serial</FieldLabel>
+                  <FieldDescription>This product has IMEI or serial numbers</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_imei'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+          </>
+        )}
+
+        {/* Promotional Pricing */}
+        <Field>
+          <div className='flex items-center justify-between'>
+            <div>
+              <FieldLabel>Enable Promotion</FieldLabel>
+              <FieldDescription>Add promotional pricing for this product</FieldDescription>
+            </div>
             <Controller
               control={form.control}
-              name='product_details'
+              name='promotion'
+              render={({ field }) => (
+                <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+              )}
+            />
+          </div>
+        </Field>
+
+        {form.watch('promotion') && (
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+            <Controller
+              control={form.control}
+              name='promotion_price'
               render={({ field, fieldState }) => (
                 <Field>
-                  <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
-                  <Textarea
-                    id='product-details'
-                    placeholder='Enter product details'
-                    rows={4}
+                  <FieldLabel htmlFor='product-promotion-price'>Promotional Price</FieldLabel>
+                  <Input
+                    id='product-promotion-price'
+                    type='number'
+                    step='0.01'
+                    placeholder='0.00'
                     autoComplete='off'
                     {...field}
-                    value={field.value || ''}
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      field.onChange(value === '' ? undefined : Number(value))
+                    }}
                     data-invalid={!!fieldState.error}
                   />
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
@@ -1783,303 +1747,339 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               )}
             />
 
-            <Controller
-              control={form.control}
-              name='short_description'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-short-description'>Short Description</FieldLabel>
-                  <Textarea
-                    id='product-short-description'
-                    placeholder='Enter short description'
-                    rows={3}
-                    autoComplete='off'
-                    {...field}
-                    value={field.value || ''}
-                    data-invalid={!!fieldState.error}
-                  />
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
+            <DatePickerField
+              label="Start Date"
+              value={form.watch('starting_date')}
+              onChange={(value) => form.setValue('starting_date', value)}
+              error={form.formState.errors.starting_date?.message}
+            />
+
+            <DatePickerField
+              label="End Date"
+              value={form.watch('last_date')}
+              onChange={(value) => form.setValue('last_date', value)}
+              error={form.formState.errors.last_date?.message}
+            />
+          </div>
+        )}
+
+        <Controller
+          control={form.control}
+          name='product_details'
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
+              <Textarea
+                id='product-details'
+                placeholder='Enter product details'
+                rows={4}
+                autoComplete='off'
+                {...field}
+                value={field.value || ''}
+                data-invalid={!!fieldState.error}
+              />
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name='short_description'
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-short-description'>Short Description</FieldLabel>
+              <Textarea
+                id='product-short-description'
+                placeholder='Enter short description'
+                rows={3}
+                autoComplete='off'
+                {...field}
+                value={field.value || ''}
+                data-invalid={!!fieldState.error}
+              />
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name='specification'
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-specification'>Specification</FieldLabel>
+              <Textarea
+                id='product-specification'
+                placeholder='Enter product specifications'
+                rows={4}
+                autoComplete='off'
+                {...field}
+                value={field.value || ''}
+                data-invalid={!!fieldState.error}
+              />
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
+
+        {productType === 'standard' && (
+          <>
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Embedded Barcode</FieldLabel>
+                  <FieldDescription>Check this if this product will be used in weight scale machine</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_embeded'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Differential Pricing</FieldLabel>
+                  <FieldDescription>This product has different price for different warehouse</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_diffPrice'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            {/* Differential Pricing Table */}
+            {form.watch('is_diffPrice') && (
+              <Field>
+                <FieldLabel>Warehouse Prices</FieldLabel>
+                <div className='rounded-md border'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Warehouse</TableHead>
+                        <TableHead>Price</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {warehouses.map((warehouse, index) => (
+                        <TableRow key={warehouse.id}>
+                          <TableCell>
+                            <input
+                              type='hidden'
+                              {...form.register(`warehouse_id.${index}`, { value: warehouse.id })}
+                            />
+                            {warehouse.name}
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type='number'
+                              step='0.01'
+                              {...form.register(`diff_price.${index}`, { valueAsNumber: true })}
+                              placeholder='0.00'
+                              className='w-full'
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <FieldError>
+                  {form.formState.errors.warehouse_id?.message || form.formState.errors.diff_price?.message}
+                </FieldError>
+              </Field>
+            )}
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Initial Stock</FieldLabel>
+                  <FieldDescription>Add initial stock for this product (Note: This feature will not work for product with variants and batches)</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_initial_stock'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+          </>
+        )}
+
+        {productType === 'combo' && (
+          <>
+            {/* Combo Products Section */}
+            <ComboProductsTable
+              control={form.control as any}
+              watch={form.watch as any}
+              setValue={form.setValue as any}
+              units={units.map(u => ({ id: u.id, unit_name: u.name || '' }))}
             />
 
             <Controller
               control={form.control}
-              name='specification'
+              name='production_cost'
               render={({ field, fieldState }) => (
                 <Field>
-                  <FieldLabel htmlFor='product-specification'>Specification</FieldLabel>
-                  <Textarea
-                    id='product-specification'
-                    placeholder='Enter product specifications'
-                    rows={4}
+                  <FieldLabel htmlFor='product-production-cost'>Production Cost</FieldLabel>
+                  <Input
+                    id='product-production-cost'
+                    type='number'
+                    step='0.01'
+                    placeholder='0.00'
                     autoComplete='off'
                     {...field}
-                    value={field.value || ''}
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      field.onChange(value === '' ? undefined : Number(value))
+                    }}
                     data-invalid={!!fieldState.error}
                   />
+                  <FieldDescription>Production cost for combo products</FieldDescription>
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 </Field>
               )}
             />
+          </>
+        )}
 
-            {productType === 'standard' && (
-              <>
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>Embedded Barcode</FieldLabel>
-                      <FieldDescription>Check this if this product will be used in weight scale machine</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_embeded'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
+        <Field>
+          <div className='flex items-center justify-between'>
+            <div>
+              <FieldLabel>Sell Online</FieldLabel>
+              <FieldDescription>Make this product available for online sales</FieldDescription>
+            </div>
+            <Controller
+              control={form.control}
+              name='is_online'
+              render={({ field }) => (
+                <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+              )}
+            />
+          </div>
+        </Field>
 
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>Differential Pricing</FieldLabel>
-                      <FieldDescription>This product has different price for different warehouse</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_diffPrice'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
+        <Field>
+          <div className='flex items-center justify-between'>
+            <div>
+              <FieldLabel>In Stock</FieldLabel>
+              <FieldDescription>Mark product as in stock</FieldDescription>
+            </div>
+            <Controller
+              control={form.control}
+              name='in_stock'
+              render={({ field }) => (
+                <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+              )}
+            />
+          </div>
+        </Field>
 
-                {/* Differential Pricing Table */}
-                {form.watch('is_diffPrice') && (
+        <Field>
+          <div className='flex items-center justify-between'>
+            <div>
+              <FieldLabel>Track Inventory</FieldLabel>
+              <FieldDescription>Track inventory for this product</FieldDescription>
+            </div>
+            <Controller
+              control={form.control}
+              name='track_inventory'
+              render={({ field }) => (
+                <Switch checked={field.value !== false} onCheckedChange={field.onChange} />
+              )}
+            />
+          </div>
+        </Field>
+
+        <Field>
+          <div className='flex items-center justify-between'>
+            <div>
+              <FieldLabel>Disable WooCommerce Sync</FieldLabel>
+              <FieldDescription>Disable synchronization with WooCommerce</FieldDescription>
+            </div>
+            <Controller
+              control={form.control}
+              name='is_sync_disable'
+              render={({ field }) => (
+                <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+              )}
+            />
+          </div>
+        </Field>
+
+        {/* Promotion Section */}
+        <Field>
+          <div className='flex items-center justify-between'>
+            <div>
+              <FieldLabel>Add Promotional Price</FieldLabel>
+              <FieldDescription>Enable promotional pricing for this product</FieldDescription>
+            </div>
+            <Controller
+              control={form.control}
+              name='promotion'
+              render={({ field }) => (
+                <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+              )}
+            />
+          </div>
+        </Field>
+
+        {form.watch('promotion') && (
+          <>
+            <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+              <Controller
+                control={form.control}
+                name='promotion_price'
+                render={({ field, fieldState }) => (
                   <Field>
-                    <FieldLabel>Warehouse Prices</FieldLabel>
-                    <div className='rounded-md border'>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Warehouse</TableHead>
-                            <TableHead>Price</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {warehouses.map((warehouse, index) => (
-                            <TableRow key={warehouse.id}>
-                              <TableCell>
-                                <input
-                                  type='hidden'
-                                  {...form.register(`warehouse_id.${index}`, { value: warehouse.id })}
-                                />
-                                {warehouse.name}
-                              </TableCell>
-                              <TableCell>
-                                <Input
-                                  type='number'
-                                  step='0.01'
-                                  {...form.register(`diff_price.${index}`, { valueAsNumber: true })}
-                                  placeholder='0.00'
-                                  className='w-full'
-                                />
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    <FieldError>
-                      {form.formState.errors.warehouse_id?.message || form.formState.errors.diff_price?.message}
-                    </FieldError>
+                    <FieldLabel htmlFor='product-promotion-price-2'>Promotional Price</FieldLabel>
+                    <Input
+                      id='product-promotion-price-2'
+                      type='number'
+                      step='0.01'
+                      placeholder='0.00'
+                      autoComplete='off'
+                      {...field}
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        field.onChange(value === '' ? undefined : Number(value))
+                      }}
+                      data-invalid={!!fieldState.error}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                   </Field>
                 )}
+              />
 
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>Initial Stock</FieldLabel>
-                      <FieldDescription>Add initial stock for this product (Note: This feature will not work for product with variants and batches)</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_initial_stock'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
-              </>
-            )}
+              <DatePickerField
+                label="Promotion Starts"
+                value={form.watch('starting_date')}
+                onChange={(value) => form.setValue('starting_date', value)}
+                error={form.formState.errors.starting_date?.message}
+              />
 
-            {productType === 'combo' && (
-              <>
-                {/* Combo Products Section */}
-                <ComboProductsTable
-                  control={form.control as any}
-                  watch={form.watch as any}
-                  setValue={form.setValue as any}
-                  units={units.map(u => ({ id: u.id, unit_name: u.name || '' }))}
-                />
-                
-                  <Controller
-                    control={form.control}
-                    name='production_cost'
-                    render={({ field, fieldState }) => (
-                      <Field>
-                        <FieldLabel htmlFor='product-production-cost'>Production Cost</FieldLabel>
-                        <Input
-                          id='product-production-cost'
-                          type='number'
-                          step='0.01'
-                          placeholder='0.00'
-                          autoComplete='off'
-                          {...field}
-                          value={field.value ?? ''}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            field.onChange(value === '' ? undefined : Number(value))
-                          }}
-                          data-invalid={!!fieldState.error}
-                        />
-                        <FieldDescription>Production cost for combo products</FieldDescription>
-                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                      </Field>
-                    )}
-                  />
-              </>
-            )}
-
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Sell Online</FieldLabel>
-                  <FieldDescription>Make this product available for online sales</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='is_online'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>In Stock</FieldLabel>
-                  <FieldDescription>Mark product as in stock</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='in_stock'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Track Inventory</FieldLabel>
-                  <FieldDescription>Track inventory for this product</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='track_inventory'
-                  render={({ field }) => (
-                    <Switch checked={field.value !== false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Disable WooCommerce Sync</FieldLabel>
-                  <FieldDescription>Disable synchronization with WooCommerce</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='is_sync_disable'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-
-            {/* Promotion Section */}
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Add Promotional Price</FieldLabel>
-                  <FieldDescription>Enable promotional pricing for this product</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='promotion'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-
-            {form.watch('promotion') && (
-              <>
-                <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                  <Controller
-                    control={form.control}
-                    name='promotion_price'
-                    render={({ field, fieldState }) => (
-                      <Field>
-                        <FieldLabel htmlFor='product-promotion-price-2'>Promotional Price</FieldLabel>
-                        <Input
-                          id='product-promotion-price-2'
-                          type='number'
-                          step='0.01'
-                          placeholder='0.00'
-                          autoComplete='off'
-                          {...field}
-                          value={field.value ?? ''}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            field.onChange(value === '' ? undefined : Number(value))
-                          }}
-                          data-invalid={!!fieldState.error}
-                        />
-                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                      </Field>
-                    )}
-                  />
-
-                  <DatePickerField
-                    label="Promotion Starts"
-                    value={form.watch('starting_date')}
-                    onChange={(value) => form.setValue('starting_date', value)}
-                    error={form.formState.errors.starting_date?.message}
-                  />
-
-                  <DatePickerField
-                    label="Promotion Ends"
-                    value={form.watch('last_date')}
-                    onChange={(value) => form.setValue('last_date', value)}
-                    error={form.formState.errors.last_date?.message}
-                  />
-                </div>
-              </>
-            )}
+              <DatePickerField
+                label="Promotion Ends"
+                value={form.watch('last_date')}
+                onChange={(value) => form.setValue('last_date', value)}
+                error={form.formState.errors.last_date?.message}
+              />
+            </div>
+          </>
+        )}
 
         {/* Initial Stock Section - Only for standard products without variants/batches */}
         {productType === 'standard' && form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && (
@@ -2128,169 +2128,169 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         )}
 
         {/* SEO & Additional Information */}
-            <Controller
-              control={form.control}
-              name='tags'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-tags'>Tags</FieldLabel>
-                  <TagInput
-                    id='product-tags'
-                    value={field.value?.split(',').map(t => t.trim()).filter(t => t) || []}
-                    onChange={(tags) => field.onChange(tags.join(','))}
-                    placeholder='Enter tags separated by commas'
-                    delimiter=','
-                  />
-                  <FieldDescription>Product tags for search and categorization</FieldDescription>
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
-            />
+        <Controller
+          control={form.control}
+          name='tags'
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-tags'>Tags</FieldLabel>
+              <TagInput
+                id='product-tags'
+                value={field.value?.split(',').map(t => t.trim()).filter(t => t) || []}
+                onChange={(tags) => field.onChange(tags.join(','))}
+                placeholder='Enter tags separated by commas'
+                delimiter=','
+              />
+              <FieldDescription>Product tags for search and categorization</FieldDescription>
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
 
-            <Controller
-              control={form.control}
-              name='meta_title'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-meta-title'>Meta Title</FieldLabel>
-                  <Input
-                    id='product-meta-title'
-                    placeholder='Enter meta title for SEO'
-                    maxLength={255}
-                    autoComplete='off'
-                    {...field}
-                    value={field.value || ''}
-                    data-invalid={!!fieldState.error}
-                  />
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
-            />
+        <Controller
+          control={form.control}
+          name='meta_title'
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-meta-title'>Meta Title</FieldLabel>
+              <Input
+                id='product-meta-title'
+                placeholder='Enter meta title for SEO'
+                maxLength={255}
+                autoComplete='off'
+                {...field}
+                value={field.value || ''}
+                data-invalid={!!fieldState.error}
+              />
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
 
-            <Controller
-              control={form.control}
-              name='meta_description'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-meta-description'>Meta Description</FieldLabel>
-                  <Textarea
-                    id='product-meta-description'
-                    placeholder='Enter meta description for SEO'
-                    rows={3}
-                    maxLength={1000}
-                    autoComplete='off'
-                    {...field}
-                    value={field.value || ''}
-                    data-invalid={!!fieldState.error}
-                  />
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
-            />
+        <Controller
+          control={form.control}
+          name='meta_description'
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-meta-description'>Meta Description</FieldLabel>
+              <Textarea
+                id='product-meta-description'
+                placeholder='Enter meta description for SEO'
+                rows={3}
+                maxLength={1000}
+                autoComplete='off'
+                {...field}
+                value={field.value || ''}
+                data-invalid={!!fieldState.error}
+              />
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
 
-            <RelatedProducts
-              setValue={form.setValue}
-              value={form.watch('related_products')}
-            />
+        <RelatedProducts
+          setValue={form.setValue}
+          value={form.watch('related_products')}
+        />
 
         {/* Restaurant Module Fields */}
-            <Controller
-              control={form.control}
-              name='kitchen_id'
-              render={({ field, fieldState }) => {
-                // TODO: Add kitchen API integration when available
-                const kitchenItems: Array<{ id: number; name: string }> = []
+        <Controller
+          control={form.control}
+          name='kitchen_id'
+          render={({ field, fieldState }) => {
+            // TODO: Add kitchen API integration when available
+            const kitchenItems: Array<{ id: number; name: string }> = []
 
-                return (
-                  <Field>
-                    <FieldLabel htmlFor='product-kitchen'>Kitchen</FieldLabel>
-                    <Combobox
-                      items={kitchenItems}
-                      value={null}
-                      onValueChange={() => {
-                        // No-op until kitchen API is integrated
-                      }}
-                      itemToStringValue={(item: { id: number; name: string } | null) => item ? String(item.id) : ''}
-                    >
-                      <ComboboxInput
-                        id='product-kitchen'
-                        name="kitchen_id"
-                        placeholder="Select kitchen (optional)"
-                        showClear
-                        disabled
-                        data-invalid={!!fieldState.error}
-                      />
-                      <ComboboxContent>
-                        <ComboboxEmpty>
-                          Kitchen selection coming soon. Requires kitchen API integration.
-                        </ComboboxEmpty>
-                        <ComboboxList>
-                          {(item) => (
-                            <ComboboxItem key={item.id} value={item}>
-                              {item.name}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                  </Field>
-                )
-              }}
-            />
-
-            <Controller
-              control={form.control}
-              name='menu_type'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-menu-type'>Menu Type</FieldLabel>
-                  <Input
-                    id='product-menu-type'
-                    value={Array.isArray(field.value) ? field.value.join(',') : ''}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      if (!value) {
-                        field.onChange([])
-                      } else {
-                        const ids = value.split(',').map((id) => parseInt(id.trim())).filter((id) => !isNaN(id))
-                        field.onChange(ids)
-                      }
-                    }}
-                    placeholder='Comma-separated menu type IDs (e.g., 1,2,3)'
-                    autoComplete='off'
+            return (
+              <Field>
+                <FieldLabel htmlFor='product-kitchen'>Kitchen</FieldLabel>
+                <Combobox
+                  items={kitchenItems}
+                  value={null}
+                  onValueChange={() => {
+                    // No-op until kitchen API is integrated
+                  }}
+                  itemToStringValue={(item: { id: number; name: string } | null) => item ? String(item.id) : ''}
+                >
+                  <ComboboxInput
+                    id='product-kitchen'
+                    name="kitchen_id"
+                    placeholder="Select kitchen (optional)"
+                    showClear
+                    disabled
                     data-invalid={!!fieldState.error}
                   />
-                  <FieldDescription>
-                    Enter menu type IDs separated by commas. Full menu type selection coming soon. Requires menu type API integration.
-                  </FieldDescription>
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
-            />
+                  <ComboboxContent>
+                    <ComboboxEmpty>
+                      Kitchen selection coming soon. Requires kitchen API integration.
+                    </ComboboxEmpty>
+                    <ComboboxList>
+                      {(item) => (
+                        <ComboboxItem key={item.id} value={item}>
+                          {item.name}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+                <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+              </Field>
+            )
+          }}
+        />
 
-            <Controller
-              control={form.control}
-              name='extras'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-extras'>Extras/Add-ons</FieldLabel>
-                  <Textarea
-                    id='product-extras'
-                    placeholder='Comma-separated addon IDs (e.g., 1,2,3)'
-                    rows={2}
-                    autoComplete='off'
-                    {...field}
-                    value={field.value || ''}
-                    data-invalid={!!fieldState.error}
-                  />
-                  <FieldDescription>
-                    Enter addon/extra product IDs separated by commas. Full addon search integration coming soon.
-                  </FieldDescription>
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
-            />
+        <Controller
+          control={form.control}
+          name='menu_type'
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-menu-type'>Menu Type</FieldLabel>
+              <Input
+                id='product-menu-type'
+                value={Array.isArray(field.value) ? field.value.join(',') : ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (!value) {
+                    field.onChange([])
+                  } else {
+                    const ids = value.split(',').map((id) => parseInt(id.trim())).filter((id) => !isNaN(id))
+                    field.onChange(ids)
+                  }
+                }}
+                placeholder='Comma-separated menu type IDs (e.g., 1,2,3)'
+                autoComplete='off'
+                data-invalid={!!fieldState.error}
+              />
+              <FieldDescription>
+                Enter menu type IDs separated by commas. Full menu type selection coming soon. Requires menu type API integration.
+              </FieldDescription>
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name='extras'
+          render={({ field, fieldState }) => (
+            <Field>
+              <FieldLabel htmlFor='product-extras'>Extras/Add-ons</FieldLabel>
+              <Textarea
+                id='product-extras'
+                placeholder='Comma-separated addon IDs (e.g., 1,2,3)'
+                rows={2}
+                autoComplete='off'
+                {...field}
+                value={field.value || ''}
+                data-invalid={!!fieldState.error}
+              />
+              <FieldDescription>
+                Enter addon/extra product IDs separated by commas. Full addon search integration coming soon.
+              </FieldDescription>
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+            </Field>
+          )}
+        />
       </FieldGroup>
 
       {/* Dialogs */}
