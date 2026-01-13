@@ -691,58 +691,55 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
 
           {/* Digital File Upload - Only for digital type, appears in Row 2 */}
           {productType === 'digital' && (
-            <Field>
-              <FieldLabel>
-                Attach File <span className='text-destructive'>*</span>
-              </FieldLabel>
-              <Controller
-                control={form.control}
-                name='file'
-                render={({ field: { onChange, value, ...field }, fieldState }) => (
-                  <Field>
-                    <FieldLabel htmlFor='product-file'>
-                      Attach File <span className='text-destructive'>*</span>
-                    </FieldLabel>
-                    <FileUpload
-                      {...field}
-                      accept='*/*'
-                      value={value ? [value] : []}
-                      onValueChange={(files) => onChange(files[0] || undefined)}
-                      maxFiles={1}
-                    >
-                      <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
-                        Drag and drop or
-                        <FileUploadTrigger asChild>
-                          <Button type='button' variant='link' size='sm' className='p-0'>
-                            choose file
-                          </Button>
-                        </FileUploadTrigger>
-                        to upload
-                      </FileUploadDropzone>
-                      <FileUploadList>
-                        {value && (
-                          <FileUploadItem key={value.name} value={value}>
-                            <FileUploadItemPreview />
-                            <FileUploadItemMetadata />
-                            <FileUploadItemDelete asChild>
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='icon'
-                                className='size-7'
-                              >
-                                ×
-                                <span className='sr-only'>Delete</span>
-                              </Button>
-                            </FileUploadItemDelete>
-                          </FileUploadItem>
-                        )}
-                      </FileUploadList>
-                    </FileUpload>
-                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                  </Field>
-                )}
-              />
+            <Controller
+              control={form.control}
+              name='file'
+              render={({ field: { onChange, value, ...field }, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-file'>
+                    Attach File <span className='text-destructive'>*</span>
+                  </FieldLabel>
+                  <FileUpload
+                    {...field}
+                    accept='*/*'
+                    value={value ? [value] : []}
+                    onValueChange={(files) => onChange(files[0] || undefined)}
+                    maxFiles={1}
+                  >
+                    <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                      Drag and drop or
+                      <FileUploadTrigger asChild>
+                        <Button type='button' variant='link' size='sm' className='p-0'>
+                          choose file
+                        </Button>
+                      </FileUploadTrigger>
+                      to upload
+                    </FileUploadDropzone>
+                    <FileUploadList>
+                      {value && (
+                        <FileUploadItem key={value.name} value={value}>
+                          <FileUploadItemPreview />
+                          <FileUploadItemMetadata />
+                          <FileUploadItemDelete asChild>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='size-7'
+                            >
+                              ×
+                              <span className='sr-only'>Delete</span>
+                            </Button>
+                          </FileUploadItemDelete>
+                        </FileUploadItem>
+                      )}
+                    </FileUploadList>
+                  </FileUpload>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
+          )}
 
           <Controller
             control={form.control}
