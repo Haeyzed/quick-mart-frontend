@@ -490,19 +490,23 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       }
       if (data.kitchen_id) formData.append('kitchen_id', data.kitchen_id.toString())
 
+      let response
       if (isEdit && productId) {
-        await updateProduct.mutateAsync({ id: productId, data: formData })
+        response = await updateProduct.mutateAsync({ id: productId, data: formData })
       } else {
-        await createProduct.mutateAsync(formData)
+        response = await createProduct.mutateAsync(formData)
       }
 
+      const message = (response as any)?.message || (isEdit ? 'Product updated successfully' : 'Product created successfully')
+      toast.success(message)
+      
       if (onSuccess) {
         onSuccess()
       } else {
         router.push('/products')
       }
-    } catch (error) {
-      handleApiError(error)
+    } catch (error: any) {
+      handleApiError(error, form.setError)
     }
   }
 
@@ -618,8 +622,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           form.setValue('code', code)
                           toast.success('Code generated successfully')
                         }
-                      } catch (error) {
-                        handleApiError(error)
+                      } catch (error: any) {
+                        handleApiError(error, form.setError)
                       }
                     }}
                     disabled={generateCode.isFetching}
