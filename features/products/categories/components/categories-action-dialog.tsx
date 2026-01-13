@@ -280,6 +280,7 @@ export function CategoriesActionDialog({
                           placeholder='Select parent category (optional)'
                           showClear
                           data-invalid={!!fieldState.error}
+                          value={selectedCategory ? selectedCategory.name : ''}
                         />
                         <ComboboxContent>
                           <ComboboxEmpty>No parent categories available</ComboboxEmpty>

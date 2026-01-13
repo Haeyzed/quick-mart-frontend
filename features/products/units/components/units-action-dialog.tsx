@@ -209,6 +209,7 @@ export function UnitsActionDialog({ currentRow, open, onOpenChange }: UnitsActio
                           placeholder="Select base unit (optional)"
                           showClear
                           data-invalid={!!fieldState.error}
+                          value={selectedUnit ? selectedUnit.label : ''}
                         />
                         <ComboboxContent>
                           <ComboboxEmpty>No base units found.</ComboboxEmpty>
@@ -256,6 +257,7 @@ export function UnitsActionDialog({ currentRow, open, onOpenChange }: UnitsActio
                               placeholder="Select operator"
                               showClear
                               data-invalid={!!fieldState.error}
+                              value={selectedOperator ? selectedOperator.label : ''}
                             />
                             <ComboboxContent>
                               <ComboboxEmpty>No operators found.</ComboboxEmpty>

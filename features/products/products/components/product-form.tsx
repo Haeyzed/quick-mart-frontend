@@ -552,6 +552,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       placeholder="Select product type"
                       showClear
                       data-invalid={!!fieldState.error}
+                      value={selectedType ? selectedType.label : ''}
                     />
                     <ComboboxContent>
                       <ComboboxEmpty>No product types found.</ComboboxEmpty>
@@ -569,9 +570,6 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               )
             }}
           />
-        )
-      }}
-    />
 
           <Controller
             control={form.control}
@@ -672,6 +670,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       placeholder="Select barcode symbology"
                       showClear
                       data-invalid={!!fieldState.error}
+                      value={selectedBarcode ? selectedBarcode.label : ''}
                     />
                     <ComboboxContent>
                       <ComboboxEmpty>No barcode symbologies found.</ComboboxEmpty>
@@ -699,50 +698,51 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               <Controller
                 control={form.control}
                 name='file'
-                render={({ field: { onChange, value, ...field } }) => (
-                  <FileUpload
-                    {...field}
-                    accept='*/*'
-                    value={value ? [value] : []}
-                    onValueChange={(files) => onChange(files[0] || undefined)}
-                    maxFiles={1}
-                  >
-                    <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
-                      Drag and drop or
-                      <FileUploadTrigger asChild>
-                        <Button type='button' variant='link' size='sm' className='p-0'>
-                          choose file
-                        </Button>
-                      </FileUploadTrigger>
-                      to upload
-                    </FileUploadDropzone>
-                    <FileUploadList>
-                      {value && (
-                        <FileUploadItem key={value.name} value={value}>
-                          <FileUploadItemPreview />
-                          <FileUploadItemMetadata />
-                          <FileUploadItemDelete asChild>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='icon'
-                              className='size-7'
-                            >
-                              ×
-                              <span className='sr-only'>Delete</span>
-                            </Button>
-                          </FileUploadItemDelete>
-                        </FileUploadItem>
-                      )}
-                    </FileUploadList>
-                  </FileUpload>
+                render={({ field: { onChange, value, ...field }, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor='product-file'>
+                      Attach File <span className='text-destructive'>*</span>
+                    </FieldLabel>
+                    <FileUpload
+                      {...field}
+                      accept='*/*'
+                      value={value ? [value] : []}
+                      onValueChange={(files) => onChange(files[0] || undefined)}
+                      maxFiles={1}
+                    >
+                      <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                        Drag and drop or
+                        <FileUploadTrigger asChild>
+                          <Button type='button' variant='link' size='sm' className='p-0'>
+                            choose file
+                          </Button>
+                        </FileUploadTrigger>
+                        to upload
+                      </FileUploadDropzone>
+                      <FileUploadList>
+                        {value && (
+                          <FileUploadItem key={value.name} value={value}>
+                            <FileUploadItemPreview />
+                            <FileUploadItemMetadata />
+                            <FileUploadItemDelete asChild>
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='icon'
+                                className='size-7'
+                              >
+                                ×
+                                <span className='sr-only'>Delete</span>
+                              </Button>
+                            </FileUploadItemDelete>
+                          </FileUploadItem>
+                        )}
+                      </FileUploadList>
+                    </FileUpload>
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
                 )}
               />
-              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-            </Field>
-          )
-        }}
-      />
 
           <Controller
             control={form.control}
@@ -773,6 +773,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           placeholder="Select brand (optional)"
                           showClear
                           data-invalid={!!fieldState.error}
+                          value={selectedBrand ? selectedBrand.name : ''}
                         />
                         <ComboboxContent>
                           <ComboboxEmpty>No brands found.</ComboboxEmpty>
@@ -833,6 +834,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           placeholder="Select category (required)"
                           showClear
                           data-invalid={!!fieldState.error}
+                          value={selectedCategory ? selectedCategory.name : ''}
                         />
                         <ComboboxContent>
                           <ComboboxEmpty>No categories found.</ComboboxEmpty>
@@ -903,6 +905,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                   placeholder="Select unit"
                                   showClear
                                   data-invalid={!!fieldState.error}
+                                  value={selectedUnit ? selectedUnit.name : ''}
                                 />
                                 <ComboboxContent>
                                   <ComboboxEmpty>No units found.</ComboboxEmpty>
@@ -963,6 +966,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                 placeholder="Select sale unit (optional)"
                                 showClear
                                 data-invalid={!!fieldState.error}
+                                value={selectedSaleUnit ? selectedSaleUnit.name : ''}
                               />
                               <ComboboxContent>
                                 <ComboboxEmpty>No sale units found.</ComboboxEmpty>
@@ -1012,6 +1016,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                 placeholder="Select purchase unit (optional)"
                                 showClear
                                 data-invalid={!!fieldState.error}
+                                value={selectedPurchaseUnit ? selectedPurchaseUnit.name : ''}
                               />
                               <ComboboxContent>
                                 <ComboboxEmpty>No purchase units found.</ComboboxEmpty>
@@ -1089,6 +1094,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                     placeholder="Select profit margin type"
                                     showClear
                                     data-invalid={!!fieldState.error}
+                                    value={selectedMarginType ? selectedMarginType.label : ''}
                                   />
                                   <ComboboxContent>
                                     <ComboboxEmpty>No profit margin types found.</ComboboxEmpty>
@@ -1277,6 +1283,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                   placeholder="Select tax (optional)"
                                   showClear
                                   data-invalid={!!fieldState.error}
+                                  value={selectedTax ? selectedTax.label : ''}
                                 />
                                 <ComboboxContent>
                                   <ComboboxEmpty>No taxes found.</ComboboxEmpty>
@@ -1333,6 +1340,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                               placeholder="Select tax method"
                               showClear
                               data-invalid={!!fieldState.error}
+                              value={selectedTaxMethod ? selectedTaxMethod.label : ''}
                             />
                             <ComboboxContent>
                               <ComboboxEmpty>No tax methods found.</ComboboxEmpty>
@@ -1472,6 +1480,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                             placeholder="Select warranty type"
                             showClear
                             data-invalid={!!fieldState.error}
+                            value={selectedWarrantyType ? selectedWarrantyType.label : ''}
                           />
                           <ComboboxContent>
                             <ComboboxEmpty>No warranty types found.</ComboboxEmpty>
@@ -1545,6 +1554,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                             placeholder="Select guarantee type"
                             showClear
                             data-invalid={!!fieldState.error}
+                            value={selectedGuaranteeType ? selectedGuaranteeType.label : ''}
                           />
                           <ComboboxContent>
                             <ComboboxEmpty>No guarantee types found.</ComboboxEmpty>
