@@ -23,7 +23,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
 import {
   FileUpload,
   FileUploadDropzone,
@@ -249,36 +256,49 @@ export function CategoriesActionDialog({
               <Controller
                 control={form.control}
                 name='parent_id'
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel htmlFor='category-parent'>Parent Category</FieldLabel>
-                    <Select
-                      value={field.value ? String(field.value) : undefined}
-                      onValueChange={(value) => {
-                        field.onChange(value ? Number(value) : null)
-                      }}
-                    >
-                      <SelectTrigger id='category-parent' data-invalid={!!fieldState.error}>
-                        <SelectValue placeholder='Select parent category (optional)' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableParentCategories.length === 0 ? (
-                          <div className='text-muted-foreground px-2 py-1.5 text-sm'>No parent categories available</div>
-                        ) : (
-                          availableParentCategories.map((cat) => (
-                            <SelectItem key={cat.id} value={String(cat.id)}>
-                              {cat.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FieldDescription>
-                      Select a parent category to create a subcategory
-                    </FieldDescription>
-                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                  </Field>
-                )}
+                render={({ field, fieldState }) => {
+                  const categoryItems = availableParentCategories.map((cat) => ({
+                    id: cat.id,
+                    name: cat.name,
+                  }))
+                  const selectedCategory = categoryItems.find((cat) => cat.id === field.value)
+
+                  return (
+                    <Field>
+                      <FieldLabel htmlFor='category-parent'>Parent Category</FieldLabel>
+                      <Combobox
+                        items={categoryItems}
+                        value={selectedCategory || null}
+                        onValueChange={(value) => {
+                          field.onChange(value ? value.id : null)
+                        }}
+                        itemToStringValue={(item) => String(item.id)}
+                      >
+                        <ComboboxInput
+                          id='category-parent'
+                          name='parent_id'
+                          placeholder='Select parent category (optional)'
+                          showClear
+                          data-invalid={!!fieldState.error}
+                        />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No parent categories available</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item) => (
+                              <ComboboxItem key={item.id} value={item}>
+                                {item.name}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                      <FieldDescription>
+                        Select a parent category to create a subcategory
+                      </FieldDescription>
+                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                    </Field>
+                  )
+                }}
               />
               <Controller
                 control={form.control}

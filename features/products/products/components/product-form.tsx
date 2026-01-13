@@ -15,7 +15,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
 import {
   FileUpload,
   FileUploadDropzone,
@@ -521,19 +528,42 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             <Controller
               control={form.control}
               name='type'
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select product type' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='standard'>Standard</SelectItem>
-                    <SelectItem value='combo'>Combo</SelectItem>
-                    <SelectItem value='digital'>Digital</SelectItem>
-                    <SelectItem value='service'>Service</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+              render={({ field }) => {
+                const typeOptions = [
+                  { value: 'standard', label: 'Standard' },
+                  { value: 'combo', label: 'Combo' },
+                  { value: 'digital', label: 'Digital' },
+                  { value: 'service', label: 'Service' },
+                ]
+                const selectedType = typeOptions.find((opt) => opt.value === field.value)
+
+                return (
+                  <Combobox
+                    items={typeOptions}
+                    value={selectedType || null}
+                    onValueChange={(value) => {
+                      field.onChange(value ? value.value : 'standard')
+                    }}
+                    itemToStringValue={(item) => item.value}
+                  >
+                    <ComboboxInput
+                      name="type"
+                      placeholder="Select product type"
+                      showClear
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>No product types found.</ComboboxEmpty>
+                      <ComboboxList>
+                        {(item) => (
+                          <ComboboxItem key={item.value} value={item}>
+                            {item.label}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                )
+              }}
             />
             <FieldError>{form.formState.errors.type?.message}</FieldError>
           </Field>
@@ -587,21 +617,44 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             <Controller
               control={form.control}
               name='barcode_symbology'
-              render={({ field }) => (
-                <Select value={field.value || 'EAN13'} onValueChange={field.onChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='C128'>Code 128</SelectItem>
-                    <SelectItem value='C39'>Code 39</SelectItem>
-                    <SelectItem value='UPCA'>UPC-A</SelectItem>
-                    <SelectItem value='UPCE'>UPC-E</SelectItem>
-                    <SelectItem value='EAN8'>EAN-8</SelectItem>
-                    <SelectItem value='EAN13'>EAN-13</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+              render={({ field }) => {
+                const barcodeOptions = [
+                  { value: 'C128', label: 'Code 128' },
+                  { value: 'C39', label: 'Code 39' },
+                  { value: 'UPCA', label: 'UPC-A' },
+                  { value: 'UPCE', label: 'UPC-E' },
+                  { value: 'EAN8', label: 'EAN-8' },
+                  { value: 'EAN13', label: 'EAN-13' },
+                ]
+                const selectedBarcode = barcodeOptions.find((opt) => opt.value === (field.value || 'EAN13'))
+
+                return (
+                  <Combobox
+                    items={barcodeOptions}
+                    value={selectedBarcode || null}
+                    onValueChange={(value) => {
+                      field.onChange(value ? value.value : 'EAN13')
+                    }}
+                    itemToStringValue={(item) => item.value}
+                  >
+                    <ComboboxInput
+                      name="barcode_symbology"
+                      placeholder="Select barcode symbology"
+                      showClear
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>No barcode symbologies found.</ComboboxEmpty>
+                      <ComboboxList>
+                        {(item) => (
+                          <ComboboxItem key={item.value} value={item}>
+                            {item.label}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                )
+              }}
             />
             <FieldError>{form.formState.errors.barcode_symbology?.message}</FieldError>
           </Field>
@@ -665,25 +718,40 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 <Controller
                   control={form.control}
                   name='brand_id'
-                  render={({ field }) => (
-                    <Select
-                      value={field.value ? String(field.value) : undefined}
-                      onValueChange={(value) => {
-                        field.onChange(value ? Number(value) : null)
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select brand (optional)' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {brands.map((brand) => (
-                          <SelectItem key={brand.id} value={brand.id.toString()}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  render={({ field }) => {
+                    const brandItems = brands.map((brand) => ({
+                      id: brand.id,
+                      name: brand.name,
+                    }))
+                    const selectedBrand = brandItems.find((brand) => brand.id === field.value)
+
+                    return (
+                      <Combobox
+                        items={brandItems}
+                        value={selectedBrand || null}
+                        onValueChange={(value) => {
+                          field.onChange(value ? value.id : null)
+                        }}
+                        itemToStringValue={(item) => String(item.id)}
+                      >
+                        <ComboboxInput
+                          name="brand_id"
+                          placeholder="Select brand (optional)"
+                          showClear
+                        />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No brands found.</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item) => (
+                              <ComboboxItem key={item.id} value={item}>
+                                {item.name}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                    )
+                  }}
                 />
               </div>
               <Button
@@ -708,23 +776,40 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 <Controller
                   control={form.control}
                   name='category_id'
-                  render={({ field }) => (
-                    <Select
-                      value={field.value?.toString() || ''}
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select category (required)' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  render={({ field }) => {
+                    const categoryItems = categories.map((category) => ({
+                      id: category.id,
+                      name: category.name,
+                    }))
+                    const selectedCategory = categoryItems.find((cat) => cat.id === field.value)
+
+                    return (
+                      <Combobox
+                        items={categoryItems}
+                        value={selectedCategory || null}
+                        onValueChange={(value) => {
+                          field.onChange(value ? value.id : 0)
+                        }}
+                        itemToStringValue={(item) => String(item.id)}
+                      >
+                        <ComboboxInput
+                          name="category_id"
+                          placeholder="Select category (required)"
+                          showClear
+                        />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No categories found.</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item) => (
+                              <ComboboxItem key={item.id} value={item}>
+                                {item.name}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                    )
+                  }}
                 />
               </div>
               <Button
@@ -757,25 +842,42 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         <Controller
                           control={form.control}
                           name='unit_id'
-                          render={({ field }) => (
-                            <Select
-                              value={field.value?.toString() || ''}
-                              onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder='Select unit' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {units
-                                  .filter((u) => !u.base_unit) // Only show base units (base_unit is null)
-                                  .map((unit) => (
-                                    <SelectItem key={unit.id} value={unit.id.toString()}>
-                                      {unit.name}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                          )}
+                          render={({ field }) => {
+                            const baseUnitItems = units
+                              .filter((u) => !u.base_unit) // Only show base units (base_unit is null)
+                              .map((unit) => ({
+                                id: unit.id,
+                                name: unit.name,
+                              }))
+                            const selectedUnit = baseUnitItems.find((unit) => unit.id === field.value)
+
+                            return (
+                              <Combobox
+                                items={baseUnitItems}
+                                value={selectedUnit || null}
+                                onValueChange={(value) => {
+                                  field.onChange(value ? value.id : undefined)
+                                }}
+                                itemToStringValue={(item) => String(item.id)}
+                              >
+                                <ComboboxInput
+                                  name="unit_id"
+                                  placeholder="Select unit"
+                                  showClear
+                                />
+                                <ComboboxContent>
+                                  <ComboboxEmpty>No units found.</ComboboxEmpty>
+                                  <ComboboxList>
+                                    {(item) => (
+                                      <ComboboxItem key={item.id} value={item}>
+                                        {item.name}
+                                      </ComboboxItem>
+                                    )}
+                                  </ComboboxList>
+                                </ComboboxContent>
+                              </Combobox>
+                            )
+                          }}
                         />
                       </div>
                       <Button
@@ -796,27 +898,42 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     <Controller
                       control={form.control}
                       name='sale_unit_id'
-                      render={({ field }) => (
-                        <Select
-                          value={field.value ? String(field.value) : undefined}
-                          onValueChange={(value) => {
-                            field.onChange(value ? Number(value) : null)
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select sale unit (optional)' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {units
-                              .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
-                              .map((unit) => (
-                                <SelectItem key={unit.id} value={unit.id.toString()}>
-                                  {unit.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                      render={({ field }) => {
+                        const saleUnitItems = units
+                          .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                          .map((unit) => ({
+                            id: unit.id,
+                            name: unit.name,
+                          }))
+                        const selectedSaleUnit = saleUnitItems.find((unit) => unit.id === field.value)
+
+                        return (
+                          <Combobox
+                            items={saleUnitItems}
+                            value={selectedSaleUnit || null}
+                            onValueChange={(value) => {
+                              field.onChange(value ? value.id : null)
+                            }}
+                            itemToStringValue={(item) => String(item.id)}
+                          >
+                            <ComboboxInput
+                              name="sale_unit_id"
+                              placeholder="Select sale unit (optional)"
+                              showClear
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>No sale units found.</ComboboxEmpty>
+                              <ComboboxList>
+                                {(item) => (
+                                  <ComboboxItem key={item.id} value={item}>
+                                    {item.name}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
+                        )
+                      }}
                     />
                     <FieldError>{form.formState.errors.sale_unit_id?.message}</FieldError>
                   </Field>
@@ -826,27 +943,42 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     <Controller
                       control={form.control}
                       name='purchase_unit_id'
-                      render={({ field }) => (
-                        <Select
-                          value={field.value ? String(field.value) : undefined}
-                          onValueChange={(value) => {
-                            field.onChange(value ? Number(value) : null)
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select purchase unit (optional)' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {units
-                              .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
-                              .map((unit) => (
-                                <SelectItem key={unit.id} value={unit.id.toString()}>
-                                  {unit.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                      render={({ field }) => {
+                        const purchaseUnitItems = units
+                          .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                          .map((unit) => ({
+                            id: unit.id,
+                            name: unit.name,
+                          }))
+                        const selectedPurchaseUnit = purchaseUnitItems.find((unit) => unit.id === field.value)
+
+                        return (
+                          <Combobox
+                            items={purchaseUnitItems}
+                            value={selectedPurchaseUnit || null}
+                            onValueChange={(value) => {
+                              field.onChange(value ? value.id : null)
+                            }}
+                            itemToStringValue={(item) => String(item.id)}
+                          >
+                            <ComboboxInput
+                              name="purchase_unit_id"
+                              placeholder="Select purchase unit (optional)"
+                              showClear
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>No purchase units found.</ComboboxEmpty>
+                              <ComboboxList>
+                                {(item) => (
+                                  <ComboboxItem key={item.id} value={item}>
+                                    {item.name}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
+                        )
+                      }}
                     />
                     <FieldError>{form.formState.errors.purchase_unit_id?.message}</FieldError>
                   </Field>
@@ -874,17 +1006,40 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           <Controller
                             control={form.control}
                             name='profit_margin_type'
-                            render={({ field }) => (
-                              <Select value={field.value || 'percentage'} onValueChange={field.onChange}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value='percentage'>Percentage (%)</SelectItem>
-                                  <SelectItem value='flat'>Flat</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
+                            render={({ field }) => {
+                              const marginTypeOptions = [
+                                { value: 'percentage', label: 'Percentage (%)' },
+                                { value: 'flat', label: 'Flat' },
+                              ]
+                              const selectedMarginType = marginTypeOptions.find((opt) => opt.value === (field.value || 'percentage'))
+
+                              return (
+                                <Combobox
+                                  items={marginTypeOptions}
+                                  value={selectedMarginType || null}
+                                  onValueChange={(value) => {
+                                    field.onChange(value ? value.value : 'percentage')
+                                  }}
+                                  itemToStringValue={(item) => item.value}
+                                >
+                                  <ComboboxInput
+                                    name="profit_margin_type"
+                                    placeholder="Select profit margin type"
+                                    showClear
+                                  />
+                                  <ComboboxContent>
+                                    <ComboboxEmpty>No profit margin types found.</ComboboxEmpty>
+                                    <ComboboxList>
+                                      {(item) => (
+                                        <ComboboxItem key={item.value} value={item}>
+                                          {item.label}
+                                        </ComboboxItem>
+                                      )}
+                                    </ComboboxList>
+                                  </ComboboxContent>
+                                </Combobox>
+                              )
+                            }}
                           />
                           <FieldError>{form.formState.errors.profit_margin_type?.message}</FieldError>
                         </Field>
@@ -967,25 +1122,40 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         <Controller
                           control={form.control}
                           name='tax_id'
-                          render={({ field }) => (
-                            <Select
-                              value={field.value ? String(field.value) : undefined}
-                              onValueChange={(value) => {
-                                field.onChange(value ? Number(value) : null)
-                              }}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder='Select tax (optional)' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {taxes.map((tax) => (
-                                  <SelectItem key={tax.id} value={tax.id.toString()}>
-                                    {tax.name} ({tax.rate}%)
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
+                          render={({ field }) => {
+                            const taxItems = taxes.map((tax) => ({
+                              id: tax.id,
+                              label: `${tax.name} (${tax.rate}%)`,
+                            }))
+                            const selectedTax = taxItems.find((tax) => tax.id === field.value)
+
+                            return (
+                              <Combobox
+                                items={taxItems}
+                                value={selectedTax || null}
+                                onValueChange={(value) => {
+                                  field.onChange(value ? value.id : null)
+                                }}
+                                itemToStringValue={(item) => String(item.id)}
+                              >
+                                <ComboboxInput
+                                  name="tax_id"
+                                  placeholder="Select tax (optional)"
+                                  showClear
+                                />
+                                <ComboboxContent>
+                                  <ComboboxEmpty>No taxes found.</ComboboxEmpty>
+                                  <ComboboxList>
+                                    {(item) => (
+                                      <ComboboxItem key={item.id} value={item}>
+                                        {item.label}
+                                      </ComboboxItem>
+                                    )}
+                                  </ComboboxList>
+                                </ComboboxContent>
+                              </Combobox>
+                            )
+                          }}
                         />
                       </div>
                       <Button
@@ -1006,20 +1176,40 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     <Controller
                       control={form.control}
                       name='tax_method'
-                      render={({ field }) => (
-                        <Select
-                          value={field.value?.toString() || '0'}
-                          onValueChange={(value) => field.onChange(parseInt(value))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value='0'>Exclusive</SelectItem>
-                            <SelectItem value='1'>Inclusive</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                      render={({ field }) => {
+                        const taxMethodOptions = [
+                          { value: 0, label: 'Exclusive' },
+                          { value: 1, label: 'Inclusive' },
+                        ]
+                        const selectedTaxMethod = taxMethodOptions.find((opt) => opt.value === (field.value ?? 0))
+
+                        return (
+                          <Combobox
+                            items={taxMethodOptions}
+                            value={selectedTaxMethod || null}
+                            onValueChange={(value) => {
+                              field.onChange(value ? value.value : 0)
+                            }}
+                            itemToStringValue={(item) => String(item.value)}
+                          >
+                            <ComboboxInput
+                              name="tax_method"
+                              placeholder="Select tax method"
+                              showClear
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>No tax methods found.</ComboboxEmpty>
+                              <ComboboxList>
+                                {(item) => (
+                                  <ComboboxItem key={item.value} value={item}>
+                                    {item.label}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
+                        )
+                      }}
                     />
                     <FieldError>{form.formState.errors.tax_method?.message}</FieldError>
                   </Field>
@@ -1094,18 +1284,41 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   <Controller
                     control={form.control}
                     name='warranty_type'
-                    render={({ field }) => (
-                      <Select value={field.value || 'months'} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='days'>Days</SelectItem>
-                          <SelectItem value='months'>Months</SelectItem>
-                          <SelectItem value='years'>Years</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
+                    render={({ field }) => {
+                      const warrantyTypeOptions = [
+                        { value: 'days', label: 'Days' },
+                        { value: 'months', label: 'Months' },
+                        { value: 'years', label: 'Years' },
+                      ]
+                      const selectedWarrantyType = warrantyTypeOptions.find((opt) => opt.value === (field.value || 'months'))
+
+                      return (
+                        <Combobox
+                          items={warrantyTypeOptions}
+                          value={selectedWarrantyType || null}
+                          onValueChange={(value) => {
+                            field.onChange(value ? value.value : 'months')
+                          }}
+                          itemToStringValue={(item) => item.value}
+                        >
+                          <ComboboxInput
+                            name="warranty_type"
+                            placeholder="Select warranty type"
+                            showClear
+                          />
+                          <ComboboxContent>
+                            <ComboboxEmpty>No warranty types found.</ComboboxEmpty>
+                            <ComboboxList>
+                              {(item) => (
+                                <ComboboxItem key={item.value} value={item}>
+                                  {item.label}
+                                </ComboboxItem>
+                              )}
+                            </ComboboxList>
+                          </ComboboxContent>
+                        </Combobox>
+                      )
+                    }}
                   />
                   <FieldError>{form.formState.errors.warranty_type?.message}</FieldError>
                 </Field>
@@ -1128,18 +1341,41 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   <Controller
                     control={form.control}
                     name='guarantee_type'
-                    render={({ field }) => (
-                      <Select value={field.value || 'months'} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='days'>Days</SelectItem>
-                          <SelectItem value='months'>Months</SelectItem>
-                          <SelectItem value='years'>Years</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
+                    render={({ field }) => {
+                      const guaranteeTypeOptions = [
+                        { value: 'days', label: 'Days' },
+                        { value: 'months', label: 'Months' },
+                        { value: 'years', label: 'Years' },
+                      ]
+                      const selectedGuaranteeType = guaranteeTypeOptions.find((opt) => opt.value === (field.value || 'months'))
+
+                      return (
+                        <Combobox
+                          items={guaranteeTypeOptions}
+                          value={selectedGuaranteeType || null}
+                          onValueChange={(value) => {
+                            field.onChange(value ? value.value : 'months')
+                          }}
+                          itemToStringValue={(item) => item.value}
+                        >
+                          <ComboboxInput
+                            name="guarantee_type"
+                            placeholder="Select guarantee type"
+                            showClear
+                          />
+                          <ComboboxContent>
+                            <ComboboxEmpty>No guarantee types found.</ComboboxEmpty>
+                            <ComboboxList>
+                              {(item) => (
+                                <ComboboxItem key={item.value} value={item}>
+                                  {item.label}
+                                </ComboboxItem>
+                              )}
+                            </ComboboxList>
+                          </ComboboxContent>
+                        </Combobox>
+                      )
+                    }}
                   />
                   <FieldError>{form.formState.errors.guarantee_type?.message}</FieldError>
                 </Field>
@@ -1680,24 +1916,40 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               <Controller
                 control={form.control}
                 name='kitchen_id'
-                render={({ field }) => (
-                  <Select
-                    value={field.value ? String(field.value) : undefined}
-                    onValueChange={(value) => {
-                      field.onChange(value ? Number(value) : null)
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder='Select kitchen (optional)' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {/* TODO: Add kitchen API integration when available */}
-                      <div className='px-2 py-1.5 text-sm text-muted-foreground'>
-                        Kitchen selection coming soon. Requires kitchen API integration.
-                      </div>
-                    </SelectContent>
-                  </Select>
-                )}
+                render={({ field }) => {
+                  // TODO: Add kitchen API integration when available
+                  const kitchenItems: Array<{ id: number; name: string }> = []
+
+                  return (
+                    <Combobox
+                      items={kitchenItems}
+                      value={null}
+                      onValueChange={() => {
+                        // No-op until kitchen API is integrated
+                      }}
+                      itemToStringValue={(item: { id: number; name: string } | null) => item ? String(item.id) : ''}
+                    >
+                      <ComboboxInput
+                        name="kitchen_id"
+                        placeholder="Select kitchen (optional)"
+                        showClear
+                        disabled
+                      />
+                      <ComboboxContent>
+                        <ComboboxEmpty>
+                          Kitchen selection coming soon. Requires kitchen API integration.
+                        </ComboboxEmpty>
+                        <ComboboxList>
+                          {(item) => (
+                            <ComboboxItem key={item.id} value={item}>
+                              {item.name}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  )
+                }}
               />
               <FieldError>{form.formState.errors.kitchen_id?.message}</FieldError>
             </Field>

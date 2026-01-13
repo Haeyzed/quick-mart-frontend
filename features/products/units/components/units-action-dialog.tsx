@@ -16,7 +16,14 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldError, FieldDescription } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
 import { useCreateUnit, useUpdateUnit, useBaseUnits } from "../api/use-units"
 import { toast } from "sonner"
 import { handleApiError } from "@/lib/handle-api-error"
@@ -179,33 +186,41 @@ export function UnitsActionDialog({ currentRow, open, onOpenChange }: UnitsActio
                 name="base_unit"
                 render={({ field, fieldState }) => {
                   const availableBaseUnits = baseUnits.filter((unit) => !isEdit || unit.id !== currentRow?.id)
-                  const currentValue = field.value ? String(field.value) : ""
+                  const unitItems = availableBaseUnits.map((unit) => ({
+                    id: unit.id,
+                    label: `${unit.code} - ${unit.name}`,
+                  }))
+                  const selectedUnit = unitItems.find((unit) => unit.id === field.value)
 
                   return (
                     <Field>
                       <FieldLabel htmlFor="unit-base-unit">Base Unit</FieldLabel>
-                      <Select
-                        value={currentValue}
+                      <Combobox
+                        items={unitItems}
+                        value={selectedUnit || null}
                         onValueChange={(value) => {
-                          const numValue = value ? Number(value) : null
-                          field.onChange(numValue)
+                          field.onChange(value ? value.id : null)
                         }}
+                        itemToStringValue={(item) => String(item.id)}
                       >
-                        <SelectTrigger id="unit-base-unit" data-invalid={!!fieldState.error}>
-                          <SelectValue placeholder="Select base unit (optional)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableBaseUnits.length === 0 ? (
-                            <div className="text-muted-foreground px-2 py-1.5 text-sm">No base units found.</div>
-                          ) : (
-                            availableBaseUnits.map((unit) => (
-                              <SelectItem key={unit.id} value={String(unit.id)}>
-                                {unit.code} - {unit.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                        <ComboboxInput
+                          id="unit-base-unit"
+                          name="base_unit"
+                          placeholder="Select base unit (optional)"
+                          showClear
+                          data-invalid={!!fieldState.error}
+                        />
+                        <ComboboxContent>
+                          <ComboboxEmpty>No base units found.</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item) => (
+                              <ComboboxItem key={item.id} value={item}>
+                                {item.label}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
                       <FieldDescription>Leave empty if this is a base unit</FieldDescription>
                       <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                     </Field>
@@ -222,27 +237,37 @@ export function UnitsActionDialog({ currentRow, open, onOpenChange }: UnitsActio
                         { value: "*", label: "Multiply (*)" },
                         { value: "/", label: "Divide (/)" },
                       ]
+                      const selectedOperator = operatorOptions.find((opt) => opt.value === field.value)
 
                       return (
                         <Field>
                           <FieldLabel htmlFor="unit-operator">Operator</FieldLabel>
-                          <Select
-                            value={field.value || ""}
+                          <Combobox
+                            items={operatorOptions}
+                            value={selectedOperator || null}
                             onValueChange={(value) => {
-                              field.onChange(value || null)
+                              field.onChange(value ? value.value : null)
                             }}
+                            itemToStringValue={(item) => item.value}
                           >
-                            <SelectTrigger id="unit-operator" data-invalid={!!fieldState.error}>
-                              <SelectValue placeholder="Select operator" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {operatorOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            <ComboboxInput
+                              id="unit-operator"
+                              name="operator"
+                              placeholder="Select operator"
+                              showClear
+                              data-invalid={!!fieldState.error}
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>No operators found.</ComboboxEmpty>
+                              <ComboboxList>
+                                {(item) => (
+                                  <ComboboxItem key={item.value} value={item}>
+                                    {item.label}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
                           <FieldDescription>Mathematical operator for conversion</FieldDescription>
                           <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                         </Field>
