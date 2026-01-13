@@ -1369,66 +1369,6 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           </>
         )}
 
-        {/* Promotional Pricing */}
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Enable Promotion</FieldLabel>
-                  <FieldDescription>Add promotional pricing for this product</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='promotion'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-
-            {form.watch('promotion') && (
-              <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                <Controller
-                  control={form.control}
-                  name='promotion_price'
-                  render={({ field, fieldState }) => (
-                    <Field>
-                      <FieldLabel htmlFor='product-promotion-price'>Promotional Price</FieldLabel>
-                      <Input
-                        id='product-promotion-price'
-                        type='number'
-                        step='0.01'
-                        placeholder='0.00'
-                        autoComplete='off'
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          field.onChange(value === '' ? undefined : Number(value))
-                        }}
-                        data-invalid={!!fieldState.error}
-                      />
-                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                    </Field>
-                  )}
-                />
-
-                <DatePickerField
-                  label="Start Date"
-                  value={form.watch('starting_date')}
-                  onChange={(value) => form.setValue('starting_date', value)}
-                  error={form.formState.errors.starting_date?.message}
-                />
-
-                <DatePickerField
-                  label="End Date"
-                  value={form.watch('last_date')}
-                  onChange={(value) => form.setValue('last_date', value)}
-                  error={form.formState.errors.last_date?.message}
-                />
-              </div>
-            )}
-
         {/* Warranty & Guarantee */}
             <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <div className='grid grid-cols-2 gap-2'>
@@ -1762,6 +1702,66 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 </Field>
               </>
             )}
+
+            {/* Promotional Pricing */}
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>Enable Promotion</FieldLabel>
+                      <FieldDescription>Add promotional pricing for this product</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='promotion'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+    
+                {form.watch('promotion') && (
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                    <Controller
+                      control={form.control}
+                      name='promotion_price'
+                      render={({ field, fieldState }) => (
+                        <Field>
+                          <FieldLabel htmlFor='product-promotion-price'>Promotional Price</FieldLabel>
+                          <Input
+                            id='product-promotion-price'
+                            type='number'
+                            step='0.01'
+                            placeholder='0.00'
+                            autoComplete='off'
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              field.onChange(value === '' ? undefined : Number(value))
+                            }}
+                            data-invalid={!!fieldState.error}
+                          />
+                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                        </Field>
+                      )}
+                    />
+    
+                    <DatePickerField
+                      label="Start Date"
+                      value={form.watch('starting_date')}
+                      onChange={(value) => form.setValue('starting_date', value)}
+                      error={form.formState.errors.starting_date?.message}
+                    />
+    
+                    <DatePickerField
+                      label="End Date"
+                      value={form.watch('last_date')}
+                      onChange={(value) => form.setValue('last_date', value)}
+                      error={form.formState.errors.last_date?.message}
+                    />
+                  </div>
+                )}
 
             <Controller
               control={form.control}
