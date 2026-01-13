@@ -521,23 +521,23 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       <FieldGroup>
         {/* Row 1: Product Type, Product Name, Product Code */}
         <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-          <Field>
-            <FieldLabel>
-              Product Type <span className='text-destructive'>*</span>
-            </FieldLabel>
-            <Controller
-              control={form.control}
-              name='type'
-              render={({ field }) => {
-                const typeOptions = [
-                  { value: 'standard', label: 'Standard' },
-                  { value: 'combo', label: 'Combo' },
-                  { value: 'digital', label: 'Digital' },
-                  { value: 'service', label: 'Service' },
-                ]
-                const selectedType = typeOptions.find((opt) => opt.value === field.value)
+          <Controller
+            control={form.control}
+            name='type'
+            render={({ field, fieldState }) => {
+              const typeOptions = [
+                { value: 'standard', label: 'Standard' },
+                { value: 'combo', label: 'Combo' },
+                { value: 'digital', label: 'Digital' },
+                { value: 'service', label: 'Service' },
+              ]
+              const selectedType = typeOptions.find((opt) => opt.value === field.value)
 
-                return (
+              return (
+                <Field>
+                  <FieldLabel htmlFor='product-type'>
+                    Product Type <span className='text-destructive'>*</span>
+                  </FieldLabel>
                   <Combobox
                     items={typeOptions}
                     value={selectedType || null}
@@ -547,9 +547,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     itemToStringValue={(item) => item.value}
                   >
                     <ComboboxInput
+                      id='product-type'
                       name="type"
                       placeholder="Select product type"
                       showClear
+                      data-invalid={!!fieldState.error}
                     />
                     <ComboboxContent>
                       <ComboboxEmpty>No product types found.</ComboboxEmpty>
@@ -562,73 +564,100 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       </ComboboxList>
                     </ComboboxContent>
                   </Combobox>
-                )
-              }}
-            />
-            <FieldError>{form.formState.errors.type?.message}</FieldError>
-          </Field>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )
+            }}
+          />
+        )
+      }}
+    />
 
-          <Field>
-            <FieldLabel>
-              Product Name <span className='text-destructive'>*</span>
-            </FieldLabel>
-            <Input {...form.register('name')} placeholder='Enter product name' />
-            <FieldError>{form.formState.errors.name?.message}</FieldError>
-          </Field>
+          <Controller
+            control={form.control}
+            name='name'
+            render={({ field, fieldState }) => (
+              <Field>
+                <FieldLabel htmlFor='product-name'>
+                  Product Name <span className='text-destructive'>*</span>
+                </FieldLabel>
+                <Input
+                  id='product-name'
+                  placeholder='Enter product name'
+                  autoComplete='off'
+                  {...field}
+                  data-invalid={!!fieldState.error}
+                />
+                <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+              </Field>
+            )}
+          />
 
-          <Field>
-            <FieldLabel>
-              Product Code <span className='text-destructive'>*</span>
-            </FieldLabel>
-            <div className='flex gap-2'>
-              <Input {...form.register('code')} placeholder='Enter product code' />
-              <Button
-                type='button'
-                variant='outline'
-                size='icon'
-                onClick={async () => {
-                  try {
-                    const { data: code } = await generateCode.refetch()
-                    if (code) {
-                      form.setValue('code', code)
-                      toast.success('Code generated successfully')
-                    }
-                  } catch (error) {
-                    handleApiError(error)
-                  }
-                }}
-                disabled={generateCode.isFetching}
-              >
-                {generateCode.isFetching ? (
-                  <Spinner className='h-4 w-4' />
-                ) : (
-                  <HugeiconsIcon icon={Refresh01Icon} className='h-4 w-4' />
-                )}
-              </Button>
-            </div>
-            <FieldError>{form.formState.errors.code?.message}</FieldError>
-          </Field>
+          <Controller
+            control={form.control}
+            name='code'
+            render={({ field, fieldState }) => (
+              <Field>
+                <FieldLabel htmlFor='product-code'>
+                  Product Code <span className='text-destructive'>*</span>
+                </FieldLabel>
+                <div className='flex gap-2'>
+                  <Input
+                    id='product-code'
+                    placeholder='Enter product code'
+                    autoComplete='off'
+                    {...field}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='icon'
+                    onClick={async () => {
+                      try {
+                        const { data: code } = await generateCode.refetch()
+                        if (code) {
+                          form.setValue('code', code)
+                          toast.success('Code generated successfully')
+                        }
+                      } catch (error) {
+                        handleApiError(error)
+                      }
+                    }}
+                    disabled={generateCode.isFetching}
+                  >
+                    {generateCode.isFetching ? (
+                      <Spinner className='h-4 w-4' />
+                    ) : (
+                      <HugeiconsIcon icon={Refresh01Icon} className='h-4 w-4' />
+                    )}
+                  </Button>
+                </div>
+                <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+              </Field>
+            )}
+          />
         </div>
 
         {/* Row 2: Barcode Symbology, Digital File (conditional), Brand, Category */}
         <div className={`grid grid-cols-1 gap-4 ${productType === 'digital' ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-          <Field>
-            <FieldLabel>Barcode Symbology</FieldLabel>
-            <Controller
-              control={form.control}
-              name='barcode_symbology'
-              render={({ field }) => {
-                const barcodeOptions = [
-                  { value: 'C128', label: 'Code 128' },
-                  { value: 'C39', label: 'Code 39' },
-                  { value: 'UPCA', label: 'UPC-A' },
-                  { value: 'UPCE', label: 'UPC-E' },
-                  { value: 'EAN8', label: 'EAN-8' },
-                  { value: 'EAN13', label: 'EAN-13' },
-                ]
-                const selectedBarcode = barcodeOptions.find((opt) => opt.value === (field.value || 'EAN13'))
+          <Controller
+            control={form.control}
+            name='barcode_symbology'
+            render={({ field, fieldState }) => {
+              const barcodeOptions = [
+                { value: 'C128', label: 'Code 128' },
+                { value: 'C39', label: 'Code 39' },
+                { value: 'UPCA', label: 'UPC-A' },
+                { value: 'UPCE', label: 'UPC-E' },
+                { value: 'EAN8', label: 'EAN-8' },
+                { value: 'EAN13', label: 'EAN-13' },
+              ]
+              const selectedBarcode = barcodeOptions.find((opt) => opt.value === (field.value || 'EAN13'))
 
-                return (
+              return (
+                <Field>
+                  <FieldLabel htmlFor='product-barcode-symbology'>Barcode Symbology</FieldLabel>
                   <Combobox
                     items={barcodeOptions}
                     value={selectedBarcode || null}
@@ -638,9 +667,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     itemToStringValue={(item) => item.value}
                   >
                     <ComboboxInput
+                      id='product-barcode-symbology'
                       name="barcode_symbology"
                       placeholder="Select barcode symbology"
                       showClear
+                      data-invalid={!!fieldState.error}
                     />
                     <ComboboxContent>
                       <ComboboxEmpty>No barcode symbologies found.</ComboboxEmpty>
@@ -653,11 +684,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       </ComboboxList>
                     </ComboboxContent>
                   </Combobox>
-                )
-              }}
-            />
-            <FieldError>{form.formState.errors.barcode_symbology?.message}</FieldError>
-          </Field>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )
+            }}
+          />
 
           {/* Digital File Upload - Only for digital type, appears in Row 2 */}
           {productType === 'digital' && (
@@ -707,25 +738,27 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   </FileUpload>
                 )}
               />
-              <FieldError>{form.formState.errors.file?.message}</FieldError>
+              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
             </Field>
-          )}
+          )
+        }}
+      />
 
-          <Field>
-            <FieldLabel>Brand</FieldLabel>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Controller
-                  control={form.control}
-                  name='brand_id'
-                  render={({ field }) => {
-                    const brandItems = brands.map((brand) => ({
-                      id: brand.id,
-                      name: brand.name,
-                    }))
-                    const selectedBrand = brandItems.find((brand) => brand.id === field.value)
+          <Controller
+            control={form.control}
+            name='brand_id'
+            render={({ field, fieldState }) => {
+              const brandItems = brands.map((brand) => ({
+                id: brand.id,
+                name: brand.name,
+              }))
+              const selectedBrand = brandItems.find((brand) => brand.id === field.value)
 
-                    return (
+              return (
+                <Field>
+                  <FieldLabel htmlFor='product-brand'>Brand</FieldLabel>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
                       <Combobox
                         items={brandItems}
                         value={selectedBrand || null}
@@ -735,9 +768,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         itemToStringValue={(item) => String(item.id)}
                       >
                         <ComboboxInput
+                          id='product-brand'
                           name="brand_id"
                           placeholder="Select brand (optional)"
                           showClear
+                          data-invalid={!!fieldState.error}
                         />
                         <ComboboxContent>
                           <ComboboxEmpty>No brands found.</ComboboxEmpty>
@@ -750,40 +785,40 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           </ComboboxList>
                         </ComboboxContent>
                       </Combobox>
-                    )
-                  }}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setBrandDialogOpen(true)}
-                title="Add new brand"
-              >
-                <HugeiconsIcon icon={Plus} className="h-4 w-4" />
-              </Button>
-            </div>
-            <FieldError>{form.formState.errors.brand_id?.message}</FieldError>
-          </Field>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setBrandDialogOpen(true)}
+                      title="Add new brand"
+                    >
+                      <HugeiconsIcon icon={Plus} className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )
+            }}
+          />
 
-          <Field>
-            <FieldLabel>
-              Category <span className='text-destructive'>*</span>
-            </FieldLabel>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Controller
-                  control={form.control}
-                  name='category_id'
-                  render={({ field }) => {
-                    const categoryItems = categories.map((category) => ({
-                      id: category.id,
-                      name: category.name,
-                    }))
-                    const selectedCategory = categoryItems.find((cat) => cat.id === field.value)
+          <Controller
+            control={form.control}
+            name='category_id'
+            render={({ field, fieldState }) => {
+              const categoryItems = categories.map((category) => ({
+                id: category.id,
+                name: category.name,
+              }))
+              const selectedCategory = categoryItems.find((cat) => cat.id === field.value)
 
-                    return (
+              return (
+                <Field>
+                  <FieldLabel htmlFor='product-category'>
+                    Category <span className='text-destructive'>*</span>
+                  </FieldLabel>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
                       <Combobox
                         items={categoryItems}
                         value={selectedCategory || null}
@@ -793,9 +828,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         itemToStringValue={(item) => String(item.id)}
                       >
                         <ComboboxInput
+                          id='product-category'
                           name="category_id"
                           placeholder="Select category (required)"
                           showClear
+                          data-invalid={!!fieldState.error}
                         />
                         <ComboboxContent>
                           <ComboboxEmpty>No categories found.</ComboboxEmpty>
@@ -808,22 +845,22 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           </ComboboxList>
                         </ComboboxContent>
                       </Combobox>
-                    )
-                  }}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setCategoryDialogOpen(true)}
-                title="Add new category"
-              >
-                <HugeiconsIcon icon={Plus} className="h-4 w-4" />
-              </Button>
-            </div>
-            <FieldError>{form.formState.errors.category_id?.message}</FieldError>
-          </Field>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCategoryDialogOpen(true)}
+                      title="Add new category"
+                    >
+                      <HugeiconsIcon icon={Plus} className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )
+            }}
+          />
         </div>
 
         {/* Pricing & Units - Only for standard, combo, service */}
@@ -833,25 +870,25 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               <>
                 {/* Row 3: Product Unit, Sale Unit, Purchase Unit */}
                 <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                  <Field>
-                    <FieldLabel>
-                      Product Unit <span className='text-destructive'>*</span>
-                    </FieldLabel>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <Controller
-                          control={form.control}
-                          name='unit_id'
-                          render={({ field }) => {
-                            const baseUnitItems = units
-                              .filter((u) => !u.base_unit) // Only show base units (base_unit is null)
-                              .map((unit) => ({
-                                id: unit.id,
-                                name: unit.name,
-                              }))
-                            const selectedUnit = baseUnitItems.find((unit) => unit.id === field.value)
+                  <Controller
+                    control={form.control}
+                    name='unit_id'
+                    render={({ field, fieldState }) => {
+                      const baseUnitItems = units
+                        .filter((u) => !u.base_unit) // Only show base units (base_unit is null)
+                        .map((unit) => ({
+                          id: unit.id,
+                          name: unit.name,
+                        }))
+                      const selectedUnit = baseUnitItems.find((unit) => unit.id === field.value)
 
-                            return (
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor='product-unit'>
+                            Product Unit <span className='text-destructive'>*</span>
+                          </FieldLabel>
+                          <div className="flex gap-2">
+                            <div className="flex-1">
                               <Combobox
                                 items={baseUnitItems}
                                 value={selectedUnit || null}
@@ -861,9 +898,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                 itemToStringValue={(item) => String(item.id)}
                               >
                                 <ComboboxInput
+                                  id='product-unit'
                                   name="unit_id"
                                   placeholder="Select unit"
                                   showClear
+                                  data-invalid={!!fieldState.error}
                                 />
                                 <ComboboxContent>
                                   <ComboboxEmpty>No units found.</ComboboxEmpty>
@@ -876,29 +915,29 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                   </ComboboxList>
                                 </ComboboxContent>
                               </Combobox>
-                            )
-                          }}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setUnitDialogOpen(true)}
-                        title="Add new unit"
-                      >
-                        <HugeiconsIcon icon={Plus} className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <FieldError>{form.formState.errors.unit_id?.message}</FieldError>
-                  </Field>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setUnitDialogOpen(true)}
+                              title="Add new unit"
+                            >
+                              <HugeiconsIcon icon={Plus} className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                        </Field>
+                      )
+                    }}
+                  />
 
                   <Field>
                     <FieldLabel>Sale Unit</FieldLabel>
                     <Controller
                       control={form.control}
                       name='sale_unit_id'
-                      render={({ field }) => {
+                      render={({ field, fieldState }) => {
                         const saleUnitItems = units
                           .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
                           .map((unit) => ({
@@ -908,42 +947,46 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         const selectedSaleUnit = saleUnitItems.find((unit) => unit.id === field.value)
 
                         return (
-                          <Combobox
-                            items={saleUnitItems}
-                            value={selectedSaleUnit || null}
-                            onValueChange={(value) => {
-                              field.onChange(value ? value.id : null)
-                            }}
-                            itemToStringValue={(item) => String(item.id)}
-                          >
-                            <ComboboxInput
-                              name="sale_unit_id"
-                              placeholder="Select sale unit (optional)"
-                              showClear
-                            />
-                            <ComboboxContent>
-                              <ComboboxEmpty>No sale units found.</ComboboxEmpty>
-                              <ComboboxList>
-                                {(item) => (
-                                  <ComboboxItem key={item.id} value={item}>
-                                    {item.name}
-                                  </ComboboxItem>
-                                )}
-                              </ComboboxList>
-                            </ComboboxContent>
-                          </Combobox>
+                          <Field>
+                            <FieldLabel htmlFor='product-sale-unit'>Sale Unit</FieldLabel>
+                            <Combobox
+                              items={saleUnitItems}
+                              value={selectedSaleUnit || null}
+                              onValueChange={(value) => {
+                                field.onChange(value ? value.id : null)
+                              }}
+                              itemToStringValue={(item) => String(item.id)}
+                            >
+                              <ComboboxInput
+                                id='product-sale-unit'
+                                name="sale_unit_id"
+                                placeholder="Select sale unit (optional)"
+                                showClear
+                                data-invalid={!!fieldState.error}
+                              />
+                              <ComboboxContent>
+                                <ComboboxEmpty>No sale units found.</ComboboxEmpty>
+                                <ComboboxList>
+                                  {(item) => (
+                                    <ComboboxItem key={item.id} value={item}>
+                                      {item.name}
+                                    </ComboboxItem>
+                                  )}
+                                </ComboboxList>
+                              </ComboboxContent>
+                            </Combobox>
+                            <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                          </Field>
                         )
                       }}
                     />
-                    <FieldError>{form.formState.errors.sale_unit_id?.message}</FieldError>
-                  </Field>
 
                   <Field>
                     <FieldLabel>Purchase Unit</FieldLabel>
                     <Controller
                       control={form.control}
                       name='purchase_unit_id'
-                      render={({ field }) => {
+                      render={({ field, fieldState }) => {
                         const purchaseUnitItems = units
                           .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
                           .map((unit) => ({
@@ -953,67 +996,85 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         const selectedPurchaseUnit = purchaseUnitItems.find((unit) => unit.id === field.value)
 
                         return (
-                          <Combobox
-                            items={purchaseUnitItems}
-                            value={selectedPurchaseUnit || null}
-                            onValueChange={(value) => {
-                              field.onChange(value ? value.id : null)
-                            }}
-                            itemToStringValue={(item) => String(item.id)}
-                          >
-                            <ComboboxInput
-                              name="purchase_unit_id"
-                              placeholder="Select purchase unit (optional)"
-                              showClear
-                            />
-                            <ComboboxContent>
-                              <ComboboxEmpty>No purchase units found.</ComboboxEmpty>
-                              <ComboboxList>
-                                {(item) => (
-                                  <ComboboxItem key={item.id} value={item}>
-                                    {item.name}
-                                  </ComboboxItem>
-                                )}
-                              </ComboboxList>
-                            </ComboboxContent>
-                          </Combobox>
+                          <Field>
+                            <FieldLabel htmlFor='product-purchase-unit'>Purchase Unit</FieldLabel>
+                            <Combobox
+                              items={purchaseUnitItems}
+                              value={selectedPurchaseUnit || null}
+                              onValueChange={(value) => {
+                                field.onChange(value ? value.id : null)
+                              }}
+                              itemToStringValue={(item) => String(item.id)}
+                            >
+                              <ComboboxInput
+                                id='product-purchase-unit'
+                                name="purchase_unit_id"
+                                placeholder="Select purchase unit (optional)"
+                                showClear
+                                data-invalid={!!fieldState.error}
+                              />
+                              <ComboboxContent>
+                                <ComboboxEmpty>No purchase units found.</ComboboxEmpty>
+                                <ComboboxList>
+                                  {(item) => (
+                                    <ComboboxItem key={item.id} value={item}>
+                                      {item.name}
+                                    </ComboboxItem>
+                                  )}
+                                </ComboboxList>
+                              </ComboboxContent>
+                            </Combobox>
+                            <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                          </Field>
                         )
                       }}
                     />
-                    <FieldError>{form.formState.errors.purchase_unit_id?.message}</FieldError>
-                  </Field>
                 </div>
 
                   {/* Cost and Profit Margin */}
                   <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
                     {productType === 'standard' && (
                       <>
-                        <Field>
-                          <FieldLabel>
-                            Cost <span className='text-destructive'>*</span>
-                          </FieldLabel>
-                          <Input
-                            type='number'
-                            step='0.01'
-                            {...form.register('cost', { valueAsNumber: true })}
-                            placeholder='0.00'
-                          />
-                          <FieldError>{form.formState.errors.cost?.message}</FieldError>
-                        </Field>
+                        <Controller
+                          control={form.control}
+                          name='cost'
+                          render={({ field, fieldState }) => (
+                            <Field>
+                              <FieldLabel htmlFor='product-cost'>
+                                Cost <span className='text-destructive'>*</span>
+                              </FieldLabel>
+                              <Input
+                                id='product-cost'
+                                type='number'
+                                step='0.01'
+                                placeholder='0.00'
+                                autoComplete='off'
+                                {...field}
+                                value={field.value ?? ''}
+                                onChange={(e) => {
+                                  const value = e.target.value
+                                  field.onChange(value === '' ? undefined : Number(value))
+                                }}
+                                data-invalid={!!fieldState.error}
+                              />
+                              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                            </Field>
+                          )}
+                        />
 
-                        <Field>
-                          <FieldLabel>Profit Margin Type</FieldLabel>
-                          <Controller
-                            control={form.control}
-                            name='profit_margin_type'
-                            render={({ field }) => {
-                              const marginTypeOptions = [
-                                { value: 'percentage', label: 'Percentage (%)' },
-                                { value: 'flat', label: 'Flat' },
-                              ]
-                              const selectedMarginType = marginTypeOptions.find((opt) => opt.value === (field.value || 'percentage'))
+                        <Controller
+                          control={form.control}
+                          name='profit_margin_type'
+                          render={({ field, fieldState }) => {
+                            const marginTypeOptions = [
+                              { value: 'percentage', label: 'Percentage (%)' },
+                              { value: 'flat', label: 'Flat' },
+                            ]
+                            const selectedMarginType = marginTypeOptions.find((opt) => opt.value === (field.value || 'percentage'))
 
-                              return (
+                            return (
+                              <Field>
+                                <FieldLabel htmlFor='product-profit-margin-type'>Profit Margin Type</FieldLabel>
                                 <Combobox
                                   items={marginTypeOptions}
                                   value={selectedMarginType || null}
@@ -1023,9 +1084,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                   itemToStringValue={(item) => item.value}
                                 >
                                   <ComboboxInput
+                                    id='product-profit-margin-type'
                                     name="profit_margin_type"
                                     placeholder="Select profit margin type"
                                     showClear
+                                    data-invalid={!!fieldState.error}
                                   />
                                   <ComboboxContent>
                                     <ComboboxEmpty>No profit margin types found.</ComboboxEmpty>
@@ -1038,98 +1101,168 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                     </ComboboxList>
                                   </ComboboxContent>
                                 </Combobox>
-                              )
-                            }}
-                          />
-                          <FieldError>{form.formState.errors.profit_margin_type?.message}</FieldError>
-                        </Field>
+                                <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                              </Field>
+                            )
+                          }}
+                        />
 
-                        <Field>
-                          <FieldLabel>Profit Margin</FieldLabel>
-                          <Input
-                            type='number'
-                            step='0.01'
-                            {...form.register('profit_margin', { valueAsNumber: true })}
-                            placeholder='0.00'
-                          />
-                          <FieldError>{form.formState.errors.profit_margin?.message}</FieldError>
-                        </Field>
+                        <Controller
+                          control={form.control}
+                          name='profit_margin'
+                          render={({ field, fieldState }) => (
+                            <Field>
+                              <FieldLabel htmlFor='product-profit-margin'>Profit Margin</FieldLabel>
+                              <Input
+                                id='product-profit-margin'
+                                type='number'
+                                step='0.01'
+                                placeholder='0.00'
+                                autoComplete='off'
+                                {...field}
+                                value={field.value ?? ''}
+                                onChange={(e) => {
+                                  const value = e.target.value
+                                  field.onChange(value === '' ? undefined : Number(value))
+                                }}
+                                data-invalid={!!fieldState.error}
+                              />
+                              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                            </Field>
+                          )}
+                        />
                       </>
                     )}
                   </div>
 
                 {/* Row 5: Price, Wholesale Price, Daily Sale Objective */}
                 <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                  <Field>
-                    <FieldLabel>
-                      Price <span className='text-destructive'>*</span>
-                    </FieldLabel>
-                    <Input
-                      type='number'
-                      step='0.01'
-                      {...form.register('price', { valueAsNumber: true })}
-                      placeholder='0.00'
-                    />
-                    <FieldError>{form.formState.errors.price?.message}</FieldError>
-                  </Field>
+                  <Controller
+                    control={form.control}
+                    name='price'
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel htmlFor='product-price'>
+                          Price <span className='text-destructive'>*</span>
+                        </FieldLabel>
+                        <Input
+                          id='product-price'
+                          type='number'
+                          step='0.01'
+                          placeholder='0.00'
+                          autoComplete='off'
+                          {...field}
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            field.onChange(value === '' ? undefined : Number(value))
+                          }}
+                          data-invalid={!!fieldState.error}
+                        />
+                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                      </Field>
+                    )}
+                  />
 
-                  <Field>
-                    <FieldLabel>Wholesale Price</FieldLabel>
-                    <Input
-                      type='number'
-                      step='0.01'
-                      {...form.register('wholesale_price', { valueAsNumber: true })}
-                      placeholder='0.00'
-                    />
-                    <FieldError>{form.formState.errors.wholesale_price?.message}</FieldError>
-                  </Field>
+                  <Controller
+                    control={form.control}
+                    name='wholesale_price'
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel htmlFor='product-wholesale-price'>Wholesale Price</FieldLabel>
+                        <Input
+                          id='product-wholesale-price'
+                          type='number'
+                          step='0.01'
+                          placeholder='0.00'
+                          autoComplete='off'
+                          {...field}
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            field.onChange(value === '' ? undefined : Number(value))
+                          }}
+                          data-invalid={!!fieldState.error}
+                        />
+                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                      </Field>
+                    )}
+                  />
 
                   {productType === 'standard' && (
-                    <Field>
-                      <FieldLabel>Daily Sale Objective</FieldLabel>
-                      <Input
-                        type='number'
-                        step='0.01'
-                        {...form.register('daily_sale_objective', { valueAsNumber: true })}
-                        placeholder='0.00'
-                      />
-                      <FieldDescription>Minimum quantity to sell per day</FieldDescription>
-                      <FieldError>{form.formState.errors.daily_sale_objective?.message}</FieldError>
-                    </Field>
+                    <Controller
+                      control={form.control}
+                      name='daily_sale_objective'
+                      render={({ field, fieldState }) => (
+                        <Field>
+                          <FieldLabel htmlFor='product-daily-sale-objective'>Daily Sale Objective</FieldLabel>
+                          <Input
+                            id='product-daily-sale-objective'
+                            type='number'
+                            step='0.01'
+                            placeholder='0.00'
+                            autoComplete='off'
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              field.onChange(value === '' ? undefined : Number(value))
+                            }}
+                            data-invalid={!!fieldState.error}
+                          />
+                          <FieldDescription>Minimum quantity to sell per day</FieldDescription>
+                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                        </Field>
+                      )}
+                    />
                   )}
                 </div>
 
                 {/* Row 6: Alert Quantity, Tax, Tax Method */}
                 <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
                   {productType === 'standard' && (
-                    <Field>
-                      <FieldLabel>Alert Quantity</FieldLabel>
-                      <Input
-                        type='number'
-                        step='0.01'
-                        {...form.register('alert_quantity', { valueAsNumber: true })}
-                        placeholder='0.00'
-                      />
-                      <FieldDescription>Low stock alert threshold</FieldDescription>
-                      <FieldError>{form.formState.errors.alert_quantity?.message}</FieldError>
-                    </Field>
+                    <Controller
+                      control={form.control}
+                      name='alert_quantity'
+                      render={({ field, fieldState }) => (
+                        <Field>
+                          <FieldLabel htmlFor='product-alert-quantity'>Alert Quantity</FieldLabel>
+                          <Input
+                            id='product-alert-quantity'
+                            type='number'
+                            step='0.01'
+                            placeholder='0.00'
+                            autoComplete='off'
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              field.onChange(value === '' ? undefined : Number(value))
+                            }}
+                            data-invalid={!!fieldState.error}
+                          />
+                          <FieldDescription>Low stock alert threshold</FieldDescription>
+                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                        </Field>
+                      )}
+                    />
                   )}
 
-                  <Field>
-                    <FieldLabel>Tax</FieldLabel>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <Controller
-                          control={form.control}
-                          name='tax_id'
-                          render={({ field }) => {
-                            const taxItems = taxes.map((tax) => ({
-                              id: tax.id,
-                              label: `${tax.name} (${tax.rate}%)`,
-                            }))
-                            const selectedTax = taxItems.find((tax) => tax.id === field.value)
+                  <Controller
+                    control={form.control}
+                    name='tax_id'
+                    render={({ field, fieldState }) => {
+                      const taxItems = taxes.map((tax) => ({
+                        id: tax.id,
+                        label: `${tax.name} (${tax.rate}%)`,
+                      }))
+                      const selectedTax = taxItems.find((tax) => tax.id === field.value)
 
-                            return (
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor='product-tax'>Tax</FieldLabel>
+                          <div className="flex gap-2">
+                            <div className="flex-1">
                               <Combobox
                                 items={taxItems}
                                 value={selectedTax || null}
@@ -1139,9 +1272,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                 itemToStringValue={(item) => String(item.id)}
                               >
                                 <ComboboxInput
+                                  id='product-tax'
                                   name="tax_id"
                                   placeholder="Select tax (optional)"
                                   showClear
+                                  data-invalid={!!fieldState.error}
                                 />
                                 <ComboboxContent>
                                   <ComboboxEmpty>No taxes found.</ComboboxEmpty>
@@ -1154,36 +1289,36 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                                   </ComboboxList>
                                 </ComboboxContent>
                               </Combobox>
-                            )
-                          }}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setTaxDialogOpen(true)}
-                        title="Add new tax"
-                      >
-                        <HugeiconsIcon icon={Plus} className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <FieldError>{form.formState.errors.tax_id?.message}</FieldError>
-                  </Field>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setTaxDialogOpen(true)}
+                              title="Add new tax"
+                            >
+                              <HugeiconsIcon icon={Plus} className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                        </Field>
+                      )
+                    }}
+                  />
 
-                  <Field>
-                    <FieldLabel>Tax Method</FieldLabel>
-                    <Controller
-                      control={form.control}
-                      name='tax_method'
-                      render={({ field }) => {
-                        const taxMethodOptions = [
-                          { value: 0, label: 'Exclusive' },
-                          { value: 1, label: 'Inclusive' },
-                        ]
-                        const selectedTaxMethod = taxMethodOptions.find((opt) => opt.value === (field.value ?? 0))
+                  <Controller
+                    control={form.control}
+                    name='tax_method'
+                    render={({ field, fieldState }) => {
+                      const taxMethodOptions = [
+                        { value: 0, label: 'Exclusive' },
+                        { value: 1, label: 'Inclusive' },
+                      ]
+                      const selectedTaxMethod = taxMethodOptions.find((opt) => opt.value === (field.value ?? 0))
 
-                        return (
+                      return (
+                        <Field>
+                          <FieldLabel htmlFor='product-tax-method'>Tax Method</FieldLabel>
                           <Combobox
                             items={taxMethodOptions}
                             value={selectedTaxMethod || null}
@@ -1193,9 +1328,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                             itemToStringValue={(item) => String(item.value)}
                           >
                             <ComboboxInput
+                              id='product-tax-method'
                               name="tax_method"
                               placeholder="Select tax method"
                               showClear
+                              data-invalid={!!fieldState.error}
                             />
                             <ComboboxContent>
                               <ComboboxEmpty>No tax methods found.</ComboboxEmpty>
@@ -1208,11 +1345,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                               </ComboboxList>
                             </ComboboxContent>
                           </Combobox>
-                        )
-                      }}
-                    />
-                    <FieldError>{form.formState.errors.tax_method?.message}</FieldError>
-                  </Field>
+                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                        </Field>
+                      )
+                    }}
+                  />
                 </div>
                 </>
               )}
@@ -1238,16 +1375,30 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
 
             {form.watch('promotion') && (
               <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                <Field>
-                  <FieldLabel>Promotional Price</FieldLabel>
-                  <Input
-                    type='number'
-                    step='0.01'
-                    {...form.register('promotion_price', { valueAsNumber: true })}
-                    placeholder='0.00'
-                  />
-                  <FieldError>{form.formState.errors.promotion_price?.message}</FieldError>
-                </Field>
+                <Controller
+                  control={form.control}
+                  name='promotion_price'
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel htmlFor='product-promotion-price'>Promotional Price</FieldLabel>
+                      <Input
+                        id='product-promotion-price'
+                        type='number'
+                        step='0.01'
+                        placeholder='0.00'
+                        autoComplete='off'
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? undefined : Number(value))
+                        }}
+                        data-invalid={!!fieldState.error}
+                      />
+                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                    </Field>
+                  )}
+                />
 
                 <DatePickerField
                   label="Start Date"
@@ -1268,31 +1419,45 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         {/* Warranty & Guarantee */}
             <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <div className='grid grid-cols-2 gap-2'>
-                <Field>
-                  <FieldLabel>Warranty</FieldLabel>
-                  <Input
-                    type='number'
-                    min='0'
-                    {...form.register('warranty', { valueAsNumber: true })}
-                    placeholder='0'
-                  />
-                  <FieldError>{form.formState.errors.warranty?.message}</FieldError>
-                </Field>
+                <Controller
+                  control={form.control}
+                  name='warranty'
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel htmlFor='product-warranty'>Warranty</FieldLabel>
+                      <Input
+                        id='product-warranty'
+                        type='number'
+                        min='0'
+                        placeholder='0'
+                        autoComplete='off'
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? undefined : Number(value))
+                        }}
+                        data-invalid={!!fieldState.error}
+                      />
+                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                    </Field>
+                  )}
+                />
 
-                <Field>
-                  <FieldLabel>Type</FieldLabel>
-                  <Controller
-                    control={form.control}
-                    name='warranty_type'
-                    render={({ field }) => {
-                      const warrantyTypeOptions = [
-                        { value: 'days', label: 'Days' },
-                        { value: 'months', label: 'Months' },
-                        { value: 'years', label: 'Years' },
-                      ]
-                      const selectedWarrantyType = warrantyTypeOptions.find((opt) => opt.value === (field.value || 'months'))
+                <Controller
+                  control={form.control}
+                  name='warranty_type'
+                  render={({ field, fieldState }) => {
+                    const warrantyTypeOptions = [
+                      { value: 'days', label: 'Days' },
+                      { value: 'months', label: 'Months' },
+                      { value: 'years', label: 'Years' },
+                    ]
+                    const selectedWarrantyType = warrantyTypeOptions.find((opt) => opt.value === (field.value || 'months'))
 
-                      return (
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor='product-warranty-type'>Type</FieldLabel>
                         <Combobox
                           items={warrantyTypeOptions}
                           value={selectedWarrantyType || null}
@@ -1302,9 +1467,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           itemToStringValue={(item) => item.value}
                         >
                           <ComboboxInput
+                            id='product-warranty-type'
                             name="warranty_type"
                             placeholder="Select warranty type"
                             showClear
+                            data-invalid={!!fieldState.error}
                           />
                           <ComboboxContent>
                             <ComboboxEmpty>No warranty types found.</ComboboxEmpty>
@@ -1317,39 +1484,53 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                             </ComboboxList>
                           </ComboboxContent>
                         </Combobox>
-                      )
-                    }}
-                  />
-                  <FieldError>{form.formState.errors.warranty_type?.message}</FieldError>
-                </Field>
+                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                      </Field>
+                    )
+                  }}
+                />
               </div>
 
               <div className='grid grid-cols-2 gap-2'>
-                <Field>
-                  <FieldLabel>Guarantee</FieldLabel>
-                  <Input
-                    type='number'
-                    min='0'
-                    {...form.register('guarantee', { valueAsNumber: true })}
-                    placeholder='0'
-                  />
-                  <FieldError>{form.formState.errors.guarantee?.message}</FieldError>
-                </Field>
+                <Controller
+                  control={form.control}
+                  name='guarantee'
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldLabel htmlFor='product-guarantee'>Guarantee</FieldLabel>
+                      <Input
+                        id='product-guarantee'
+                        type='number'
+                        min='0'
+                        placeholder='0'
+                        autoComplete='off'
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? undefined : Number(value))
+                        }}
+                        data-invalid={!!fieldState.error}
+                      />
+                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                    </Field>
+                  )}
+                />
 
-                <Field>
-                  <FieldLabel>Type</FieldLabel>
-                  <Controller
-                    control={form.control}
-                    name='guarantee_type'
-                    render={({ field }) => {
-                      const guaranteeTypeOptions = [
-                        { value: 'days', label: 'Days' },
-                        { value: 'months', label: 'Months' },
-                        { value: 'years', label: 'Years' },
-                      ]
-                      const selectedGuaranteeType = guaranteeTypeOptions.find((opt) => opt.value === (field.value || 'months'))
+                <Controller
+                  control={form.control}
+                  name='guarantee_type'
+                  render={({ field, fieldState }) => {
+                    const guaranteeTypeOptions = [
+                      { value: 'days', label: 'Days' },
+                      { value: 'months', label: 'Months' },
+                      { value: 'years', label: 'Years' },
+                    ]
+                    const selectedGuaranteeType = guaranteeTypeOptions.find((opt) => opt.value === (field.value || 'months'))
 
-                      return (
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor='product-guarantee-type'>Type</FieldLabel>
                         <Combobox
                           items={guaranteeTypeOptions}
                           value={selectedGuaranteeType || null}
@@ -1359,9 +1540,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           itemToStringValue={(item) => item.value}
                         >
                           <ComboboxInput
+                            id='product-guarantee-type'
                             name="guarantee_type"
                             placeholder="Select guarantee type"
                             showClear
+                            data-invalid={!!fieldState.error}
                           />
                           <ComboboxContent>
                             <ComboboxEmpty>No guarantee types found.</ComboboxEmpty>
@@ -1374,22 +1557,22 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                             </ComboboxList>
                           </ComboboxContent>
                         </Combobox>
-                      )
-                    }}
-                  />
-                  <FieldError>{form.formState.errors.guarantee_type?.message}</FieldError>
-                </Field>
+                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                      </Field>
+                    )
+                  }}
+                />
               </div>
             </div>
 
 
         {/* Images */}
-          <Field>
-            <FieldLabel>Images</FieldLabel>
-            <Controller
-              control={form.control}
-              name='image'
-              render={({ field: { onChange, value = [], ...field } }) => (
+          <Controller
+            control={form.control}
+            name='image'
+            render={({ field: { onChange, value = [], ...field }, fieldState }) => (
+              <Field>
+                <FieldLabel htmlFor='product-images'>Images</FieldLabel>
                 <FileUpload
                   {...field}
                   accept='image/*'
@@ -1425,34 +1608,34 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     ))}
                   </FileUploadList>
                 </FileUpload>
-              )}
-            />
-            {isEdit && form.watch('prev_img') && form.watch('prev_img')!.length > 0 && (
-              <div className='mt-4 flex gap-2'>
-                {form.watch('prev_img')!.map((img, index) => (
-                  <div key={index} className='relative'>
-                    <img src={img} alt={`Product ${index + 1}`} className='h-20 w-20 rounded object-cover' />
-                    <Button
-                      type='button'
-                      variant='destructive'
-                      size='sm'
-                      className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0'
-                      onClick={() => {
-                        const current = form.getValues('prev_img') || []
-                        form.setValue(
-                          'prev_img',
-                          current.filter((_, i) => i !== index)
-                        )
-                      }}
-                    >
-                      ×
-                    </Button>
+                {isEdit && form.watch('prev_img') && form.watch('prev_img')!.length > 0 && (
+                  <div className='mt-4 flex gap-2'>
+                    {form.watch('prev_img')!.map((img, index) => (
+                      <div key={index} className='relative'>
+                        <img src={img} alt={`Product ${index + 1}`} className='h-20 w-20 rounded object-cover' />
+                        <Button
+                          type='button'
+                          variant='destructive'
+                          size='sm'
+                          className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0'
+                          onClick={() => {
+                            const current = form.getValues('prev_img') || []
+                            form.setValue(
+                              'prev_img',
+                              current.filter((_, i) => i !== index)
+                            )
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+                <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+              </Field>
             )}
-            <FieldError>{form.formState.errors.image?.message}</FieldError>
-          </Field>
+          />
 
         {/* Additional Options */}
             <Field>
@@ -1565,35 +1748,65 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               </>
             )}
 
-            <Field>
-              <FieldLabel>Product Details</FieldLabel>
-              <Textarea
-                {...form.register('product_details')}
-                placeholder='Enter product details'
-                rows={4}
-              />
-              <FieldError>{form.formState.errors.product_details?.message}</FieldError>
-            </Field>
+            <Controller
+              control={form.control}
+              name='product_details'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
+                  <Textarea
+                    id='product-details'
+                    placeholder='Enter product details'
+                    rows={4}
+                    autoComplete='off'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
-            <Field>
-              <FieldLabel>Short Description</FieldLabel>
-              <Textarea
-                {...form.register('short_description')}
-                placeholder='Enter short description'
-                rows={3}
-              />
-              <FieldError>{form.formState.errors.short_description?.message}</FieldError>
-            </Field>
+            <Controller
+              control={form.control}
+              name='short_description'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-short-description'>Short Description</FieldLabel>
+                  <Textarea
+                    id='product-short-description'
+                    placeholder='Enter short description'
+                    rows={3}
+                    autoComplete='off'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
-            <Field>
-              <FieldLabel>Specification</FieldLabel>
-              <Textarea
-                {...form.register('specification')}
-                placeholder='Enter product specifications'
-                rows={4}
-              />
-              <FieldError>{form.formState.errors.specification?.message}</FieldError>
-            </Field>
+            <Controller
+              control={form.control}
+              name='specification'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-specification'>Specification</FieldLabel>
+                  <Textarea
+                    id='product-specification'
+                    placeholder='Enter product specifications'
+                    rows={4}
+                    autoComplete='off'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
             {productType === 'standard' && (
               <>
@@ -1699,17 +1912,31 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   units={units.map(u => ({ id: u.id, unit_name: u.name || '' }))}
                 />
                 
-                <Field>
-                  <FieldLabel>Production Cost</FieldLabel>
-                  <Input
-                    type='number'
-                    step='0.01'
-                    {...form.register('production_cost', { valueAsNumber: true })}
-                    placeholder='0.00'
+                  <Controller
+                    control={form.control}
+                    name='production_cost'
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel htmlFor='product-production-cost'>Production Cost</FieldLabel>
+                        <Input
+                          id='product-production-cost'
+                          type='number'
+                          step='0.01'
+                          placeholder='0.00'
+                          autoComplete='off'
+                          {...field}
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            field.onChange(value === '' ? undefined : Number(value))
+                          }}
+                          data-invalid={!!fieldState.error}
+                        />
+                        <FieldDescription>Production cost for combo products</FieldDescription>
+                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                      </Field>
+                    )}
                   />
-                  <FieldDescription>Production cost for combo products</FieldDescription>
-                  <FieldError>{form.formState.errors.production_cost?.message}</FieldError>
-                </Field>
               </>
             )}
 
@@ -1797,16 +2024,30 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             {form.watch('promotion') && (
               <>
                 <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                  <Field>
-                    <FieldLabel>Promotional Price</FieldLabel>
-                    <Input
-                      type='number'
-                      step='0.01'
-                      {...form.register('promotion_price', { valueAsNumber: true })}
-                      placeholder='0.00'
-                    />
-                    <FieldError>{form.formState.errors.promotion_price?.message}</FieldError>
-                  </Field>
+                  <Controller
+                    control={form.control}
+                    name='promotion_price'
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel htmlFor='product-promotion-price-2'>Promotional Price</FieldLabel>
+                        <Input
+                          id='product-promotion-price-2'
+                          type='number'
+                          step='0.01'
+                          placeholder='0.00'
+                          autoComplete='off'
+                          {...field}
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            field.onChange(value === '' ? undefined : Number(value))
+                          }}
+                          data-invalid={!!fieldState.error}
+                        />
+                        <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                      </Field>
+                    )}
+                  />
 
                   <DatePickerField
                     label="Promotion Starts"
@@ -1872,38 +2113,65 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         )}
 
         {/* SEO & Additional Information */}
-            <Field>
-              <FieldLabel>Tags</FieldLabel>
-              <TagInput
-                value={form.watch('tags')?.split(',').map(t => t.trim()).filter(t => t) || []}
-                onChange={(tags) => form.setValue('tags', tags.join(','))}
-                placeholder='Enter tags separated by commas'
-                delimiter=','
-              />
-              <FieldDescription>Product tags for search and categorization</FieldDescription>
-              <FieldError>{form.formState.errors.tags?.message}</FieldError>
-            </Field>
+            <Controller
+              control={form.control}
+              name='tags'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-tags'>Tags</FieldLabel>
+                  <TagInput
+                    id='product-tags'
+                    value={field.value?.split(',').map(t => t.trim()).filter(t => t) || []}
+                    onChange={(tags) => field.onChange(tags.join(','))}
+                    placeholder='Enter tags separated by commas'
+                    delimiter=','
+                  />
+                  <FieldDescription>Product tags for search and categorization</FieldDescription>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
-            <Field>
-              <FieldLabel>Meta Title</FieldLabel>
-              <Input
-                {...form.register('meta_title')}
-                placeholder='Enter meta title for SEO'
-                maxLength={255}
-              />
-              <FieldError>{form.formState.errors.meta_title?.message}</FieldError>
-            </Field>
+            <Controller
+              control={form.control}
+              name='meta_title'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-meta-title'>Meta Title</FieldLabel>
+                  <Input
+                    id='product-meta-title'
+                    placeholder='Enter meta title for SEO'
+                    maxLength={255}
+                    autoComplete='off'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
-            <Field>
-              <FieldLabel>Meta Description</FieldLabel>
-              <Textarea
-                {...form.register('meta_description')}
-                placeholder='Enter meta description for SEO'
-                rows={3}
-                maxLength={1000}
-              />
-              <FieldError>{form.formState.errors.meta_description?.message}</FieldError>
-            </Field>
+            <Controller
+              control={form.control}
+              name='meta_description'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-meta-description'>Meta Description</FieldLabel>
+                  <Textarea
+                    id='product-meta-description'
+                    placeholder='Enter meta description for SEO'
+                    rows={3}
+                    maxLength={1000}
+                    autoComplete='off'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
             <RelatedProducts
               setValue={form.setValue}
@@ -1911,16 +2179,16 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             />
 
         {/* Restaurant Module Fields */}
-            <Field>
-              <FieldLabel>Kitchen</FieldLabel>
-              <Controller
-                control={form.control}
-                name='kitchen_id'
-                render={({ field }) => {
-                  // TODO: Add kitchen API integration when available
-                  const kitchenItems: Array<{ id: number; name: string }> = []
+            <Controller
+              control={form.control}
+              name='kitchen_id'
+              render={({ field, fieldState }) => {
+                // TODO: Add kitchen API integration when available
+                const kitchenItems: Array<{ id: number; name: string }> = []
 
-                  return (
+                return (
+                  <Field>
+                    <FieldLabel htmlFor='product-kitchen'>Kitchen</FieldLabel>
                     <Combobox
                       items={kitchenItems}
                       value={null}
@@ -1930,10 +2198,12 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       itemToStringValue={(item: { id: number; name: string } | null) => item ? String(item.id) : ''}
                     >
                       <ComboboxInput
+                        id='product-kitchen'
                         name="kitchen_id"
                         placeholder="Select kitchen (optional)"
                         showClear
                         disabled
+                        data-invalid={!!fieldState.error}
                       />
                       <ComboboxContent>
                         <ComboboxEmpty>
@@ -1948,19 +2218,20 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         </ComboboxList>
                       </ComboboxContent>
                     </Combobox>
-                  )
-                }}
-              />
-              <FieldError>{form.formState.errors.kitchen_id?.message}</FieldError>
-            </Field>
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )
+              }}
+            />
 
-            <Field>
-              <FieldLabel>Menu Type</FieldLabel>
-              <Controller
-                control={form.control}
-                name='menu_type'
-                render={({ field }) => (
+            <Controller
+              control={form.control}
+              name='menu_type'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-menu-type'>Menu Type</FieldLabel>
                   <Input
+                    id='product-menu-type'
                     value={Array.isArray(field.value) ? field.value.join(',') : ''}
                     onChange={(e) => {
                       const value = e.target.value
@@ -1972,27 +2243,39 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       }
                     }}
                     placeholder='Comma-separated menu type IDs (e.g., 1,2,3)'
+                    autoComplete='off'
+                    data-invalid={!!fieldState.error}
                   />
-                )}
-              />
-              <FieldDescription>
-                Enter menu type IDs separated by commas. Full menu type selection coming soon. Requires menu type API integration.
-              </FieldDescription>
-              <FieldError>{form.formState.errors.menu_type?.message}</FieldError>
-            </Field>
+                  <FieldDescription>
+                    Enter menu type IDs separated by commas. Full menu type selection coming soon. Requires menu type API integration.
+                  </FieldDescription>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
-            <Field>
-              <FieldLabel>Extras/Add-ons</FieldLabel>
-              <Textarea
-                {...form.register('extras')}
-                placeholder='Comma-separated addon IDs (e.g., 1,2,3)'
-                rows={2}
-              />
-              <FieldDescription>
-                Enter addon/extra product IDs separated by commas. Full addon search integration coming soon.
-              </FieldDescription>
-              <FieldError>{form.formState.errors.extras?.message}</FieldError>
-            </Field>
+            <Controller
+              control={form.control}
+              name='extras'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-extras'>Extras/Add-ons</FieldLabel>
+                  <Textarea
+                    id='product-extras'
+                    placeholder='Comma-separated addon IDs (e.g., 1,2,3)'
+                    rows={2}
+                    autoComplete='off'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldDescription>
+                    Enter addon/extra product IDs separated by commas. Full addon search integration coming soon.
+                  </FieldDescription>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
       </FieldGroup>
 
       {/* Dialogs */}
