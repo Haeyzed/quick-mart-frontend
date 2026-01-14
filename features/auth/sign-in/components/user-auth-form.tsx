@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from 'react'
 import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,7 +12,7 @@ import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { cn } from '@/lib/utils'
 import { handleApiError } from '@/lib/handle-api-error'
-import { authApi } from '@/lib/api/auth'
+import { useLogin } from '@/features/auth/api/use-auth'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -39,10 +38,10 @@ export function UserAuthForm({
   redirectTo,
   ...props
 }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = redirectTo || searchParams.get('redirect') || '/'
+  const loginMutation = useLogin()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,12 +52,10 @@ export function UserAuthForm({
   })
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-
     try {
       // First, call the API to check for errors (email not verified, account deactivated, etc.)
       try {
-        await authApi.login({
+        await loginMutation.mutateAsync({
           name: data.name,
           password: data.password,
         })
@@ -66,7 +63,6 @@ export function UserAuthForm({
       } catch (apiError: any) {
         // API error occurred - show error and stop
         handleApiError(apiError, form.setError)
-        setIsLoading(false)
         return
       }
 
@@ -84,7 +80,6 @@ export function UserAuthForm({
         if (result.error.includes('email') || result.error.includes('password')) {
           form.setError('name', { type: 'server', message: errorMessage })
         }
-        setIsLoading(false)
         return
       }
 
@@ -95,9 +90,10 @@ export function UserAuthForm({
       }
     } catch (error: any) {
       handleApiError(error, form.setError)
-      setIsLoading(false)
     }
   }
+
+  const isLoading = loginMutation.isPending
 
   return (
     <form

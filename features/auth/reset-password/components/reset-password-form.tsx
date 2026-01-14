@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from 'react'
 import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,7 +9,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Spinner } from '@/components/ui/spinner'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { authApi } from '@/lib/api/auth'
+import { useResetPassword } from '@/features/auth/api/use-auth'
 import { handleApiError } from '@/lib/handle-api-error'
 import { Button } from '@/components/ui/button'
 import {
@@ -43,7 +42,7 @@ export function ResetPasswordForm({
 }: React.HTMLAttributes<HTMLFormElement>) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isLoading, setIsLoading] = useState(false)
+  const resetPasswordMutation = useResetPassword()
 
   const email = searchParams.get('email') || ''
   const token = searchParams.get('token') || ''
@@ -59,10 +58,8 @@ export function ResetPasswordForm({
   })
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-
     try {
-      await authApi.resetPassword({
+      await resetPasswordMutation.mutateAsync({
         email: data.email,
         token: data.token,
         password: data.password,
@@ -72,10 +69,10 @@ export function ResetPasswordForm({
       router.push('/sign-in')
     } catch (error: any) {
       handleApiError(error, form.setError)
-    } finally {
-      setIsLoading(false)
     }
   }
+
+  const isLoading = resetPasswordMutation.isPending
 
   return (
     <form

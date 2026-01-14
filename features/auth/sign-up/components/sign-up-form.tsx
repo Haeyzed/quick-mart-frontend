@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { toast } from 'sonner'
-import { authApi } from '@/lib/api/auth'
+import { useRegister } from '@/features/auth/api/use-auth'
 import { cn } from '@/lib/utils'
 import { handleApiError } from '@/lib/handle-api-error'
 import { Button } from '@/components/ui/button'
@@ -69,9 +69,9 @@ export function SignUpForm({
   className,
   ...props
 }: React.HTMLAttributes<HTMLFormElement>) {
-  const [isLoading, setIsLoading] = useState(false)
   const [step, setStep] = useState('personal')
   const router = useRouter()
+  const registerMutation = useRegister()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -102,10 +102,8 @@ export function SignUpForm({
   }
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-
     try {
-      await authApi.register({
+      await registerMutation.mutateAsync({
         name: data.name,
         email: data.email || null,
         password: data.password,
@@ -116,10 +114,10 @@ export function SignUpForm({
       router.push('/sign-in')
     } catch (error: any) {
       handleApiError(error, form.setError)
-    } finally {
-      setIsLoading(false)
     }
   }
+
+  const isLoading = registerMutation.isPending
 
   return (
     <form
