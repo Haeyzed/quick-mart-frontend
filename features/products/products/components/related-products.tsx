@@ -54,13 +54,35 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
   const [isSearching, setIsSearching] = useState(false)
   const anchor = useComboboxAnchor()
 
-  // Parse initial value (comma-separated IDs)
+  // Parse initial value (comma-separated IDs) and fetch product details
   useEffect(() => {
     if (value) {
       const ids = value.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
-      // We'll need to fetch product details for these IDs, but for now just initialize
-      // The API should return product data when loading the form
+      if (ids.length > 0) {
+        // Fetch product details for these IDs
+        Promise.all(
+          ids.map(id => 
+            get<SearchProduct>(`/products/${id}`).then(res => res.data)
+          )
+        ).then(products => {
+          const validProducts = products.filter((p): p is SearchProduct => p !== null && p !== undefined)
+          setSelectedProducts(validProducts.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            code: p.code,
+            // image_url is already an array of full URLs from API
+            image_url: Array.isArray(p.image_url) && p.image_url.length > 0
+              ? p.image_url
+              : null,
+          })))
+        }).catch(error => {
+          console.error('Error fetching related products:', error)
+        })
+      }
+    } else {
+      setSelectedProducts([])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
 
   // Search products when input changes
@@ -75,14 +97,18 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
             page: 1,
           })
           if (response.data) {
+            // response.data is already an array of products (like useProducts hook)
             const products = Array.isArray(response.data) 
               ? response.data 
-              : (response.data as any).data || []
+              : []
             setItems(products.map((p: any) => ({
               id: p.id,
               name: p.name,
               code: p.code,
-              image_url: p.image_url || p.image,
+              // image_url is already an array of full URLs from API (like products-columns.tsx line 74-76)
+              image_url: Array.isArray(p.image_url) && p.image_url.length > 0
+                ? p.image_url
+                : null,
             })))
           } else {
             setItems([])

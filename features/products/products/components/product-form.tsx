@@ -34,6 +34,7 @@ import {
   FileUploadTrigger,
 } from '@/components/ui/file-upload'
 import { useCreateProduct, useUpdateProduct, useProduct, useGenerateProductCode } from '../api/use-products'
+import Image from 'next/image'
 import { useBrands } from '../../brands/api/use-brands'
 import { useCategories } from '../../categories/api/use-categories'
 import { useUnits } from '../../units/api/use-units'
@@ -1564,28 +1565,37 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   ))}
                 </FileUploadList>
               </FileUpload>
-              {isEdit && form.watch('prev_img') && form.watch('prev_img')!.length > 0 && (
+              {isEdit && product?.image_url && Array.isArray(product.image_url) && product.image_url.length > 0 && (
                 <div className='mt-4 flex gap-2'>
-                  {form.watch('prev_img')!.map((img, index) => (
-                    <div key={index} className='relative'>
-                      <img src={img} alt={`Product ${index + 1}`} className='h-20 w-20 rounded object-cover' />
-                      <Button
-                        type='button'
-                        variant='destructive'
-                        size='sm'
-                        className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0'
-                        onClick={() => {
-                          const current = form.getValues('prev_img') || []
-                          form.setValue(
-                            'prev_img',
-                            current.filter((_, i) => i !== index)
-                          )
-                        }}
-                      >
-                        <HugeiconsIcon icon={Trash} className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                  {product.image_url.map((imageUrl, index) => {
+                    // image_url already contains full URLs from API response
+                    // Get corresponding filename from prev_img for deletion tracking
+                    const filename = form.watch('prev_img')?.[index]
+                    return (
+                      <div key={index} className='relative'>
+                        <img
+                          src={imageUrl}
+                          alt={`Product ${index + 1}`}
+                          className='h-20 w-20 rounded object-cover'
+                        />
+                        <Button
+                          type='button'
+                          variant='destructive'
+                          size='sm'
+                          className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0'
+                          onClick={() => {
+                            const current = form.getValues('prev_img') || []
+                            form.setValue(
+                              'prev_img',
+                              current.filter((_, i) => i !== index)
+                            )
+                          }}
+                        >
+                          <HugeiconsIcon icon={Trash} className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               <FieldError errors={fieldState.error ? [fieldState.error] : []} />
