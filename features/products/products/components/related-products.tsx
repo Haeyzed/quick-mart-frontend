@@ -138,6 +138,7 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
   const getImageUrl = (image_url?: string | string[]) => {
     if (!image_url) return null
     if (typeof image_url === 'string') return image_url
+    // Use image_url[0] - first image from array
     if (Array.isArray(image_url) && image_url.length > 0) return image_url[0]
     return null
   }
@@ -175,6 +176,7 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
                             width={16}
                             height={16}
                             className="rounded object-cover mr-1"
+                            unoptimized
                           />
                         )}
                         {product.name}
@@ -210,6 +212,7 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
                             width={40}
                             height={40}
                             className="object-cover"
+                            unoptimized
                           />
                         </ItemMedia>
                       )}
@@ -241,6 +244,7 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
                           width={40}
                           height={40}
                           className="object-cover"
+                          unoptimized
                         />
                       </ItemMedia>
                     )}

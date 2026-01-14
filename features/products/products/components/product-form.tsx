@@ -33,8 +33,12 @@ import {
   FileUploadList,
   FileUploadTrigger,
 } from '@/components/ui/file-upload'
-import { useCreateProduct, useUpdateProduct, useProduct, useGenerateProductCode } from '../api/use-products'
+import { useCreateProduct, useUpdateProduct, useProduct, useGenerateProductCode, useReorderProductImages } from '../api/use-products'
 import Image from 'next/image'
+import { ImageZoom } from '@/components/ui/shadcn-io/image-zoom'
+import { useTheme } from '@/context/theme-provider'
+import { Sortable, SortableContent, SortableItem, SortableOverlay } from '@/components/ui/sortable'
+import { cn } from '@/lib/utils'
 import { useBrands } from '../../brands/api/use-brands'
 import { useCategories } from '../../categories/api/use-categories'
 import { useUnits } from '../../units/api/use-units'
@@ -64,6 +68,140 @@ import { TaxesActionDialog } from '../../../settings/tax/components/tax-action-d
 import { UnitsActionDialog } from '../../units/components/units-action-dialog'
 import { Plus, Refresh01Icon, Trash } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { UseFormReturn } from 'react-hook-form'
+
+// Existing Images Section Component
+function ExistingImagesSection({ 
+  product, 
+  form 
+}: { 
+  product: Product
+  form: UseFormReturn<any>
+}) {
+  const { resolvedTheme } = useTheme()
+  const [imageUrls, setImageUrls] = useState<string[]>(product.image_url || [])
+  const prevImgs = form.watch('prev_img') || product.image || []
+  const reorderImagesMutation = useReorderProductImages()
+  
+  // Update local state when product changes
+  useEffect(() => {
+    if (product.image_url && Array.isArray(product.image_url)) {
+      setImageUrls(product.image_url)
+    }
+  }, [product.image_url])
+  
+  const handleImageSort = async (sortedUrls: string[]) => {
+    // Optimistically update local state
+    setImageUrls(sortedUrls)
+    
+    // Update form state
+    form.setValue('image_url', sortedUrls)
+    
+    // Update prev_img order to match
+    const sortedPrevImgs = sortedUrls.map((url) => {
+      const index = (product.image_url || []).indexOf(url)
+      return index >= 0 && prevImgs[index] ? prevImgs[index] : null
+    }).filter(Boolean) as string[]
+    
+    if (sortedPrevImgs.length > 0) {
+      form.setValue('prev_img', sortedPrevImgs)
+    }
+    
+    // Call API to persist the reorder
+    try {
+      await reorderImagesMutation.mutateAsync({
+        id: product.id,
+        imageUrls: sortedUrls,
+      })
+    } catch (error) {
+      // Revert on error
+      setImageUrls(product.image_url || [])
+      form.setValue('image_url', product.image_url || [])
+      form.setValue('prev_img', product.image || [])
+      console.error('Failed to reorder images:', error)
+    }
+  }
+  
+  if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
+    return null
+  }
+  
+  return (
+    <div className='mt-4'>
+      <Sortable value={imageUrls} onValueChange={handleImageSort} orientation="horizontal">
+        <SortableContent className='flex gap-2 flex-wrap'>
+          {imageUrls.map((imageUrl, index) => {
+            const filename = prevImgs[index]
+            return (
+              <SortableItem key={imageUrl} value={imageUrl} asChild asHandle>
+                <div className='relative'>
+                  <ImageZoom
+                    backdropClassName={cn(
+                      resolvedTheme === 'dark'
+                        ? '[&_[data-rmiz-modal-overlay="visible"]]:bg-white/80'
+                        : '[&_[data-rmiz-modal-overlay="visible"]]:bg-black/80'
+                    )}
+                  >
+                    <Image
+                      src={imageUrl}
+                      alt={`Product ${index + 1}`}
+                      width={80}
+                      height={80}
+                      className='h-20 w-20 rounded object-cover'
+                      unoptimized
+                    />
+                  </ImageZoom>
+                  <Button
+                    type='button'
+                    variant='destructive'
+                    size='sm'
+                    className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0 z-10'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const current = form.getValues('prev_img') || []
+                      const currentUrls = form.getValues('image_url') || imageUrls
+                      const newPrevImgs = current.filter((_item: string, i: number) => i !== index)
+                      const newImageUrls = currentUrls.filter((_url: string, i: number) => i !== index)
+                      form.setValue('prev_img', newPrevImgs)
+                      form.setValue('image_url', newImageUrls)
+                      setImageUrls(newImageUrls)
+                    }}
+                  >
+                    <HugeiconsIcon icon={Trash} className="h-4 w-4" />
+                  </Button>
+                </div>
+              </SortableItem>
+            )
+          })}
+        </SortableContent>
+        <SortableOverlay>
+          {({ value }) => (
+            <SortableItem value={String(value)} asChild>
+              <div className='relative'>
+                <ImageZoom
+                  backdropClassName={cn(
+                    resolvedTheme === 'dark'
+                      ? '[&_[data-rmiz-modal-overlay="visible"]]:bg-white/80'
+                      : '[&_[data-rmiz-modal-overlay="visible"]]:bg-black/80'
+                  )}
+                >
+                  <Image
+                    src={String(value)}
+                    alt="Product"
+                    width={80}
+                    height={80}
+                    className='h-20 w-20 rounded object-cover'
+                    unoptimized
+                  />
+                </ImageZoom>
+              </div>
+            </SortableItem>
+          )}
+        </SortableOverlay>
+      </Sortable>
+    </div>
+  )
+}
 
 // Form schema - simplified for now, will expand
 const productFormSchema = z.object({
@@ -1566,37 +1704,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 </FileUploadList>
               </FileUpload>
               {isEdit && product?.image_url && Array.isArray(product.image_url) && product.image_url.length > 0 && (
-                <div className='mt-4 flex gap-2'>
-                  {product.image_url.map((imageUrl, index) => {
-                    // image_url already contains full URLs from API response
-                    // Get corresponding filename from prev_img for deletion tracking
-                    const filename = form.watch('prev_img')?.[index]
-                    return (
-                      <div key={index} className='relative'>
-                        <img
-                          src={imageUrl}
-                          alt={`Product ${index + 1}`}
-                          className='h-20 w-20 rounded object-cover'
-                        />
-                        <Button
-                          type='button'
-                          variant='destructive'
-                          size='sm'
-                          className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0'
-                          onClick={() => {
-                            const current = form.getValues('prev_img') || []
-                            form.setValue(
-                              'prev_img',
-                              current.filter((_, i) => i !== index)
-                            )
-                          }}
-                        >
-                          <HugeiconsIcon icon={Trash} className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )
-                  })}
-                </div>
+                <ExistingImagesSection 
+                  product={product} 
+                  form={form}
+                />
               )}
               <FieldError errors={fieldState.error ? [fieldState.error] : []} />
             </Field>

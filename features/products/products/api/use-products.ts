@@ -234,3 +234,26 @@ export function useImportProducts() {
   })
 }
 
+export function useReorderProductImages() {
+  const queryClient = useQueryClient()
+  const { post } = useApiClient()
+
+  return useMutation({
+    mutationFn: async ({ id, imageUrls }: { id: number; imageUrls: string[] }) => {
+      const response = await post<Product>(`/products/${id}/reorder-images`, {
+        image_urls: imageUrls,
+      })
+      if (response.data) {
+        return {
+          data: productSchema.parse(response.data),
+          message: response.message,
+        }
+      }
+      throw new Error(response.message || 'Failed to reorder product images')
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['products', variables.id] })
+    },
+  })
+}
