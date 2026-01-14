@@ -61,7 +61,7 @@ import { BrandsActionDialog } from '../../brands/components/brands-action-dialog
 import { CategoriesActionDialog } from '../../categories/components/categories-action-dialog'
 import { TaxesActionDialog } from '../../../settings/tax/components/tax-action-dialog'
 import { UnitsActionDialog } from '../../units/components/units-action-dialog'
-import { Plus, Refresh01Icon } from '@hugeicons/core-free-icons'
+import { Plus, Refresh01Icon, Trash } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 // Form schema - simplified for now, will expand
@@ -1533,6 +1533,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 accept='image/*'
                 value={value}
                 onValueChange={onChange}
+                multiple={true}
               >
                 <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
                   Drag and drop or
@@ -1555,7 +1556,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           size='icon'
                           className='size-7'
                         >
-                          ×
+                          <HugeiconsIcon icon={Trash} className="h-4 w-4" />
                           <span className='sr-only'>Delete</span>
                         </Button>
                       </FileUploadItemDelete>
@@ -1581,7 +1582,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           )
                         }}
                       >
-                        ×
+                        <HugeiconsIcon icon={Trash} className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
