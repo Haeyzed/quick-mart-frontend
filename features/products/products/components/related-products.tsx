@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { UseFormSetValue, FieldValues, Path } from 'react-hook-form'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -10,12 +10,6 @@ import {
   FieldDescription,
   FieldError,
 } from '@/components/ui/field'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from '@/components/ui/input-group'
 import {
   Popover,
   PopoverAnchor,
@@ -107,7 +101,8 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
       setSearchResults([])
       setIsOpen(false)
     }
-  }, [searchQuery, get])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
 
   const handleSelectProduct = (product: SearchProduct) => {
     if (selectedProducts.some(p => p.id === product.id)) {
@@ -197,8 +192,8 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
                   </div>
                 )
               })}
-              <InputGroup className="w-auto border-0 shadow-none p-0 h-auto flex-1 min-w-16">
-                <InputGroupInput
+              <div className="relative flex-1 min-w-16 flex items-center">
+                <input
                   ref={inputRef}
                   type="text"
                   placeholder={selectedProducts.length === 0 ? "Search products by name or code..." : ""}
@@ -209,23 +204,23 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
                       setIsOpen(true)
                     }
                   }}
+                  className="min-w-16 flex-1 outline-none bg-transparent"
                 />
-                <InputGroupAddon align="inline-end">
-                  {searchQuery && (
-                    <InputGroupButton
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={handleClear}
-                    >
-                      <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="pointer-events-none" />
-                    </InputGroupButton>
-                  )}
-                  {isSearching && !searchQuery && (
-                    <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  )}
-                </InputGroupAddon>
-              </InputGroup>
+                {searchQuery && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    className="opacity-50 hover:opacity-100"
+                    onClick={handleClear}
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="pointer-events-none" />
+                  </Button>
+                )}
+                {isSearching && !searchQuery && (
+                  <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                )}
+              </div>
             </div>
           </PopoverAnchor>
           <PopoverContent
