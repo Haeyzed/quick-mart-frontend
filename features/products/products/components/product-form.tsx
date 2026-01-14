@@ -66,7 +66,7 @@ import { BrandsActionDialog } from '../../brands/components/brands-action-dialog
 import { CategoriesActionDialog } from '../../categories/components/categories-action-dialog'
 import { TaxesActionDialog } from '../../../settings/tax/components/tax-action-dialog'
 import { UnitsActionDialog } from '../../units/components/units-action-dialog'
-import { Plus, Refresh01Icon, Trash } from '@hugeicons/core-free-icons'
+import { Plus, Refresh01Icon, Trash, ZoomIn } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { UseFormReturn } from 'react-hook-form'
 
@@ -134,7 +134,7 @@ function ExistingImagesSection({
             const filename = prevImgs[index]
             return (
               <SortableItem key={imageUrl} value={imageUrl} asChild asHandle>
-                <div className='relative'>
+                <div className='relative group'>
                   <ImageZoom
                     backdropClassName={cn(
                       resolvedTheme === 'dark'
@@ -147,28 +147,52 @@ function ExistingImagesSection({
                       alt={`Product ${index + 1}`}
                       width={80}
                       height={80}
-                      className='h-20 w-20 rounded object-cover'
+                      className='h-20 w-20 rounded object-cover cursor-zoom-in'
                       unoptimized
                     />
                   </ImageZoom>
-                  <Button
-                    type='button'
-                    variant='destructive'
-                    size='sm'
-                    className='absolute -right-2 -top-2 h-6 w-6 rounded-full p-0 z-10'
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      const current = form.getValues('prev_img') || []
-                      const currentUrls = form.getValues('image_url') || imageUrls
-                      const newPrevImgs = current.filter((_item: string, i: number) => i !== index)
-                      const newImageUrls = currentUrls.filter((_url: string, i: number) => i !== index)
-                      form.setValue('prev_img', newPrevImgs)
-                      form.setValue('image_url', newImageUrls)
-                      setImageUrls(newImageUrls)
-                    }}
-                  >
-                    <HugeiconsIcon icon={Trash} className="h-4 w-4" />
-                  </Button>
+                  <div className='absolute -right-2 -top-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity'>
+                    <Button
+                      type='button'
+                      variant='secondary'
+                      size='sm'
+                      className='h-6 w-6 rounded-full p-0 bg-background/90 hover:bg-background border shadow-sm'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Trigger zoom by clicking the image or the zoom button
+                        const container = e.currentTarget.closest('.relative')
+                        const imgElement = container?.querySelector('img') as HTMLElement
+                        const zoomButton = container?.querySelector('[data-rmiz-btn-zoom]') as HTMLElement
+                        if (zoomButton) {
+                          zoomButton.click()
+                        } else if (imgElement) {
+                          imgElement.click()
+                        }
+                      }}
+                      title="Zoom image"
+                    >
+                      <HugeiconsIcon icon={ZoomIn} className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type='button'
+                      variant='destructive'
+                      size='sm'
+                      className='h-6 w-6 rounded-full p-0 shadow-sm'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const current = form.getValues('prev_img') || []
+                        const currentUrls = form.getValues('image_url') || imageUrls
+                        const newPrevImgs = current.filter((_item: string, i: number) => i !== index)
+                        const newImageUrls = currentUrls.filter((_url: string, i: number) => i !== index)
+                        form.setValue('prev_img', newPrevImgs)
+                        form.setValue('image_url', newImageUrls)
+                        setImageUrls(newImageUrls)
+                      }}
+                      title="Delete image"
+                    >
+                      <HugeiconsIcon icon={Trash} className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </SortableItem>
             )
