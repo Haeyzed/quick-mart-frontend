@@ -44,7 +44,7 @@ export function ForgotPasswordForm({
       await authApi.forgotPassword({ email: data.email })
       toast.success(`Email sent to ${data.email}`)
       form.reset()
-      router.push('/otp')
+      router.push('/sign-in')
     } catch (error: any) {
       handleApiError(error, form.setError)
     } finally {
