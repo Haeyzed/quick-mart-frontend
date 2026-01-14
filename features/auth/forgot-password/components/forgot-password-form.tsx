@@ -11,6 +11,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { authApi } from '@/lib/api/auth'
+import { handleApiError } from '@/lib/handle-api-error'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -45,7 +46,7 @@ export function ForgotPasswordForm({
       form.reset()
       router.push('/otp')
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send password reset email')
+      handleApiError(error, form.setError)
     } finally {
       setIsLoading(false)
     }

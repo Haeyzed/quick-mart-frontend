@@ -12,6 +12,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { cn } from '@/lib/utils'
+import { handleApiError } from '@/lib/handle-api-error'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -61,7 +62,13 @@ export function UserAuthForm({
       })
 
       if (result?.error) {
-        toast.error(result.error || 'Invalid credentials')
+        // Handle next-auth errors
+        const errorMessage = result.error || 'Invalid credentials'
+        toast.error(errorMessage)
+        // Try to set form error if it's a validation error
+        if (result.error.includes('email') || result.error.includes('password')) {
+          form.setError('name', { type: 'server', message: errorMessage })
+        }
         setIsLoading(false)
         return
       }
@@ -72,7 +79,7 @@ export function UserAuthForm({
         router.refresh()
       }
     } catch (error: any) {
-      toast.error(error.message || 'An error occurred during login')
+      handleApiError(error, form.setError)
       setIsLoading(false)
     }
   }
