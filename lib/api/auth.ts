@@ -73,6 +73,23 @@ export type RefreshTokenData = {
 
 // Auth API functions - these work with NextAuth session tokens automatically
 export const authApi = {
+  async login(data: LoginCredentials): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>('/auth/login', {
+      name: data.name,
+      password: data.password,
+    })
+
+    if (response.status && response.data) {
+      return response.data
+    }
+
+    // This should not happen as apiClient throws on error, but just in case
+    const error = new Error(response.message || 'Login failed')
+    ;(error as any).status = 400
+    ;(error as any).errors = (response as any).errors
+    throw error
+  },
+
   async register(data: RegisterData): Promise<User> {
     const response = await apiClient.post<User>('/auth/register', data)
 

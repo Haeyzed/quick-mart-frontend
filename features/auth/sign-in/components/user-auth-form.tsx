@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { cn } from '@/lib/utils'
 import { handleApiError } from '@/lib/handle-api-error'
+import { authApi } from '@/lib/api/auth'
 import { Button } from '@/components/ui/button'
 import {
   Field,
@@ -55,6 +56,21 @@ export function UserAuthForm({
     setIsLoading(true)
 
     try {
+      // First, call the API to check for errors (email not verified, account deactivated, etc.)
+      try {
+        await authApi.login({
+          name: data.name,
+          password: data.password,
+        })
+        // If API call succeeds, proceed with NextAuth
+      } catch (apiError: any) {
+        // API error occurred - show error and stop
+        handleApiError(apiError, form.setError)
+        setIsLoading(false)
+        return
+      }
+
+      // API call succeeded, now proceed with NextAuth authentication
       const result = await signIn('credentials', {
         name: data.name,
         password: data.password,
@@ -62,10 +78,9 @@ export function UserAuthForm({
       })
 
       if (result?.error) {
-        // Handle next-auth errors
+        // Handle next-auth errors (shouldn't happen if API succeeded, but just in case)
         const errorMessage = result.error || 'Invalid credentials'
         toast.error(errorMessage)
-        // Try to set form error if it's a validation error
         if (result.error.includes('email') || result.error.includes('password')) {
           form.setError('name', { type: 'server', message: errorMessage })
         }
