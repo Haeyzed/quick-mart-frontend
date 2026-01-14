@@ -2,13 +2,15 @@
 
 import { useDirection } from "@radix-ui/react-direction";
 import { Slot } from "@radix-ui/react-slot";
-import { Check } from "lucide-react";
+import { Check } from "@hugeicons/core-free-icons";
+
 import * as React from "react";
 import { useComposedRefs } from "@/lib/compose-refs";
 import { cn } from "@/lib/utils";
 import { useAsRef } from "@/hooks/use-as-ref";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect";
 import { useLazyRef } from "@/hooks/use-lazy-ref";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 const ROOT_NAME = "Stepper";
 const LIST_NAME = "StepperList";
@@ -1015,7 +1017,7 @@ function StepperIndicator(props: StepperIndicatorProps) {
       ) : children ? (
         children
       ) : dataState === "completed" ? (
-        <Check className="size-4" />
+        <HugeiconsIcon icon={Check} className="size-4" />
       ) : (
         stepPosition
       )}
