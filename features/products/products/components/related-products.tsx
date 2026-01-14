@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { UseFormSetValue, FieldValues, Path } from 'react-hook-form'
 import Image from 'next/image'
-import { Button } from '@/components/ui/button'
 import {
   Field,
   FieldLabel,
@@ -11,10 +10,17 @@ import {
   FieldError,
 } from '@/components/ui/field'
 import {
-  Popover,
-  PopoverAnchor,
-  PopoverContent,
-} from '@/components/ui/popover'
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from '@/components/ui/combobox'
 import {
   Item,
   ItemMedia,
@@ -23,8 +29,6 @@ import {
   ItemDescription,
 } from '@/components/ui/item'
 import { useApiClient } from '@/lib/hooks/use-api-client'
-import { Cancel01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { cn } from '@/lib/utils'
 
 interface RelatedProductsProps<TFieldValues extends FieldValues = FieldValues> {
@@ -44,13 +48,11 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
   value 
 }: RelatedProductsProps<TFieldValues>) {
   const { get } = useApiClient()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<SearchProduct[]>([])
+  const [items, setItems] = useState<SearchProduct[]>([])
   const [selectedProducts, setSelectedProducts] = useState<SearchProduct[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-  const anchorRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const anchor = useComboboxAnchor()
 
   // Parse initial value (comma-separated IDs)
   useEffect(() => {
@@ -61,7 +63,7 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
     }
   }, [value])
 
-  // Search products
+  // Search products when input changes
   useEffect(() => {
     if (searchQuery.length >= 2) {
       setIsSearching(true)
@@ -76,21 +78,18 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
             const products = Array.isArray(response.data) 
               ? response.data 
               : (response.data as any).data || []
-            setSearchResults(products.map((p: any) => ({
+            setItems(products.map((p: any) => ({
               id: p.id,
               name: p.name,
               code: p.code,
               image_url: p.image_url || p.image,
             })))
-            setIsOpen(true)
           } else {
-            setSearchResults([])
-            setIsOpen(true)
+            setItems([])
           }
         } catch (error) {
           console.error('Error searching products:', error)
-          setSearchResults([])
-          setIsOpen(true)
+          setItems([])
         } finally {
           setIsSearching(false)
         }
@@ -98,39 +97,16 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
 
       return () => clearTimeout(timeoutId)
     } else {
-      setSearchResults([])
-      setIsOpen(false)
+      setItems([])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
 
-  const handleSelectProduct = (product: SearchProduct) => {
-    if (selectedProducts.some(p => p.id === product.id)) {
-      return // Already selected
-    }
-
-    const newSelected = [...selectedProducts, product]
-    setSelectedProducts(newSelected)
-    const ids = newSelected.map(p => p.id).join(',')
-    setValue('related_products' as Path<TFieldValues>, ids as any)
-    setSearchQuery('')
-    setSearchResults([])
-    setIsOpen(false)
-    inputRef.current?.focus()
-  }
-
-  const handleRemoveProduct = (productId: number) => {
-    const newSelected = selectedProducts.filter(p => p.id !== productId)
-    setSelectedProducts(newSelected)
-    const ids = newSelected.map(p => p.id).join(',')
+  const handleValueChange = (values: SearchProduct[] | SearchProduct | null) => {
+    const newValues = Array.isArray(values) ? values : (values ? [values] : [])
+    setSelectedProducts(newValues)
+    const ids = newValues.map(p => p.id).join(',')
     setValue('related_products' as Path<TFieldValues>, (ids || null) as any)
-  }
-
-  const handleClear = () => {
-    setSearchQuery('')
-    setSearchResults([])
-    setIsOpen(false)
-    inputRef.current?.focus()
   }
 
   const getImageUrl = (image_url?: string | string[]) => {
@@ -140,6 +116,8 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
     return null
   }
 
+  const itemToStringValue = (item: SearchProduct) => String(item.id)
+
   return (
     <Field>
       <FieldLabel>Related Products</FieldLabel>
@@ -148,133 +126,78 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
       </FieldDescription>
 
       <div className="space-y-4">
-        <Popover open={isOpen && searchResults.length > 0} onOpenChange={setIsOpen}>
-          <PopoverAnchor asChild>
-            <div
-              ref={anchorRef}
-              className={cn(
-                "dark:bg-input/30 border-input focus-within:border-ring focus-within:ring-ring/50 has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40 has-aria-invalid:border-destructive dark:has-aria-invalid:border-destructive/50 flex min-h-9 flex-wrap items-center gap-1.5 rounded-md border bg-transparent bg-clip-padding px-2.5 py-1.5 text-sm shadow-xs transition-[color,box-shadow] focus-within:ring-[3px] has-aria-invalid:ring-[3px]",
-                selectedProducts.length > 0 && "px-1.5"
-              )}
-            >
-              {selectedProducts.map((product) => {
-                const imageUrl = getImageUrl(product.image_url)
-                return (
-                  <div
-                    key={product.id}
-                    data-slot="combobox-chip"
-                    className={cn(
-                      "bg-muted text-foreground flex h-[calc(--spacing(5.5))] w-fit items-center justify-center gap-1 rounded-sm px-1.5 text-xs font-medium whitespace-nowrap pr-0"
-                    )}
-                  >
-                    {imageUrl && (
-                      <Image
-                        src={imageUrl}
-                        alt={product.name}
-                        width={16}
-                        height={16}
-                        className="rounded object-cover"
-                      />
-                    )}
-                    <span className="pr-1">{product.name}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      className="-ml-1 opacity-50 hover:opacity-100"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRemoveProduct(product.id)
-                      }}
-                    >
-                      <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="pointer-events-none" />
-                    </Button>
-                  </div>
-                )
-              })}
-              <div className="relative flex-1 min-w-16 flex items-center">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder={selectedProducts.length === 0 ? "Search products by name or code..." : ""}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => {
-                    if (searchResults.length > 0) {
-                      setIsOpen(true)
-                    }
-                  }}
-                  className="min-w-16 flex-1 outline-none bg-transparent"
-                />
-                {searchQuery && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    className="opacity-50 hover:opacity-100"
-                    onClick={handleClear}
-                  >
-                    <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="pointer-events-none" />
-                  </Button>
-                )}
-                {isSearching && !searchQuery && (
-                  <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                )}
-              </div>
-            </div>
-          </PopoverAnchor>
-          <PopoverContent
-            align="start"
-            sideOffset={6}
-            className="bg-popover text-popover-foreground max-h-72 min-w-36 overflow-hidden rounded-md shadow-md ring-1 ring-foreground/10 p-1 w-[var(--radix-popover-trigger-width)]"
-          >
-            {searchResults.length === 0 ? (
-              <div className="text-muted-foreground flex w-full justify-center py-2 text-center text-sm">
-                No products found.
-              </div>
-            ) : (
-              <div className="no-scrollbar max-h-[calc(18rem-0.5rem)] overflow-y-auto overscroll-contain p-1">
-                {searchResults.map((product) => {
-                  const isSelected = selectedProducts.some(p => p.id === product.id)
-                  const imageUrl = getImageUrl(product.image_url)
-                  return (
-                    <div
-                      key={product.id}
-                      className={cn(
-                        "data-highlighted:bg-accent data-highlighted:text-accent-foreground gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm relative flex w-full cursor-pointer items-center outline-hidden select-none hover:bg-accent",
-                        isSelected && "bg-accent"
-                      )}
-                      onClick={() => handleSelectProduct(product)}
-                    >
-                      <Item variant="default" size="xs" className="border-0 p-0 w-full">
+        <Combobox
+          multiple
+          autoHighlight
+          items={items}
+          value={selectedProducts}
+          onValueChange={handleValueChange}
+          itemToStringValue={itemToStringValue}
+        >
+          <ComboboxChips ref={anchor}>
+            <ComboboxValue>
+              {(values) => (
+                <>
+                  {Array.isArray(values) && values.map((product: SearchProduct) => {
+                    const imageUrl = getImageUrl(product.image_url)
+                    return (
+                      <ComboboxChip key={product.id} {...({ value: product } as any)}>
                         {imageUrl && (
-                          <ItemMedia variant="image">
-                            <Image
-                              src={imageUrl}
-                              alt={product.name}
-                              width={40}
-                              height={40}
-                              className="object-cover"
-                            />
-                          </ItemMedia>
+                          <Image
+                            src={imageUrl}
+                            alt={product.name}
+                            width={16}
+                            height={16}
+                            className="rounded object-cover mr-1"
+                          />
                         )}
-                        <ItemContent>
-                          <ItemTitle>{product.name}</ItemTitle>
-                          <ItemDescription>{product.code}</ItemDescription>
-                        </ItemContent>
-                      </Item>
-                      {isSelected && (
-                        <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center">
-                          <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="pointer-events-none" />
-                        </span>
+                        {product.name}
+                      </ComboboxChip>
+                    )
+                  })}
+                  <ComboboxChipsInput 
+                    placeholder={selectedProducts.length === 0 ? "Search products by name or code..." : ""}
+                    onChange={(e) => {
+                      const inputValue = (e.target as HTMLInputElement).value
+                      setSearchQuery(inputValue)
+                    }}
+                  />
+                </>
+              )}
+            </ComboboxValue>
+          </ComboboxChips>
+          <ComboboxContent anchor={anchor}>
+            <ComboboxEmpty>
+              {isSearching ? 'Searching...' : searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No products found.'}
+            </ComboboxEmpty>
+            <ComboboxList>
+              {(item) => {
+                const imageUrl = getImageUrl(item.image_url)
+                return (
+                  <ComboboxItem key={item.id} value={item}>
+                    <Item variant="default" size="xs" className="border-0 p-0 w-full">
+                      {imageUrl && (
+                        <ItemMedia variant="image">
+                          <Image
+                            src={imageUrl}
+                            alt={item.name}
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                          />
+                        </ItemMedia>
                       )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </PopoverContent>
-        </Popover>
+                      <ItemContent>
+                        <ItemTitle>{item.name}</ItemTitle>
+                        <ItemDescription>{item.code}</ItemDescription>
+                      </ItemContent>
+                    </Item>
+                  </ComboboxItem>
+                )
+              }}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
 
         {selectedProducts.length > 0 && (
           <div>
