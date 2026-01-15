@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Editor } from '@/components/blocks/editor-x/editor'
+import { SerializedEditorState } from 'lexical'
 import { Switch } from '@/components/ui/switch'
 import {
   Combobox,
@@ -1912,21 +1914,63 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         <Controller
           control={form.control}
           name='product_details'
-          render={({ field, fieldState }) => (
-            <Field>
-              <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
-              <Textarea
-                id='product-details'
-                placeholder='Enter product details'
-                rows={4}
-                autoComplete='off'
-                {...field}
-                value={field.value || ''}
-                data-invalid={!!fieldState.error}
-              />
-              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-            </Field>
-          )}
+          render={({ field, fieldState }) => {
+            // Parse product_details string to SerializedEditorState if it exists
+            let initialEditorState: SerializedEditorState | undefined
+            if (field.value) {
+              try {
+                initialEditorState = typeof field.value === 'string' 
+                  ? JSON.parse(field.value) 
+                  : field.value
+              } catch {
+                // If parsing fails, create a simple text node with the value
+                const textValue = String(field.value)
+                initialEditorState = {
+                  root: {
+                    children: [
+                      {
+                        children: [
+                          {
+                            detail: 0,
+                            format: 0,
+                            mode: "normal",
+                            style: "",
+                            text: textValue,
+                            type: "text",
+                            version: 1,
+                          },
+                        ],
+                        direction: "ltr",
+                        format: "",
+                        indent: 0,
+                        type: "paragraph",
+                        version: 1,
+                      },
+                    ],
+                    direction: "ltr",
+                    format: "",
+                    indent: 0,
+                    type: "root",
+                    version: 1,
+                  },
+                } as unknown as SerializedEditorState
+              }
+            }
+
+            return (
+              <Field>
+                <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
+                <Editor
+                  editorSerializedState={initialEditorState}
+                  onSerializedChange={(value) => {
+                    // Store as JSON string in the form
+                    field.onChange(JSON.stringify(value))
+                  }}
+                />
+                <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+              </Field>
+            )
+          }}
         />
 
         <Controller
