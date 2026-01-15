@@ -246,82 +246,80 @@ export function ComboProductsTable({ control, watch, setValue, units }: ComboPro
         Search and add products to this combo
       </FieldDescription>
       
-      <div className="mb-4">
-        <Combobox
-          multiple
-          autoHighlight
-          items={items}
-          value={selectedProducts}
-          onValueChange={handleValueChange}
-          itemToStringValue={itemToStringValue}
-        >
-          <ComboboxChips ref={anchor}>
-            <ComboboxValue>
-              {(values) => (
-                <>
-                  {Array.isArray(values) && values.map((product: SearchProduct) => {
-                    const imageUrl = getImageUrl(product.image_url)
-                    return (
-                      <ComboboxChip key={product.id} {...({ value: product } as any)}>
-                        {imageUrl && (
-                          <Image
-                            src={imageUrl}
-                            alt={product.name}
-                            width={16}
-                            height={16}
-                            className="rounded object-cover mr-1"
-                            unoptimized
-                          />
-                        )}
-                        {product.name}
-                      </ComboboxChip>
-                    )
-                  })}
-                  <ComboboxChipsInput 
-                    placeholder={selectedProducts.length === 0 ? "Search products by name or code..." : ""}
-                    onChange={(e) => {
-                      const inputValue = (e.target as HTMLInputElement).value
-                      setSearchQuery(inputValue)
-                    }}
-                  />
-                </>
-              )}
-            </ComboboxValue>
-          </ComboboxChips>
-          <ComboboxContent anchor={anchor}>
-            <ComboboxEmpty>
-              {isSearching ? 'Searching...' : searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No products found.'}
-            </ComboboxEmpty>
-            <ComboboxList>
-              {(item) => {
-                const imageUrl = getImageUrl(item.image_url)
-                return (
-                  <ComboboxItem key={item.id} value={item}>
-                    <Item variant="default" size="xs" className="border-0 p-0 w-full">
+      <Combobox
+        multiple
+        autoHighlight
+        items={items}
+        value={selectedProducts}
+        onValueChange={handleValueChange}
+        itemToStringValue={itemToStringValue}
+      >
+        <ComboboxChips ref={anchor}>
+          <ComboboxValue>
+            {(values) => (
+              <>
+                {Array.isArray(values) && values.map((product: SearchProduct) => {
+                  const imageUrl = getImageUrl(product.image_url)
+                  return (
+                    <ComboboxChip key={product.id} {...({ value: product } as any)}>
                       {imageUrl && (
-                        <ItemMedia variant="image">
-                          <Image
-                            src={imageUrl}
-                            alt={item.name}
-                            width={40}
-                            height={40}
-                            className="object-cover"
-                            unoptimized
-                          />
-                        </ItemMedia>
+                        <Image
+                          src={imageUrl}
+                          alt={product.name}
+                          width={16}
+                          height={16}
+                          className="rounded object-cover mr-1"
+                          unoptimized
+                        />
                       )}
-                      <ItemContent>
-                        <ItemTitle>{item.name}</ItemTitle>
-                        <ItemDescription>{item.code}</ItemDescription>
-                      </ItemContent>
-                    </Item>
-                  </ComboboxItem>
-                )
-              }}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </div>
+                      {product.name}
+                    </ComboboxChip>
+                  )
+                })}
+                <ComboboxChipsInput 
+                  placeholder={selectedProducts.length === 0 ? "Search products by name or code..." : ""}
+                  onChange={(e) => {
+                    const inputValue = (e.target as HTMLInputElement).value
+                    setSearchQuery(inputValue)
+                  }}
+                />
+              </>
+            )}
+          </ComboboxValue>
+        </ComboboxChips>
+        <ComboboxContent anchor={anchor}>
+          <ComboboxEmpty>
+            {isSearching ? 'Searching...' : searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No products found.'}
+          </ComboboxEmpty>
+          <ComboboxList>
+            {(item) => {
+              const imageUrl = getImageUrl(item.image_url)
+              return (
+                <ComboboxItem key={item.id} value={item}>
+                  <Item variant="default" size="xs" className="border-0 p-0 w-full">
+                    {imageUrl && (
+                      <ItemMedia variant="image">
+                        <Image
+                          src={imageUrl}
+                          alt={item.name}
+                          width={40}
+                          height={40}
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </ItemMedia>
+                    )}
+                    <ItemContent>
+                      <ItemTitle>{item.name}</ItemTitle>
+                      <ItemDescription>{item.code}</ItemDescription>
+                    </ItemContent>
+                  </Item>
+                </ComboboxItem>
+              )
+            }}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
 
       {productIdArray.length > 0 && (
         <div className="mt-4 rounded-md border">
