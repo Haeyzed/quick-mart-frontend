@@ -60,7 +60,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <Script
+        {/* <Script
           id="theme-init"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
@@ -94,7 +94,7 @@ export default function RootLayout({
               })();
             `,
           }}
-        />
+        /> */}
         <NextAuthSessionProvider>
           <QueryProvider>
             <ThemeProvider>

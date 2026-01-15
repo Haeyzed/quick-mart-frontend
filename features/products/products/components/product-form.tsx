@@ -925,6 +925,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               const brandItems = brands.map((brand) => ({
                 id: brand.id,
                 name: brand.name,
+                image_url: brand.image_url,
               }))
               const selectedBrand = brandItems.find((brand) => brand.id === field.value)
 
@@ -954,7 +955,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           <ComboboxList>
                             {(item) => (
                               <ComboboxItem key={item.id} value={item}>
-                                {item.name}
+                                <div className="flex items-center gap-2">
+                                  <Image src={item.image_url} alt={item.name} width={16} height={16} className="w-4 h-4 rounded" />
+                                  <span>{item.name}</span>
+                                </div>
                               </ComboboxItem>
                             )}
                           </ComboboxList>
@@ -984,6 +988,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               const categoryItems = categories.map((category) => ({
                 id: category.id,
                 name: category.name,
+                image_url: category.image_url,
               }))
               const selectedCategory = categoryItems.find((cat) => cat.id === field.value)
 
@@ -1015,7 +1020,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                           <ComboboxList>
                             {(item) => (
                               <ComboboxItem key={item.id} value={item}>
-                                {item.name}
+                                <div className="flex items-center gap-2">
+                                  <Image src={item.image_url} alt={item.name} width={16} height={16} className="w-4 h-4 rounded" />
+                                  <span>{item.name}</span>
+                                </div>
                               </ComboboxItem>
                             )}
                           </ComboboxList>

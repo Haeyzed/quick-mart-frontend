@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from 'react'
-import { useFieldArray, Control, UseFormWatch, useFormContext } from 'react-hook-form'
+import { useState, useEffect } from 'react'
+import { Control, UseFormWatch } from 'react-hook-form'
 import { z } from 'zod'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -19,11 +20,29 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useProductsWithoutVariant, useProductsWithVariant } from '../api/use-products'
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from '@/components/ui/combobox'
+import {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+} from '@/components/ui/item'
 import { productFormSchema } from '../data/schema'
-import { Tick02Icon, Delete01Icon } from '@hugeicons/core-free-icons'
+import { Delete01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { cn } from '@/lib/utils'
+import { useApiClient } from '@/lib/hooks/use-api-client'
 
 type ProductFormData = z.infer<typeof productFormSchema>
 
@@ -34,18 +53,22 @@ interface ComboProductsTableProps {
   units: Array<{ id: number; unit_name: string }>
 }
 
-interface ComboProductRow {
-  product_id: number
-  product_qty: number
-  unit_price: number
-  wastage_percent: number
-  product_name?: string
-  product_code?: string
+interface SearchProduct {
+  id: number
+  name: string
+  code: string
+  image_url?: string | string[]
+  price?: number
+  cost?: number
 }
 
 export function ComboProductsTable({ control, watch, setValue, units }: ComboProductsTableProps) {
-  const { data: productsWithoutVariant = [] } = useProductsWithoutVariant()
-  const { data: productsWithVariant = [] } = useProductsWithoutVariant() // Note: Using without variant for combo for simplicity
+  const { get } = useApiClient()
+  const [items, setItems] = useState<SearchProduct[]>([])
+  const [selectedProducts, setSelectedProducts] = useState<SearchProduct[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
+  const anchor = useComboboxAnchor()
   
   const productIdArray = ((watch as any)('product_id') as number[]) || []
   const productQtyArray = ((watch as any)('product_qty') as number[]) || []
@@ -56,49 +79,135 @@ export function ComboProductsTable({ control, watch, setValue, units }: ComboPro
   const wastagePercentArray = wastagePercentString 
     ? wastagePercentString.split(',').map(v => parseFloat(v.trim()) || 0)
     : []
-  
-  // Combine products for search
-  const allProducts = [
-    ...productsWithoutVariant.map((p) => ({ id: p.id, name: p.name, code: p.code, price: 0 })),
-  ]
 
-  const [openSearch, setOpenSearch] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const filteredProducts = allProducts.filter((product) => {
-    const query = searchQuery.toLowerCase()
-    return (
-      product.name.toLowerCase().includes(query) ||
-      product.code.toLowerCase().includes(query)
-    )
-  })
-
-  const handleAddProduct = (product: typeof allProducts[0]) => {
-    // Check if product already exists
-    if (productIdArray.includes(product.id)) {
-      return // Product already added
+  // Load selected products from form arrays
+  useEffect(() => {
+    if (productIdArray.length > 0) {
+      Promise.all(
+        productIdArray.map((id, index) => 
+          get<SearchProduct>(`/products/${id}`).then(res => {
+            if (!res.data) return null
+            return {
+              ...res.data,
+              price: unitPriceArray[index] || res.data.price || 0,
+              cost: res.data.cost || 0,
+            }
+          })
+        )
+      ).then(products => {
+        const validProducts = products.filter((p): p is SearchProduct & { price: number; cost: number } => 
+          p !== null && p !== undefined && p.id !== undefined && p.name !== undefined && p.code !== undefined
+        )
+        setSelectedProducts(validProducts.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          code: p.code,
+          price: p.price || 0,
+          cost: p.cost || 0,
+          image_url: Array.isArray(p.image_url) && p.image_url.length > 0
+            ? p.image_url
+            : null,
+        })))
+      }).catch(error => {
+        console.error('Error fetching combo products:', error)
+      })
+    } else {
+      setSelectedProducts([])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productIdArray.join(',')])
 
-    // Add to arrays
-    const newProductIds = [...productIdArray, product.id]
-    const newQty = [...productQtyArray, 1]
-    const newPrice = [...unitPriceArray, product.price]
-    const newWastage = [...wastagePercentArray, 0]
+  // Search products when input changes
+  useEffect(() => {
+    if (searchQuery.length >= 2) {
+      setIsSearching(true)
+      const timeoutId = setTimeout(async () => {
+        try {
+          const response = await get<{ data: SearchProduct[] }>('/products', {
+            search: searchQuery,
+            per_page: 20,
+            page: 1,
+          })
+          if (response.data) {
+            const products = Array.isArray(response.data) 
+              ? response.data 
+              : []
+            setItems(products.map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              code: p.code,
+              price: p.price || 0,
+              cost: p.cost || 0,
+              image_url: Array.isArray(p.image_url) && p.image_url.length > 0
+                ? p.image_url
+                : null,
+            })))
+          } else {
+            setItems([])
+          }
+        } catch (error) {
+          console.error('Error searching products:', error)
+          setItems([])
+        } finally {
+          setIsSearching(false)
+        }
+      }, 300)
+
+      return () => clearTimeout(timeoutId)
+    } else {
+      setItems([])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
+
+  const handleValueChange = (values: SearchProduct[] | SearchProduct | null) => {
+    const newValues = Array.isArray(values) ? values : (values ? [values] : [])
+    
+    // Filter out products that are already selected (to prevent duplicates)
+    const existingIds = productIdArray
+    const newProducts = newValues.filter(p => !existingIds.includes(p.id))
+    const allProducts = [...selectedProducts, ...newProducts]
+    
+    setSelectedProducts(allProducts)
+    
+    // Update form arrays
+    const newProductIds = allProducts.map(p => p.id)
+    const newQty = allProducts.map((_, index) => productQtyArray[index] || 1)
+    const newPrice = allProducts.map((p, index) => unitPriceArray[index] || p.price || 0)
+    const newWastage = allProducts.map((_, index) => wastagePercentArray[index] || 0)
 
     ;(setValue as any)('product_id', newProductIds)
     ;(setValue as any)('product_qty', newQty)
     ;(setValue as any)('unit_price', newPrice)
     setValue('wastage_percent', newWastage.join(','))
-
-    setOpenSearch(false)
-    setSearchQuery('')
   }
 
+  const getImageUrl = (image_url?: string | string[]) => {
+    if (!image_url) return null
+    if (typeof image_url === 'string') return image_url
+    if (Array.isArray(image_url) && image_url.length > 0) return image_url[0]
+    return null
+  }
+
+  const itemToStringValue = (item: SearchProduct) => String(item.id)
+
   const handleRemoveProduct = (index: number) => {
-    const newProductIds = productIdArray.filter((_, i) => i !== index)
-    const newQty = productQtyArray.filter((_, i) => i !== index)
-    const newPrice = unitPriceArray.filter((_, i) => i !== index)
-    const newWastage = wastagePercentArray.filter((_, i) => i !== index)
+    const newSelectedProducts = selectedProducts.filter((_, i) => i !== index)
+    setSelectedProducts(newSelectedProducts)
+    
+    const newProductIds = newSelectedProducts.map(p => p.id)
+    const newQty = newSelectedProducts.map((_, i) => {
+      const oldIndex = productIdArray.findIndex(id => id === newSelectedProducts[i].id)
+      return oldIndex >= 0 ? productQtyArray[oldIndex] : 1
+    })
+    const newPrice = newSelectedProducts.map((p, i) => {
+      const oldIndex = productIdArray.findIndex(id => id === p.id)
+      return oldIndex >= 0 ? unitPriceArray[oldIndex] : p.price || 0
+    })
+    const newWastage = newSelectedProducts.map((_, i) => {
+      const oldIndex = productIdArray.findIndex(id => id === newSelectedProducts[i].id)
+      return oldIndex >= 0 ? wastagePercentArray[oldIndex] : 0
+    })
 
     setValue('product_id' as any, newProductIds)
     setValue('product_qty' as any, newQty)
@@ -137,53 +246,81 @@ export function ComboProductsTable({ control, watch, setValue, units }: ComboPro
         Search and add products to this combo
       </FieldDescription>
       
-      <div className="relative mb-4">
-        <Input
-          type="text"
-          placeholder="Please type product code and select"
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value)
-            setOpenSearch(true)
-          }}
-          onBlur={() => {
-            // Delay closing to allow click on dropdown item
-            setTimeout(() => setOpenSearch(false), 200)
-          }}
-        />
-        
-        {openSearch && searchQuery.length >= 2 && filteredProducts.length > 0 && (
-          <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
-            <div className="p-1">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent rounded-sm",
-                    productIdArray.includes(product.id) && "bg-accent"
-                  )}
-                  onMouseDown={(e) => {
-                    e.preventDefault() // Prevent input blur
-                    handleAddProduct(product)
-                    setSearchQuery('')
-                    setOpenSearch(false)
-                  }}
-                >
-                  <HugeiconsIcon
-                    icon={Tick02Icon}
-                    className={cn(
-                      "h-4 w-4",
-                      productIdArray.includes(product.id)
-                        ? "opacity-100"
-                        : "opacity-0"
-                    )}
+      <div className="mb-4">
+        <Combobox
+          multiple
+          autoHighlight
+          items={items}
+          value={selectedProducts}
+          onValueChange={handleValueChange}
+          itemToStringValue={itemToStringValue}
+        >
+          <ComboboxChips ref={anchor}>
+            <ComboboxValue>
+              {(values) => (
+                <>
+                  {Array.isArray(values) && values.map((product: SearchProduct) => {
+                    const imageUrl = getImageUrl(product.image_url)
+                    return (
+                      <ComboboxChip key={product.id} {...({ value: product } as any)}>
+                        {imageUrl && (
+                          <Image
+                            src={imageUrl}
+                            alt={product.name}
+                            width={16}
+                            height={16}
+                            className="rounded object-cover mr-1"
+                            unoptimized
+                          />
+                        )}
+                        {product.name}
+                      </ComboboxChip>
+                    )
+                  })}
+                  <ComboboxChipsInput 
+                    placeholder={selectedProducts.length === 0 ? "Search products by name or code..." : ""}
+                    onChange={(e) => {
+                      const inputValue = (e.target as HTMLInputElement).value
+                      setSearchQuery(inputValue)
+                    }}
                   />
-                  <span className="flex-1">{product.name} [{product.code}]</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                </>
+              )}
+            </ComboboxValue>
+          </ComboboxChips>
+          <ComboboxContent anchor={anchor}>
+            <ComboboxEmpty>
+              {isSearching ? 'Searching...' : searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No products found.'}
+            </ComboboxEmpty>
+            <ComboboxList>
+              {(item) => {
+                const imageUrl = getImageUrl(item.image_url)
+                return (
+                  <ComboboxItem key={item.id} value={item}>
+                    <Item variant="default" size="xs" className="border-0 p-0 w-full">
+                      {imageUrl && (
+                        <ItemMedia variant="image">
+                          <Image
+                            src={imageUrl}
+                            alt={item.name}
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </ItemMedia>
+                      )}
+                      <ItemContent>
+                        <ItemTitle>{item.name}</ItemTitle>
+                        <ItemDescription>{item.code}</ItemDescription>
+                      </ItemContent>
+                    </Item>
+                  </ComboboxItem>
+                )
+              }}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
       </div>
 
       {productIdArray.length > 0 && (
@@ -201,16 +338,32 @@ export function ComboProductsTable({ control, watch, setValue, units }: ComboPro
               </TableRow>
             </TableHeader>
             <TableBody>
-              {productIdArray.map((productId, index) => {
-                const product = allProducts.find((p) => p.id === productId)
-                const qty = productQtyArray[index] || 0
-                const price = unitPriceArray[index] || 0
+              {selectedProducts.map((product, index) => {
+                const productId = product.id
+                const qty = productQtyArray[index] || 1
+                const price = unitPriceArray[index] || product.price || 0
                 const wastage = wastagePercentArray[index] || 0
+                const imageUrl = getImageUrl(product.image_url)
                 
                 return (
                   <TableRow key={`${productId}-${index}`}>
                     <TableCell>
-                      {product ? `${product.name} [${product.code}]` : `Product ID: ${productId}`}
+                      <div className="flex items-center gap-2">
+                        {imageUrl && (
+                          <Image
+                            src={imageUrl}
+                            alt={product.name}
+                            width={32}
+                            height={32}
+                            className="rounded object-cover"
+                            unoptimized
+                          />
+                        )}
+                        <div>
+                          <div className="font-medium">{product.name}</div>
+                          <div className="text-sm text-muted-foreground">[{product.code}]</div>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
