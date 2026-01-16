@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import {
   Field,
   FieldGroup,
@@ -259,7 +260,7 @@ const productFormSchema = z.object({
   is_embeded: z.boolean().optional(),
   is_batch: z.boolean().optional(),
   is_variant: z.boolean().optional(),
-  is_diffPrice: z.boolean().optional(),
+  is_diff_price: z.boolean().optional(),
   is_imei: z.boolean().optional(),
   featured: z.boolean().optional(),
   product_details: z.string().optional(),
@@ -381,7 +382,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       is_embeded: false,
       is_batch: false,
       is_variant: false,
-      is_diffPrice: false,
+      is_diff_price: false,
       is_imei: false,
       featured: false,
       product_details: undefined,
@@ -467,7 +468,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         is_embeded: product.is_embeded || false,
         is_batch: product.is_batch,
         is_variant: product.is_variant,
-        is_diffPrice: product.is_diffPrice,
+        is_diff_price: product.is_diff_price,
         is_imei: product.is_imei,
         featured: product.featured || false,
         product_details: product.product_details || undefined,
@@ -561,7 +562,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       if (data.is_embeded) formData.append('is_embeded', '1')
       if (data.is_batch) formData.append('is_batch', '1')
       if (data.is_variant) formData.append('is_variant', '1')
-      if (data.is_diffPrice) formData.append('is_diffPrice', '1')
+      if (data.is_diff_price) formData.append('is_diff_price', '1')
       if (data.is_imei) formData.append('is_imei', '1')
       if (data.featured) formData.append('featured', '1')
       if (data.is_addon) formData.append('is_addon', '1')
@@ -1543,14 +1544,14 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         )}
 
         {/* Warranty & Guarantee */}
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-          <div className='grid grid-cols-2 gap-2'>
-            <Controller
-              control={form.control}
-              name='warranty'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-warranty'>Warranty</FieldLabel>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+          <Field>
+            <FieldLabel>Warranty</FieldLabel>
+            <ButtonGroup>
+              <Controller
+                control={form.control}
+                name='warranty'
+                render={({ field, fieldState }) => (
                   <Input
                     id='product-warranty'
                     type='number'
@@ -1565,25 +1566,20 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     }}
                     data-invalid={!!fieldState.error}
                   />
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
-            />
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='warranty_type'
+                render={({ field, fieldState }) => {
+                  const warrantyTypeOptions = [
+                    { value: 'days', label: 'Days' },
+                    { value: 'months', label: 'Months' },
+                    { value: 'years', label: 'Years' },
+                  ]
+                  const selectedWarrantyType = warrantyTypeOptions.find((opt) => opt.value === (field.value || 'months'))
 
-            <Controller
-              control={form.control}
-              name='warranty_type'
-              render={({ field, fieldState }) => {
-                const warrantyTypeOptions = [
-                  { value: 'days', label: 'Days' },
-                  { value: 'months', label: 'Months' },
-                  { value: 'years', label: 'Years' },
-                ]
-                const selectedWarrantyType = warrantyTypeOptions.find((opt) => opt.value === (field.value || 'months'))
-
-                return (
-                  <Field>
-                    <FieldLabel htmlFor='product-warranty-type'>Type</FieldLabel>
+                  return (
                     <Combobox
                       items={warrantyTypeOptions}
                       value={selectedWarrantyType || null}
@@ -1595,7 +1591,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       <ComboboxInput
                         id='product-warranty-type'
                         name="warranty_type"
-                        placeholder="Select warranty type"
+                        placeholder="Type"
                         showClear
                         data-invalid={!!fieldState.error}
                         value={selectedWarrantyType ? selectedWarrantyType.label : ''}
@@ -1611,20 +1607,21 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         </ComboboxList>
                       </ComboboxContent>
                     </Combobox>
-                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                  </Field>
-                )
-              }}
-            />
-          </div>
+                  )
+                }}
+              />
+            </ButtonGroup>
+            <FieldError errors={form.formState.errors.warranty ? [form.formState.errors.warranty] : []} />
+            <FieldError errors={form.formState.errors.warranty_type ? [form.formState.errors.warranty_type] : []} />
+          </Field>
 
-          <div className='grid grid-cols-2 gap-2'>
-            <Controller
-              control={form.control}
-              name='guarantee'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-guarantee'>Guarantee</FieldLabel>
+          <Field>
+            <FieldLabel>Guarantee</FieldLabel>
+            <ButtonGroup>
+              <Controller
+                control={form.control}
+                name='guarantee'
+                render={({ field, fieldState }) => (
                   <Input
                     id='product-guarantee'
                     type='number'
@@ -1639,25 +1636,20 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     }}
                     data-invalid={!!fieldState.error}
                   />
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
-            />
+                )}
+              />
+              <Controller
+                control={form.control}
+                name='guarantee_type'
+                render={({ field, fieldState }) => {
+                  const guaranteeTypeOptions = [
+                    { value: 'days', label: 'Days' },
+                    { value: 'months', label: 'Months' },
+                    { value: 'years', label: 'Years' },
+                  ]
+                  const selectedGuaranteeType = guaranteeTypeOptions.find((opt) => opt.value === (field.value || 'months'))
 
-            <Controller
-              control={form.control}
-              name='guarantee_type'
-              render={({ field, fieldState }) => {
-                const guaranteeTypeOptions = [
-                  { value: 'days', label: 'Days' },
-                  { value: 'months', label: 'Months' },
-                  { value: 'years', label: 'Years' },
-                ]
-                const selectedGuaranteeType = guaranteeTypeOptions.find((opt) => opt.value === (field.value || 'months'))
-
-                return (
-                  <Field>
-                    <FieldLabel htmlFor='product-guarantee-type'>Type</FieldLabel>
+                  return (
                     <Combobox
                       items={guaranteeTypeOptions}
                       value={selectedGuaranteeType || null}
@@ -1669,7 +1661,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       <ComboboxInput
                         id='product-guarantee-type'
                         name="guarantee_type"
-                        placeholder="Select guarantee type"
+                        placeholder="Type"
                         showClear
                         data-invalid={!!fieldState.error}
                         value={selectedGuaranteeType ? selectedGuaranteeType.label : ''}
@@ -1685,12 +1677,13 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                         </ComboboxList>
                       </ComboboxContent>
                     </Combobox>
-                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                  </Field>
-                )
-              }}
-            />
-          </div>
+                  )
+                }}
+              />
+            </ButtonGroup>
+            <FieldError errors={form.formState.errors.guarantee ? [form.formState.errors.guarantee] : []} />
+            <FieldError errors={form.formState.errors.guarantee_type ? [form.formState.errors.guarantee_type] : []} />
+          </Field>
         </div>
 
 
@@ -2047,7 +2040,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 </div>
                 <Controller
                   control={form.control}
-                  name='is_diffPrice'
+                  name='is_diff_price'
                   render={({ field }) => (
                     <Switch checked={field.value || false} onCheckedChange={field.onChange} />
                   )}
@@ -2056,7 +2049,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             </Field>
 
             {/* Differential Pricing Table */}
-            {form.watch('is_diffPrice') && (
+            {form.watch('is_diff_price') && (
               <Field>
                 <FieldLabel>Warehouse Prices</FieldLabel>
                 <div className='rounded-md border'>
@@ -2112,6 +2105,48 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 />
               </div>
             </Field>
+
+            {form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && (
+              <Field>
+                <FieldLabel>Warehouse Quantities</FieldLabel>
+                <div className='rounded-md border'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Warehouse</TableHead>
+                        <TableHead>Quantity</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {warehouses.map((warehouse, index) => (
+                        <TableRow key={warehouse.id}>
+                          <TableCell>
+                            <input
+                              type='hidden'
+                              {...form.register(`stock_warehouse_id.${index}`, { value: warehouse.id })}
+                            />
+                            {warehouse.name}
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type='number'
+                              min='0'
+                              step='0.01'
+                              {...form.register(`stock.${index}`, { valueAsNumber: true })}
+                              placeholder='0'
+                              className='w-full'
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <FieldError>
+                  {form.formState.errors.stock_warehouse_id?.message || form.formState.errors.stock?.message}
+                </FieldError>
+              </Field>
+            )}
           </>
         )}
 
@@ -2216,114 +2251,6 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             />
           </div>
         </Field>
-
-        {/* Promotion Section */}
-        <Field>
-          <div className='flex items-center justify-between'>
-            <div>
-              <FieldLabel>Add Promotional Price</FieldLabel>
-              <FieldDescription>Enable promotional pricing for this product</FieldDescription>
-            </div>
-            <Controller
-              control={form.control}
-              name='promotion'
-              render={({ field }) => (
-                <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-              )}
-            />
-          </div>
-        </Field>
-
-        {form.watch('promotion') && (
-          <>
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-              <Controller
-                control={form.control}
-                name='promotion_price'
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldLabel htmlFor='product-promotion-price-2'>Promotional Price</FieldLabel>
-                    <Input
-                      id='product-promotion-price-2'
-                      type='number'
-                      step='0.01'
-                      placeholder='0.00'
-                      autoComplete='off'
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        field.onChange(value === '' ? undefined : Number(value))
-                      }}
-                      data-invalid={!!fieldState.error}
-                    />
-                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                  </Field>
-                )}
-              />
-
-              <DatePickerField
-                label="Promotion Starts"
-                value={form.watch('starting_date')}
-                onChange={(value) => form.setValue('starting_date', value)}
-                error={form.formState.errors.starting_date?.message}
-              />
-
-              <DatePickerField
-                label="Promotion Ends"
-                value={form.watch('last_date')}
-                onChange={(value) => form.setValue('last_date', value)}
-                error={form.formState.errors.last_date?.message}
-              />
-            </div>
-          </>
-        )}
-
-        {/* Initial Stock Section - Only for standard products without variants/batches */}
-        {productType === 'standard' && form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && (
-          <Field>
-            <FieldLabel>Initial Warehouse Stock</FieldLabel>
-            <FieldDescription>
-              Add initial stock quantities for each warehouse. This feature will not work for products with variants and batches.
-            </FieldDescription>
-            <div className='rounded-md border'>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Warehouse</TableHead>
-                    <TableHead>Quantity</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {warehouses.map((warehouse, index) => (
-                    <TableRow key={warehouse.id}>
-                      <TableCell>
-                        <input
-                          type='hidden'
-                          {...form.register(`stock_warehouse_id.${index}`, { value: warehouse.id })}
-                        />
-                        {warehouse.name}
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type='number'
-                          min='0'
-                          step='0.01'
-                          {...form.register(`stock.${index}`, { valueAsNumber: true })}
-                          placeholder='0'
-                          className='w-full'
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <FieldError>
-              {form.formState.errors.stock_warehouse_id?.message || form.formState.errors.stock?.message}
-            </FieldError>
-          </Field>
-        )}
 
         {/* SEO & Additional Information */}
         <Controller

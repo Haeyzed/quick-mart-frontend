@@ -75,7 +75,7 @@ export const productSchema = z.object({
   is_embeded: z.boolean().nullable(),
   is_batch: z.boolean(),
   is_variant: z.boolean(),
-  is_diffPrice: z.boolean(),
+  is_diff_price: z.boolean(),
   is_imei: z.boolean(),
   featured: z.boolean().nullable(),
   product_list: z.string().nullable(), // Comma-separated product IDs for combo
