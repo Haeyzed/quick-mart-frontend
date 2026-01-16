@@ -87,17 +87,15 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
 
   // Search products when input changes
   useEffect(() => {
-    if (searchQuery.length >= 2) {
+    if (searchQuery.length >= 3) {
       setIsSearching(true)
       const timeoutId = setTimeout(async () => {
         try {
-          const response = await get<{ data: SearchProduct[] }>('/products', {
-            search: searchQuery,
-            per_page: 20,
-            page: 1,
+          const response = await get<{ data: SearchProduct[] }>('/products/search', {
+            term: searchQuery,
           })
           if (response.data) {
-            // response.data is already an array of products (like useProducts hook)
+            // response.data is an array of products from search endpoint
             const products = Array.isArray(response.data) 
               ? response.data 
               : []
@@ -105,10 +103,8 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
               id: p.id,
               name: p.name,
               code: p.code,
-              // image_url is already an array of full URLs from API (like products-columns.tsx line 74-76)
-              image_url: Array.isArray(p.image_url) && p.image_url.length > 0
-                ? p.image_url
-                : null,
+              // image_url is a string URL from search endpoint
+              image_url: p.image_url || null,
             })))
           } else {
             setItems([])
@@ -184,7 +180,7 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
                     )
                   })}
                   <ComboboxChipsInput 
-                    placeholder={selectedProducts.length === 0 ? "Search products by name or code..." : ""}
+                    placeholder={selectedProducts.length === 0 ? "Search products by name or code (min 3 characters)..." : ""}
                     onChange={(e) => {
                       const inputValue = (e.target as HTMLInputElement).value
                       setSearchQuery(inputValue)
@@ -196,7 +192,7 @@ export function RelatedProducts<TFieldValues extends FieldValues = FieldValues>(
           </ComboboxChips>
           <ComboboxContent anchor={anchor}>
             <ComboboxEmpty>
-              {isSearching ? 'Searching...' : searchQuery.length < 2 ? 'Type at least 2 characters to search' : 'No products found.'}
+              {isSearching ? 'Searching...' : searchQuery.length < 3 ? 'Type at least 3 characters to search' : 'No products found.'}
             </ComboboxEmpty>
             <ComboboxList>
               {(item) => {
