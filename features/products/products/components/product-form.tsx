@@ -693,6 +693,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   }
 
   const productType = form.watch('type')
+  const showCostAndProfitMargin = productType === 'standard' || productType === 'combo'
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
@@ -1215,110 +1216,108 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                   />
                 </div>
 
-                {/* Cost and Profit Margin */}
-                <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                  {productType === 'standard' && (
-                    <>
-                      <Controller
-                        control={form.control}
-                        name='cost'
-                        render={({ field, fieldState }) => (
+                {/* Cost and Profit Margin - For standard and combo */}
+                {showCostAndProfitMargin && (
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                    <Controller
+                      control={form.control}
+                      name='cost'
+                      render={({ field, fieldState }) => (
+                        <Field>
+                          <FieldLabel htmlFor='product-cost'>
+                            Cost {productType === 'standard' && <span className='text-destructive'>*</span>}
+                          </FieldLabel>
+                          <Input
+                            id='product-cost'
+                            type='number'
+                            step='0.01'
+                            placeholder='0.00'
+                            autoComplete='off'
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              field.onChange(value === '' ? undefined : Number(value))
+                            }}
+                            data-invalid={!!fieldState.error}
+                          />
+                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                        </Field>
+                      )}
+                    />
+
+                    <Controller
+                      control={form.control}
+                      name='profit_margin_type'
+                      render={({ field, fieldState }) => {
+                        const marginTypeOptions = [
+                          { value: 'percentage', label: 'Percentage (%)' },
+                          { value: 'flat', label: 'Flat' },
+                        ]
+                        const selectedMarginType = marginTypeOptions.find((opt) => opt.value === (field.value || 'percentage'))
+
+                        return (
                           <Field>
-                            <FieldLabel htmlFor='product-cost'>
-                              Cost <span className='text-destructive'>*</span>
-                            </FieldLabel>
-                            <Input
-                              id='product-cost'
-                              type='number'
-                              step='0.01'
-                              placeholder='0.00'
-                              autoComplete='off'
-                              {...field}
-                              value={field.value ?? ''}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                field.onChange(value === '' ? undefined : Number(value))
+                            <FieldLabel htmlFor='product-profit-margin-type'>Profit Margin Type</FieldLabel>
+                            <Combobox
+                              items={marginTypeOptions}
+                              value={selectedMarginType || null}
+                              onValueChange={(value) => {
+                                field.onChange(value ? value.value : 'percentage')
                               }}
-                              data-invalid={!!fieldState.error}
-                            />
+                              itemToStringValue={(item) => item.value}
+                            >
+                              <ComboboxInput
+                                id='product-profit-margin-type'
+                                name="profit_margin_type"
+                                placeholder="Select profit margin type"
+                                showClear
+                                data-invalid={!!fieldState.error}
+                                value={selectedMarginType ? selectedMarginType.label : ''}
+                              />
+                              <ComboboxContent>
+                                <ComboboxEmpty>No profit margin types found.</ComboboxEmpty>
+                                <ComboboxList>
+                                  {(item) => (
+                                    <ComboboxItem key={item.value} value={item}>
+                                      {item.label}
+                                    </ComboboxItem>
+                                  )}
+                                </ComboboxList>
+                              </ComboboxContent>
+                            </Combobox>
                             <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                           </Field>
-                        )}
-                      />
+                        )
+                      }}
+                    />
 
-                      <Controller
-                        control={form.control}
-                        name='profit_margin_type'
-                        render={({ field, fieldState }) => {
-                          const marginTypeOptions = [
-                            { value: 'percentage', label: 'Percentage (%)' },
-                            { value: 'flat', label: 'Flat' },
-                          ]
-                          const selectedMarginType = marginTypeOptions.find((opt) => opt.value === (field.value || 'percentage'))
-
-                          return (
-                            <Field>
-                              <FieldLabel htmlFor='product-profit-margin-type'>Profit Margin Type</FieldLabel>
-                              <Combobox
-                                items={marginTypeOptions}
-                                value={selectedMarginType || null}
-                                onValueChange={(value) => {
-                                  field.onChange(value ? value.value : 'percentage')
-                                }}
-                                itemToStringValue={(item) => item.value}
-                              >
-                                <ComboboxInput
-                                  id='product-profit-margin-type'
-                                  name="profit_margin_type"
-                                  placeholder="Select profit margin type"
-                                  showClear
-                                  data-invalid={!!fieldState.error}
-                                  value={selectedMarginType ? selectedMarginType.label : ''}
-                                />
-                                <ComboboxContent>
-                                  <ComboboxEmpty>No profit margin types found.</ComboboxEmpty>
-                                  <ComboboxList>
-                                    {(item) => (
-                                      <ComboboxItem key={item.value} value={item}>
-                                        {item.label}
-                                      </ComboboxItem>
-                                    )}
-                                  </ComboboxList>
-                                </ComboboxContent>
-                              </Combobox>
-                              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                            </Field>
-                          )
-                        }}
-                      />
-
-                      <Controller
-                        control={form.control}
-                        name='profit_margin'
-                        render={({ field, fieldState }) => (
-                          <Field>
-                            <FieldLabel htmlFor='product-profit-margin'>Profit Margin</FieldLabel>
-                            <Input
-                              id='product-profit-margin'
-                              type='number'
-                              step='0.01'
-                              placeholder='0.00'
-                              autoComplete='off'
-                              {...field}
-                              value={field.value ?? ''}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                field.onChange(value === '' ? undefined : Number(value))
-                              }}
-                              data-invalid={!!fieldState.error}
-                            />
-                            <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                          </Field>
-                        )}
-                      />
-                    </>
-                  )}
-                </div>
+                    <Controller
+                      control={form.control}
+                      name='profit_margin'
+                      render={({ field, fieldState }) => (
+                        <Field>
+                          <FieldLabel htmlFor='product-profit-margin'>Profit Margin</FieldLabel>
+                          <Input
+                            id='product-profit-margin'
+                            type='number'
+                            step='0.01'
+                            placeholder='0.00'
+                            autoComplete='off'
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              field.onChange(value === '' ? undefined : Number(value))
+                            }}
+                            data-invalid={!!fieldState.error}
+                          />
+                          <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                        </Field>
+                      )}
+                    />
+                  </div>
+                )}
 
                 {/* Row 5: Price, Wholesale Price, Daily Sale Objective */}
                 <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
