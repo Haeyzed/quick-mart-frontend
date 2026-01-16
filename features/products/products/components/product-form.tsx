@@ -375,7 +375,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       starting_date: undefined,
       last_date: undefined,
       tax_id: null,
-      tax_method: 0,
+      tax_method: 1,
       image: [],
       prev_img: [],
       file: undefined,
@@ -460,8 +460,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         promotion_price: product.promotion_price || undefined,
         starting_date: product.starting_date || undefined,
         last_date: product.last_date || undefined,
-        tax_id: product.tax_id,
-        tax_method: product.tax_method || 0,
+      tax_id: product.tax_id,
+      tax_method: product.tax_method || 1,
         image: [],
         prev_img: product.image || [],
         file: undefined,
@@ -1395,7 +1395,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                             }}
                             data-invalid={!!fieldState.error}
                           />
-                          <FieldDescription>Minimum quantity to sell per day</FieldDescription>
+                          <FieldDescription>Minimum quantity to sell per day. If not, you will be notified on dashboard. But you have to set up the cron job properly for that. Follow the documentation in that regard.</FieldDescription>
                           <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                         </Field>
                       )}
@@ -1497,10 +1497,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     name='tax_method'
                     render={({ field, fieldState }) => {
                       const taxMethodOptions = [
-                        { value: 0, label: 'Exclusive' },
-                        { value: 1, label: 'Inclusive' },
+                        { value: 1, label: 'Exclusive' },
+                        { value: 2, label: 'Inclusive' },
                       ]
-                      const selectedTaxMethod = taxMethodOptions.find((opt) => opt.value === (field.value ?? 0))
+                      const selectedTaxMethod = taxMethodOptions.find((opt) => opt.value === (field.value ?? 1))
 
                       return (
                         <Field>
@@ -1509,7 +1509,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                             items={taxMethodOptions}
                             value={selectedTaxMethod || null}
                             onValueChange={(value) => {
-                              field.onChange(value ? value.value : 0)
+                              field.onChange(value ? value.value : 1)
                             }}
                             itemToStringValue={(item) => String(item.value)}
                           >
@@ -1758,99 +1758,137 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           </div>
         </Field>
 
-        <Field>
-          <div className='flex items-center justify-between'>
-            <div>
-              <FieldLabel>Featured</FieldLabel>
-              <FieldDescription>Featured products will be displayed in POS</FieldDescription>
-            </div>
-            <Controller
-              control={form.control}
-              name='featured'
-              render={({ field }) => (
-                <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-              )}
-            />
-          </div>
-        </Field>
-
-        {productType === 'standard' && (
-          <>
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Has Variants</FieldLabel>
-                  <FieldDescription>This product has variants (size, color, etc.)</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='is_variant'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
+        {!form.watch('is_batch') && !form.watch('is_imei') && (
+          <Field>
+            <div className='flex items-center justify-between'>
+              <div>
+                <FieldLabel>Featured</FieldLabel>
+                <FieldDescription>Featured products will be displayed in POS</FieldDescription>
               </div>
-            </Field>
-
-            {/* Variant Section - Only for standard products with variants enabled */}
-            {productType === 'standard' && form.watch('is_variant') && (
-              <VariantSection
-                control={form.control as any}
-                watch={form.watch as any}
-                setValue={form.setValue as any}
-                productCode={form.watch('code') || ''}
+              <Controller
+                control={form.control}
+                name='featured'
+                render={({ field }) => (
+                  <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                )}
               />
-            )}
-
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>This is Topping</FieldLabel>
-                  <FieldDescription>Check this if the item is a topping or extra or add-on only to be served with a main course</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='is_addon'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Has Batch/Expiry</FieldLabel>
-                  <FieldDescription>This product has batch and expiry dates</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='is_batch'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Has IMEI/Serial</FieldLabel>
-                  <FieldDescription>This product has IMEI or serial numbers</FieldDescription>
-                </div>
-                <Controller
-                  control={form.control}
-                  name='is_imei'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
-          </>
+            </div>
+          </Field>
         )}
+
+            {productType === 'standard' && (
+              <>
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>Has Variants</FieldLabel>
+                      <FieldDescription>This product has variants (size, color, etc.)</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_variant'
+                      render={({ field }) => (
+                        <Switch 
+                          checked={field.value || false} 
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked)
+                            if (checked) {
+                              // Uncheck initial_stock and featured when variant is enabled
+                              form.setValue('is_initial_stock', false)
+                              form.setValue('featured', false)
+                              form.setValue('is_batch', false)
+                            }
+                          }} 
+                        />
+                      )}
+                    />
+                  </div>
+                </Field>
+
+                {/* Variant Section - Only for standard products with variants enabled */}
+                {productType === 'standard' && form.watch('is_variant') && (
+                  <VariantSection
+                    control={form.control as any}
+                    watch={form.watch as any}
+                    setValue={form.setValue as any}
+                    productCode={form.watch('code') || ''}
+                  />
+                )}
+
+                <Field>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <FieldLabel>This is Topping</FieldLabel>
+                      <FieldDescription>Check this if the item is a topping or extra or add-on only to be served with a main course</FieldDescription>
+                    </div>
+                    <Controller
+                      control={form.control}
+                      name='is_addon'
+                      render={({ field }) => (
+                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                </Field>
+
+                {!form.watch('is_variant') && (
+                  <Field>
+                    <div className='flex items-center justify-between'>
+                      <div>
+                        <FieldLabel>Has Batch/Expiry</FieldLabel>
+                        <FieldDescription>This product has batch and expiry dates</FieldDescription>
+                      </div>
+                      <Controller
+                        control={form.control}
+                        name='is_batch'
+                        render={({ field }) => (
+                          <Switch 
+                            checked={field.value || false} 
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked)
+                              if (checked) {
+                                // Uncheck initial_stock and featured when batch is enabled
+                                form.setValue('is_initial_stock', false)
+                                form.setValue('featured', false)
+                                form.setValue('is_variant', false)
+                              }
+                            }} 
+                          />
+                        )}
+                      />
+                    </div>
+                  </Field>
+                )}
+
+                {!form.watch('is_variant') && (
+                  <Field>
+                    <div className='flex items-center justify-between'>
+                      <div>
+                        <FieldLabel>Has IMEI/Serial</FieldLabel>
+                        <FieldDescription>This product has IMEI or serial numbers</FieldDescription>
+                      </div>
+                      <Controller
+                        control={form.control}
+                        name='is_imei'
+                        render={({ field }) => (
+                          <Switch 
+                            checked={field.value || false} 
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked)
+                              if (checked) {
+                                // Uncheck initial_stock and featured when imei is enabled
+                                form.setValue('is_initial_stock', false)
+                                form.setValue('featured', false)
+                              }
+                            }} 
+                          />
+                        )}
+                      />
+                    </div>
+                  </Field>
+                )}
+              </>
+            )}
 
         {/* Promotional Pricing */}
         <Field>
@@ -1974,45 +2012,49 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           }}
         />
 
-        <Controller
-          control={form.control}
-          name='short_description'
-          render={({ field, fieldState }) => (
-            <Field>
-              <FieldLabel htmlFor='product-short-description'>Short Description</FieldLabel>
-              <Textarea
-                id='product-short-description'
-                placeholder='Enter short description'
-                rows={3}
-                autoComplete='off'
-                {...field}
-                value={field.value || ''}
-                data-invalid={!!fieldState.error}
-              />
-              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-            </Field>
-          )}
-        />
+        {!form.watch('is_addon') && (
+          <>
+            <Controller
+              control={form.control}
+              name='short_description'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-short-description'>Short Description</FieldLabel>
+                  <Textarea
+                    id='product-short-description'
+                    placeholder='Enter short description'
+                    rows={3}
+                    autoComplete='off'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
 
-        <Controller
-          control={form.control}
-          name='specification'
-          render={({ field, fieldState }) => (
-            <Field>
-              <FieldLabel htmlFor='product-specification'>Specification</FieldLabel>
-              <Textarea
-                id='product-specification'
-                placeholder='Enter product specifications'
-                rows={4}
-                autoComplete='off'
-                {...field}
-                value={field.value || ''}
-                data-invalid={!!fieldState.error}
-              />
-              <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-            </Field>
-          )}
-        />
+            <Controller
+              control={form.control}
+              name='specification'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='product-specification'>Specification</FieldLabel>
+                  <Textarea
+                    id='product-specification'
+                    placeholder='Enter product specifications'
+                    rows={4}
+                    autoComplete='off'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
+          </>
+        )}
 
         {productType === 'standard' && (
           <>
@@ -2090,23 +2132,34 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               </Field>
             )}
 
-            <Field>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <FieldLabel>Initial Stock</FieldLabel>
-                  <FieldDescription>Add initial stock for this product (Note: This feature will not work for product with variants and batches)</FieldDescription>
+            {!form.watch('is_variant') && !form.watch('is_batch') && !form.watch('is_imei') && (
+              <Field>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <FieldLabel>Initial Stock</FieldLabel>
+                    <FieldDescription>Add initial stock for this product (Note: This feature will not work for product with variants and batches)</FieldDescription>
+                  </div>
+                  <Controller
+                    control={form.control}
+                    name='is_initial_stock'
+                    render={({ field }) => (
+                      <Switch 
+                        checked={field.value || false} 
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked)
+                          if (checked && warehouses.length === 0) {
+                            toast.error('Please create warehouse first before adding stock!')
+                            field.onChange(false)
+                          }
+                        }} 
+                      />
+                    )}
+                  />
                 </div>
-                <Controller
-                  control={form.control}
-                  name='is_initial_stock'
-                  render={({ field }) => (
-                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                  )}
-                />
-              </div>
-            </Field>
+              </Field>
+            )}
 
-            {form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && (
+            {form.watch('is_initial_stock') && !form.watch('is_variant') && !form.watch('is_batch') && warehouses.length > 0 && (
               <Field>
                 <FieldLabel>Warehouse Quantities</FieldLabel>
                 <div className='rounded-md border'>
@@ -2313,10 +2366,12 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           )}
         />
 
-        <RelatedProducts
-          setValue={form.setValue}
-          value={form.watch('related_products')}
-        />
+        {!form.watch('is_addon') && (
+          <RelatedProducts
+            setValue={form.setValue}
+            value={form.watch('related_products')}
+          />
+        )}
 
         {/* Restaurant Module Fields */}
         <Controller
