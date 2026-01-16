@@ -242,18 +242,78 @@ export function useReorderProductImages() {
     mutationFn: async ({ id, imageUrls }: { id: number; imageUrls: string[] }) => {
       const response = await post<Product>(`/products/${id}/reorder-images`, {
         image_urls: imageUrls,
-      })
-      if (response.data) {
-        return {
-          data: productSchema.parse(response.data),
-          message: response.message,
+      }, { responseType: 'json' })
+      
+      // Handle both ApiResponse and Blob types
+      if (response && typeof response === 'object' && 'data' in response) {
+        const apiResponse = response as ApiResponse<Product>
+        if (apiResponse.data) {
+          return {
+            data: productSchema.parse(apiResponse.data),
+            message: apiResponse.message,
+          }
         }
+        throw new Error(apiResponse.message || 'Failed to reorder product images')
       }
-      throw new Error(response.message || 'Failed to reorder product images')
+      throw new Error('Failed to reorder product images')
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       queryClient.invalidateQueries({ queryKey: ['products', variables.id] })
     },
+  })
+}
+
+export type ComboSearchResponse = {
+  name: string
+  code: string
+  price: number
+  promotion_price: number
+  qty: number
+  id: number
+  variant_id: number | null
+  cost: number
+  brand: string | null
+  unit_id: number | null
+  units: Array<{
+    id: number
+    name: string
+    operation_value: number
+    operator: string
+    selected: boolean
+  }>
+  additional_price: number
+}
+
+export function useComboProductSearch() {
+  const { get } = useApiClient()
+
+  return useMutation({
+    mutationFn: async (searchCode: string) => {
+      const response = await get<ComboSearchResponse[]>('/products/combo-search', {
+        data: searchCode,
+      })
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        return response.data[0]
+      }
+      throw new Error('Product not found')
+    },
+  })
+}
+
+export function useSaleUnits(unitId?: number) {
+  const { get, isAuthenticated, isLoading: isSessionLoading } = useApiClient()
+
+  return useQuery({
+    queryKey: ['products', 'sale-units', unitId],
+    queryFn: async () => {
+      if (!unitId) return {}
+      const response = await get<Record<string, string>>(`/products/sale-unit/${unitId}`)
+      if (response.data) {
+        return response.data
+      }
+      return {}
+    },
+    enabled: !!unitId && isAuthenticated && !isSessionLoading,
   })
 }

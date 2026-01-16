@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils'
 import { useBrands } from '../../brands/api/use-brands'
 import { useCategories } from '../../categories/api/use-categories'
 import { useUnits } from '../../units/api/use-units'
+import { useSaleUnits } from '../api/use-products'
 import { useTaxes } from '../../../settings/tax/api/use-taxes'
 import { useActiveWarehouses } from '../api/use-warehouses'
 import { toast } from 'sonner'
@@ -430,6 +431,36 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   })
 
   const selectedUnitId = form.watch('unit_id')
+  const { data: saleUnitsData } = useSaleUnits(selectedUnitId || undefined)
+
+  // Populate sale_unit_id and purchase_unit_id when unit_id changes
+  useEffect(() => {
+    if (selectedUnitId && saleUnitsData && Object.keys(saleUnitsData).length > 0) {
+      const saleUnitIds = Object.keys(saleUnitsData).map(id => parseInt(id))
+      
+      // If no sale_unit_id is set, set the first available or base unit
+      const currentSaleUnitId = form.watch('sale_unit_id')
+      if (!currentSaleUnitId || !saleUnitIds.includes(currentSaleUnitId)) {
+        const firstSaleUnitId = saleUnitIds.find(id => id === selectedUnitId) || saleUnitIds[0]
+        if (firstSaleUnitId) {
+          form.setValue('sale_unit_id', firstSaleUnitId)
+        }
+      }
+      
+      // If no purchase_unit_id is set, set the first available or base unit
+      const currentPurchaseUnitId = form.watch('purchase_unit_id')
+      if (!currentPurchaseUnitId || !saleUnitIds.includes(currentPurchaseUnitId)) {
+        const firstPurchaseUnitId = saleUnitIds.find(id => id === selectedUnitId) || saleUnitIds[0]
+        if (firstPurchaseUnitId) {
+          form.setValue('purchase_unit_id', firstPurchaseUnitId)
+        }
+      }
+    } else if (!selectedUnitId) {
+      // Clear sale and purchase units if no base unit selected
+      form.setValue('sale_unit_id', null)
+      form.setValue('purchase_unit_id', null)
+    }
+  }, [selectedUnitId, saleUnitsData, form])
 
   // Load product data when editing
   useEffect(() => {
@@ -1177,12 +1208,18 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     control={form.control}
                     name='sale_unit_id'
                     render={({ field, fieldState }) => {
-                      const saleUnitItems = units
-                        .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
-                        .map((unit) => ({
-                          id: unit.id,
-                          name: unit.name,
-                        }))
+                      // Use API data if available, otherwise filter from all units
+                      const saleUnitItems = saleUnitsData && Object.keys(saleUnitsData).length > 0
+                        ? Object.entries(saleUnitsData).map(([id, name]) => ({
+                            id: parseInt(id),
+                            name: String(name),
+                          }))
+                        : units
+                            .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                            .map((unit) => ({
+                              id: unit.id,
+                              name: unit.name,
+                            }))
                       const selectedSaleUnit = saleUnitItems.find((unit) => unit.id === field.value)
 
                       return (
@@ -1225,12 +1262,18 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     control={form.control}
                     name='purchase_unit_id'
                     render={({ field, fieldState }) => {
-                      const purchaseUnitItems = units
-                        .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
-                        .map((unit) => ({
-                          id: unit.id,
-                          name: unit.name,
-                        }))
+                      // Use API data if available, otherwise filter from all units
+                      const purchaseUnitItems = saleUnitsData && Object.keys(saleUnitsData).length > 0
+                        ? Object.entries(saleUnitsData).map(([id, name]) => ({
+                            id: parseInt(id),
+                            name: String(name),
+                          }))
+                        : units
+                            .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                            .map((unit) => ({
+                              id: unit.id,
+                              name: unit.name,
+                            }))
                       const selectedPurchaseUnit = purchaseUnitItems.find((unit) => unit.id === field.value)
 
                       return (

@@ -39,7 +39,7 @@ import { productFormSchema } from '../data/schema'
 import { Delete01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useApiClient } from '@/lib/hooks/use-api-client'
-import { useProductsWithoutVariant, useProductsWithVariant } from '../api/use-products'
+import { useProductsWithoutVariant, useProductsWithVariant, useComboProductSearch, type ComboSearchResponse } from '../api/use-products'
 
 type ProductFormData = z.infer<typeof productFormSchema>
 
@@ -73,33 +73,13 @@ interface ProductCodeOption {
   name: string
 }
 
-interface ComboSearchResponse {
-  name: string
-  code: string
-  price: number
-  promotion_price: number
-  qty: number
-  id: number
-  variant_id: number | null
-  cost: number
-  brand: string | null
-  unit_id: number | null
-  units: Array<{
-    id: number
-    name: string
-    operation_value: number
-    operator: string
-    selected: boolean
-  }>
-  additional_price: number
-}
 
 export function ComboProductsTable({ control, watch, setValue }: ComboProductsTableProps) {
   const { get } = useApiClient()
   const { data: productsWithoutVariant = [] } = useProductsWithoutVariant()
   const { data: productsWithVariant = [] } = useProductsWithVariant()
+  const comboProductSearch = useComboProductSearch()
   const [searchQuery, setSearchQuery] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<ComboProduct[]>([])
   
   const productIdArray = ((watch as any)('product_id') as number[]) || []
@@ -208,28 +188,25 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
     if (!option) return
     
     const searchCode = option.value
-    setIsSearching(true)
     
     try {
-      // Check for duplicates
-      const existingCodes = selectedProducts.map(p => p.code)
-      if (existingCodes.includes(option.code)) {
+      // Call combo-search endpoint using the hook
+      const data = await comboProductSearch.mutateAsync(searchCode)
+      
+      // Check for duplicates using variant_id (matching blade logic line 1400-1405)
+      // Blade checks: if variant_id matches, it's a duplicate
+      const dataVariantId = data.variant_id || null
+      const isDuplicate = selectedProducts.some(p => {
+        const pVariantId = p.variant_id || null
+        return pVariantId === dataVariantId
+      })
+      
+      if (isDuplicate) {
         alert('Duplicate input is not allowed!')
         setSearchQuery('')
         return
       }
       
-      // Call combo-search endpoint
-      const response = await get<{ data: ComboSearchResponse[] }>('/products/combo-search', {
-        data: searchCode,
-      })
-      
-      if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
-        alert('Product not found')
-        return
-      }
-      
-      const data = response.data[0]
       const selectedUnitId = data.unit_id || (data.units && data.units.length > 0 ? data.units[0].id : null)
       
       const newProduct: ComboProduct = {
@@ -281,8 +258,6 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
     } catch (error) {
       console.error('Error searching combo product:', error)
       alert('Error loading product. Please try again.')
-    } finally {
-      setIsSearching(false)
     }
   }
   
@@ -464,7 +439,7 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
           />
           <ComboboxContent>
             <ComboboxEmpty>
-              {isSearching ? 'Searching...' : searchQuery.length === 0 ? 'Start typing to search products...' : 'No products found.'}
+              {comboProductSearch.isPending ? 'Searching...' : searchQuery.length === 0 ? 'Start typing to search products...' : 'No products found.'}
             </ComboboxEmpty>
             <ComboboxList>
               {(item) => item ? (
@@ -548,7 +523,10 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
                       {product.units.length > 0 ? (
                         <Select
                           value={selectedUnitId?.toString()}
-                          onValueChange={(value) => updateField(index, 'combo_unit_id', parseInt(value) || 0)}
+                          onValueChange={(value) => {
+                            updateField(index, 'combo_unit_id', parseInt(value) || 0)
+                            calculatePrice(index)
+                          }}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select unit" />
@@ -566,15 +544,27 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
                       )}
                     </TableCell>
                     <TableCell>
+                      {/* Unit Cost - shows converted cost (calculated based on unit and qty) */}
                       <Input
                         type="number"
                         step="0.01"
-                        value={product.cost}
+                        value={(() => {
+                          const selectedUnit = product.units.find(u => u.id === selectedUnitId) || product.units[0]
+                          if (!selectedUnit) return product.cost
+                          let convertedQty = qty
+                          if (selectedUnit.operator === '*') {
+                            convertedQty = qty * (selectedUnit.operation_value || 1)
+                          } else if (selectedUnit.operator === '/') {
+                            convertedQty = qty / (selectedUnit.operation_value || 1)
+                          }
+                          return (convertedQty * product.cost).toFixed(2)
+                        })()}
                         readOnly
                         className="w-24 bg-muted"
                       />
                     </TableCell>
                     <TableCell>
+                      {/* Unit Price - editable, stores converted price */}
                       <Input
                         type="number"
                         step="0.01"
@@ -584,6 +574,7 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
                       />
                     </TableCell>
                     <TableCell>
+                      {/* Subtotal - calculated display only */}
                       <Input
                         type="text"
                         value={calculateSubtotal(index)}
