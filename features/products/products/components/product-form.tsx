@@ -307,16 +307,75 @@ const productFormSchema = z.object({
   unit_price: z.array(z.number()).optional(),
   wastage_percent: z.string().optional(), // Stored as comma-separated string, converted to array on submit
   combo_unit_id: z.string().optional(), // Stored as comma-separated string, converted to array on submit
-}).refine((data) => {
-  // If cost is required for standard products
-  if (data.type === 'standard' && data.cost === undefined) {
-    return false
-  }
-  return true
-}, {
-  message: 'Cost is required for standard products',
-  path: ['cost'],
 })
+  .refine(
+    (data) => {
+      // If cost is required for standard products
+      if (data.type === 'standard' && data.cost === undefined) {
+        return false
+      }
+      return true
+    },
+    {
+      message: 'Cost is required for standard products',
+      path: ['cost'],
+    }
+  )
+  .superRefine((data, ctx) => {
+    // Product code format validation for certain barcode types (matching blade file create.blade.php lines 1772-1793)
+    const barcodeSymbology = data.barcode_symbology
+    const productCode = data.code || ''
+    const exp = /^\d+$/
+
+    if (barcodeSymbology && ['UPCA', 'UPCE', 'EAN8', 'EAN13'].includes(barcodeSymbology)) {
+      if (!productCode.match(exp)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Product code must be numeric for selected barcode symbology',
+          path: ['code'],
+        })
+      } else {
+        // Length validation for numeric codes
+        if (barcodeSymbology === 'UPCA' && productCode.length > 11) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Product code length must be less than 12 for UPC-A',
+            path: ['code'],
+          })
+        } else if (barcodeSymbology === 'EAN8' && productCode.length > 7) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Product code length must be less than 8 for EAN-8',
+            path: ['code'],
+          })
+        }
+      }
+    }
+
+    // Combo product validation (matching blade file create.blade.php lines 1795-1801)
+    if (data.type === 'combo') {
+      const productIds = data.product_id || []
+      if (productIds.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Please insert at least one product to the combo products table!',
+          path: ['product_id'],
+        })
+      }
+    }
+
+    // Variant validation (matching blade file create.blade.php lines 1802-1808)
+    if (data.is_variant) {
+      const variantNames = data.variant_name || []
+      if (variantNames.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'This product has variant. Please insert variant to table',
+          path: ['variant_name'],
+        })
+      }
+    }
+  })
 
 type ProductFormProps = {
   productId?: number

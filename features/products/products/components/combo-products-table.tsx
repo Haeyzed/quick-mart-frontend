@@ -97,11 +97,14 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
     ? comboUnitIdString.split(',').map(v => parseInt(v.trim()) || 0)
     : []
   
-  // Create product code options for autocomplete (like blade file)
+  // Create product code options for autocomplete (matching blade file format)
+  // create.blade.php: products without variant use "code (name)", products with variant use "item_code (name)"
+  // edit.blade.php: products without variant use "code(name)", products with variant use "item_code|name"
+  // We'll use create.blade.php format: "code (name)" for non-variant, "code (name)" for variant (API returns item_code as 'code')
   const productCodeOptions = useMemo(() => {
     const options: ProductCodeOption[] = []
     
-    // Add products without variant
+    // Add products without variant - format: "code (name)"
     productsWithoutVariant.forEach((product: any) => {
       options.push({
         value: `${product.code} (${product.name})`,
@@ -110,11 +113,12 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
       })
     })
     
-    // Add products with variant (using item_code)
+    // Add products with variant - format: "item_code (name)" (API returns item_code as 'code' field)
     productsWithVariant.forEach((product: any) => {
+      // For variants, the API returns item_code as 'code', but we need to use it with format "code (name)"
       options.push({
         value: `${product.code} (${product.name})`,
-        code: product.code,
+        code: product.code, // This is actually item_code from API (aliased as 'code')
         name: product.name,
       })
     })
@@ -131,41 +135,61 @@ export function ComboProductsTable({ control, watch, setValue }: ComboProductsTa
     )
   }, [searchQuery, productCodeOptions])
   
-  // Load selected products from form arrays
+  // Load selected products from form arrays (matching blade file edit.blade.php lines 119-180)
   useEffect(() => {
     if (productIdArray.length > 0) {
       Promise.all(
         productIdArray.map(async (id, index) => {
           try {
-            // Call combo-search with product code to get full details including units
-            // First, get the product to find its code
-            const productRes = await get<{ code?: string }>(`/products/${id}`)
+            // Get product details
+            const productRes = await get<{ 
+              code?: string
+              name?: string
+              unit_id?: number
+              price?: number
+              cost?: number
+              is_variant?: boolean
+            }>(`/products/${id}`)
             if (!productRes.data) return null
             
-            const code = (productRes.data as any)?.code || ''
+            const productData = productRes.data
             const variantId = variantIdArray[index] || null
-            const searchCode = variantId ? `${code}` : code
+            let searchCode = productData.code || ''
             
-            // Call combo-search
+            // If variant exists, get item_code (matching blade edit.blade.php lines 131-134)
+            if (variantId && productData.is_variant) {
+              // For variants, we need item_code - the API's searchComboProduct handles both code and item_code
+              // So we can use the product code, and the API will search variants by item_code if needed
+              // But to be safe, let's use the format that matches what user selected: "code (name)"
+              searchCode = productData.code || ''
+            }
+            
+            // Build search code in format "CODE (Name)" or just "CODE" - API will extract code
+            // Format matches blade file which sends the full autocomplete value like "CODE (Name)"
+            const searchValue = `${searchCode} (${productData.name || ''})`
+            
+            // Call combo-search API (matching blade file's lims_product_search call)
             const searchRes = await get<{ data: ComboSearchResponse[] }>('/products/combo-search', {
-              data: searchCode,
+              data: searchValue, // Pass full format, API extracts code
             })
             
             if (!searchRes.data || !Array.isArray(searchRes.data) || searchRes.data.length === 0) return null
             
             const data = searchRes.data[0]
             const selectedUnitId = comboUnitIdArray[index] || data.unit_id || null
+            const storedPrice = unitPriceArray[index] || data.price || 0
+            const storedQty = productQtyArray[index] || 1
             
             return {
               id: data.id,
               name: data.name,
               code: data.code,
-              price: unitPriceArray[index] || data.price || 0,
+              price: storedPrice,
               cost: data.cost || 0,
-              variant_id: data.variant_id,
+              variant_id: variantId || data.variant_id || null,
               unit_id: selectedUnitId || data.unit_id || 0,
               units: data.units || [],
-              image_url: null, // Will need to fetch from product if needed
+              image_url: null,
             } as ComboProduct
           } catch (error) {
             console.error('Error loading combo product:', error)
