@@ -301,10 +301,11 @@ const productFormSchema = z.object({
   diff_price: z.array(z.number()).optional(),
   // Combo products
   product_id: z.array(z.number()).optional(),
+  variant_id: z.array(z.number()).optional(), // Variant IDs for combo products
   product_qty: z.array(z.number()).optional(),
   unit_price: z.array(z.number()).optional(),
-  wastage_percent: z.string().optional(),
-  combo_unit_id: z.string().optional(),
+  wastage_percent: z.string().optional(), // Stored as comma-separated string, converted to array on submit
+  combo_unit_id: z.string().optional(), // Stored as comma-separated string, converted to array on submit
 }).refine((data) => {
   // If cost is required for standard products
   if (data.type === 'standard' && data.cost === undefined) {
@@ -419,6 +420,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       warehouse_id: [],
       diff_price: [],
       product_id: [],
+      variant_id: [],
       product_qty: [],
       unit_price: [],
       wastage_percent: undefined,
@@ -504,9 +506,30 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         additional_price: (product as any).additional_price || [],
         warehouse_id: (product as any).warehouse_id || [],
         diff_price: (product as any).diff_price || [],
-        product_id: (product as any).product_id || [],
-        product_qty: (product as any).product_qty || [],
-        unit_price: (product as any).unit_price || [],
+        // Parse combo product arrays from comma-separated strings or arrays
+        product_id: Array.isArray((product as any).product_id)
+          ? (product as any).product_id
+          : (product as any).product_list
+          ? (product as any).product_list.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id))
+          : [],
+        variant_id: Array.isArray((product as any).variant_id)
+          ? (product as any).variant_id
+          : (product as any).variant_list
+          ? (product as any).variant_list.split(',').map((id: string) => {
+              const parsed = parseInt(id.trim())
+              return isNaN(parsed) || parsed === 0 ? null : parsed
+            }).filter((id: number | null) => id !== null) as number[]
+          : [],
+        product_qty: Array.isArray((product as any).product_qty)
+          ? (product as any).product_qty
+          : (product as any).qty_list
+          ? (product as any).qty_list.split(',').map((qty: string) => parseFloat(qty.trim())).filter((qty: number) => !isNaN(qty))
+          : [],
+        unit_price: Array.isArray((product as any).unit_price)
+          ? (product as any).unit_price
+          : (product as any).price_list
+          ? (product as any).price_list.split(',').map((price: string) => parseFloat(price.trim())).filter((price: number) => !isNaN(price))
+          : [],
         wastage_percent: product.wastage_percent || undefined,
         combo_unit_id: product.combo_unit_id || undefined,
       })
@@ -588,8 +611,34 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       if (data.warranty_type) formData.append('warranty_type', data.warranty_type)
       if (data.guarantee_type) formData.append('guarantee_type', data.guarantee_type)
       if (data.production_cost !== undefined) formData.append('production_cost', data.production_cost.toString())
-      if (data.wastage_percent) formData.append('wastage_percent', data.wastage_percent)
-      if (data.combo_unit_id) formData.append('combo_unit_id', data.combo_unit_id)
+      if (data.wastage_percent) {
+        // Handle wastage_percent as array or comma-separated string
+        if (Array.isArray(data.wastage_percent)) {
+          data.wastage_percent.forEach((percent) => {
+            formData.append('wastage_percent[]', percent.toString())
+          })
+        } else if (typeof data.wastage_percent === 'string') {
+          // If it's a comma-separated string, split and send as array
+          const percents = data.wastage_percent.split(',').map(p => p.trim()).filter(p => p)
+          percents.forEach((percent) => {
+            formData.append('wastage_percent[]', percent)
+          })
+        }
+      }
+      if (data.combo_unit_id) {
+        // Handle combo_unit_id as array or comma-separated string
+        if (Array.isArray(data.combo_unit_id)) {
+          data.combo_unit_id.forEach((id) => {
+            formData.append('combo_unit_id[]', id.toString())
+          })
+        } else if (typeof data.combo_unit_id === 'string') {
+          // If it's a comma-separated string, split and send as array
+          const ids = data.combo_unit_id.split(',').map(id => id.trim()).filter(id => id)
+          ids.forEach((id) => {
+            formData.append('combo_unit_id[]', id)
+          })
+        }
+      }
 
       // Handle arrays
       if (data.menu_type && Array.isArray(data.menu_type) && data.menu_type.length > 0) {
@@ -650,6 +699,11 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       if (data.product_id && data.product_id.length > 0) {
         data.product_id.forEach((id) => {
           formData.append('product_id[]', id.toString())
+        })
+      }
+      if (data.variant_id && Array.isArray(data.variant_id) && data.variant_id.length > 0) {
+        data.variant_id.forEach((id) => {
+          formData.append('variant_id[]', id.toString())
         })
       }
       if (data.product_qty && data.product_qty.length > 0) {
@@ -2209,7 +2263,6 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
               control={form.control as any}
               watch={form.watch as any}
               setValue={form.setValue as any}
-              units={units.map(u => ({ id: u.id, unit_name: u.name || '' }))}
             />
 
             <Controller
