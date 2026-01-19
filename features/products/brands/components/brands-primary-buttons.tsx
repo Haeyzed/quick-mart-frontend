@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useBrands } from './brands-provider'
 import { useBrands as useBrandsQuery } from '../api/use-brands'
 import { useMemo } from 'react'
+import { PermissionGuard } from '@/lib/hooks/use-permissions'
 
 export function BrandsPrimaryButtons() {
   const { setOpen } = useBrands()
@@ -19,16 +20,26 @@ export function BrandsPrimaryButtons() {
 
   return (
     <div className='flex gap-2'>
-      <Button
-        variant='outline'
-        className='space-x-1'
-        onClick={() => setOpen('import')}
+      <PermissionGuard 
+        permission={['brand', 'brands-import']}
+        fallback={null}
       >
-        <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
-      </Button>
-      <Button className='space-x-1' onClick={() => setOpen('add')}>
-        <span>Add Brand</span> <HugeiconsIcon icon={PlusSignIcon} size={18} />
-      </Button>
+        <Button
+          variant='outline'
+          className='space-x-1'
+          onClick={() => setOpen('import')}
+        >
+          <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard 
+        permission={['brand', 'brands-add']}
+        fallback={null}
+      >
+        <Button className='space-x-1' onClick={() => setOpen('add')}>
+          <span>Add Brand</span> <HugeiconsIcon icon={PlusSignIcon} size={18} />
+        </Button>
+      </PermissionGuard>
     </div>
   )
 }

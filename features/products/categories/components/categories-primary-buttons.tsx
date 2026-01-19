@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useCategories } from './categories-provider'
 import { useCategories as useCategoriesQuery } from '../api/use-categories'
 import { useMemo } from 'react'
+import { PermissionGuard } from '@/lib/hooks/use-permissions'
 
 export function CategoriesPrimaryButtons() {
   const { setOpen } = useCategories()
@@ -19,16 +20,26 @@ export function CategoriesPrimaryButtons() {
 
   return (
     <div className='flex gap-2'>
-      <Button
-        variant='outline'
-        className='space-x-1'
-        onClick={() => setOpen('import')}
+      <PermissionGuard 
+        permission={['category', 'categories-import']}
+        fallback={null}
       >
-        <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
-      </Button>
-      <Button className='space-x-1' onClick={() => setOpen('add')}>
-        <span>Add Category</span> <HugeiconsIcon icon={PlusSignIcon} size={18} />
-      </Button>
+        <Button
+          variant='outline'
+          className='space-x-1'
+          onClick={() => setOpen('import')}
+        >
+          <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard 
+        permission={['category', 'categories-add']}
+        fallback={null}
+      >
+        <Button className='space-x-1' onClick={() => setOpen('add')}>
+          <span>Add Category</span> <HugeiconsIcon icon={PlusSignIcon} size={18} />
+        </Button>
+      </PermissionGuard>
     </div>
   )
 }

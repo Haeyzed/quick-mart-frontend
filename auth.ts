@@ -2,6 +2,16 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 
 // Types
+export interface Role {
+  id: number
+  name: string
+}
+
+export interface Permission {
+  id: number
+  name: string
+}
+
 export interface User {
   id: number
   name: string
@@ -16,6 +26,10 @@ export interface User {
   email_verified_at: string | null
   created_at: string | null
   updated_at: string | null
+  roles?: Role[]
+  permissions?: Permission[]
+  all_permissions?: string[]
+  role_names?: string[]
 }
 
 interface LoginResponse {
@@ -94,6 +108,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email_verified_at: response.data.user.email_verified_at,
               created_at: response.data.user.created_at,
               updated_at: response.data.user.updated_at,
+              roles: response.data.user.roles || [],
+              permissions: response.data.user.permissions || [],
+              all_permissions: response.data.user.all_permissions || [],
+              role_names: response.data.user.role_names || [],
               accessToken: response.data.token,
             }
           }
@@ -127,6 +145,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email_verified_at: (user as any).email_verified_at,
             created_at: (user as any).created_at,
             updated_at: (user as any).updated_at,
+            roles: (user as any).roles || [],
+            permissions: (user as any).permissions || [],
+            all_permissions: (user as any).all_permissions || [],
+            role_names: (user as any).role_names || [],
           },
           tokenExpiry: Date.now() + (30 * 24 * 60 * 60 * 1000), // 30 days
         }
@@ -155,6 +177,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               user: {
                 ...(token.user as any),
                 ...response.data.user,
+                roles: response.data.user.roles || [],
+                permissions: response.data.user.permissions || [],
+                all_permissions: response.data.user.all_permissions || [],
+                role_names: response.data.user.role_names || [],
               },
               tokenExpiry: Date.now() + (30 * 24 * 60 * 60 * 1000),
             }

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useUnits } from './units-provider'
 import { useUnits as useUnitsQuery } from '../api/use-units'
 import { useMemo } from 'react'
+import { PermissionGuard } from '@/lib/hooks/use-permissions'
 
 export function UnitsPrimaryButtons() {
   const { setOpen } = useUnits()
@@ -19,16 +20,20 @@ export function UnitsPrimaryButtons() {
 
   return (
     <div className='flex gap-2'>
-      <Button
-        variant='outline'
-        className='space-x-1'
-        onClick={() => setOpen('import')}
-      >
-        <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
-      </Button>
-      <Button className='space-x-1' onClick={() => setOpen('add')}>
-        <span>Add Unit</span> <HugeiconsIcon icon={PlusSignIcon} size={18} />
-      </Button>
+      <PermissionGuard permission={['unit', 'units-import']} fallback={null}>
+        <Button
+          variant='outline'
+          className='space-x-1'
+          onClick={() => setOpen('import')}
+        >
+          <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard permission={['unit', 'units-add']} fallback={null}>
+        <Button className='space-x-1' onClick={() => setOpen('add')}>
+          <span>Add Unit</span> <HugeiconsIcon icon={PlusSignIcon} size={18} />
+        </Button>
+      </PermissionGuard>
     </div>
   )
 }

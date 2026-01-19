@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useTaxes } from './tax-provider'
 import { useTaxes as useTaxesQuery } from '../api/use-taxes'
 import { useMemo } from 'react'
+import { PermissionGuard } from '@/lib/hooks/use-permissions'
 
 export function TaxesPrimaryButtons() {
   const { setOpen } = useTaxes()
@@ -19,16 +20,20 @@ export function TaxesPrimaryButtons() {
 
   return (
     <div className='flex gap-2'>
-      <Button
-        variant='outline'
-        className='space-x-1'
-        onClick={() => setOpen('import')}
-      >
-        <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
-      </Button>
-      <Button className='space-x-1' onClick={() => setOpen('add')}>
-        <span>Add Tax</span> <HugeiconsIcon icon={PlusSignIcon} size={18} />
-      </Button>
+      <PermissionGuard permission={['tax', 'taxes-import']} fallback={null}>
+        <Button
+          variant='outline'
+          className='space-x-1'
+          onClick={() => setOpen('import')}
+        >
+          <span>Import</span> <HugeiconsIcon icon={Download01Icon} size={18} />
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard permission={['tax', 'taxes-add']} fallback={null}>
+        <Button className='space-x-1' onClick={() => setOpen('add')}>
+          <span>Add Tax</span> <HugeiconsIcon icon={PlusSignIcon} size={18} />
+        </Button>
+      </PermissionGuard>
     </div>
   )
 }
