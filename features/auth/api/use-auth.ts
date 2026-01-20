@@ -29,7 +29,7 @@ export type LoginResponse = {
 }
 
 export type LoginCredentials = {
-  name: string // email or username
+  identifier: string // email or username
   password: string
 }
 
@@ -88,7 +88,7 @@ export function useLogin() {
     mutationFn: async (data: LoginCredentials): Promise<LoginResponse> => {
       // Use apiClient directly for login since we don't have a token yet
       const response = await apiClient.post<LoginResponse>('/auth/login', {
-        name: data.name,
+        identifier: data.identifier,
         password: data.password,
       })
 

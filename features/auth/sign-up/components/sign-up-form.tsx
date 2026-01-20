@@ -37,6 +37,7 @@ import {
 const formSchema = z
   .object({
     name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
+    username: z.string().regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens').max(255, 'Username is too long').optional().nullable(),
     email: z.string().email('Please enter a valid email address.').optional().nullable(),
     password: z
       .string()
@@ -55,7 +56,7 @@ const steps = [
     value: 'personal',
     title: 'Personal Information',
     description: 'Enter your basic details',
-    fields: ['name', 'email'] as const,
+    fields: ['name', 'username', 'email'] as const,
   },
   {
     value: 'password',
@@ -77,6 +78,7 @@ export function SignUpForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -105,6 +107,7 @@ export function SignUpForm({
     try {
       await registerMutation.mutateAsync({
         name: data.name,
+        username: data.username || null,
         email: data.email || null,
         password: data.password,
         password_confirmation: data.confirmPassword,
@@ -153,6 +156,23 @@ export function SignUpForm({
                     id='signup-name'
                     placeholder='John Doe'
                     {...field}
+                    data-invalid={!!fieldState.error}
+                  />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
+            <Controller
+              control={form.control}
+              name='username'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='signup-username'>Username (optional)</FieldLabel>
+                  <Input
+                    id='signup-username'
+                    placeholder='john_doe'
+                    {...field}
+                    value={field.value || ''}
                     data-invalid={!!fieldState.error}
                   />
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
