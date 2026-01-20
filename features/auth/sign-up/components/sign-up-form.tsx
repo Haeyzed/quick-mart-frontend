@@ -286,7 +286,13 @@ export function SignUpForm({
               render={({ field, fieldState }) => (
                 <Field>
                   <FieldLabel htmlFor='signup-phone'>Phone (optional)</FieldLabel>
-                  <PhoneInput {...field} />
+                  <PhoneInput 
+                    id='signup-phone'
+                    placeholder='+123456789'
+                    {...field}
+                    value={field.value || ''}
+                    data-invalid={!!fieldState.error}
+                  />
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 </Field>
               )}
