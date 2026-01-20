@@ -17,6 +17,8 @@ export interface User {
   name: string
   username: string | null
   email: string | null
+  avatar: string | null
+  avatar_url: string | null
   phone: string | null
   company_name: string | null
   role_id: number | null
@@ -100,6 +102,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email: response.data.user.email || '',
               name: response.data.user.name,
               username: response.data.user.username || null,
+              avatar: response.data.user.avatar || null,
+              avatar_url: response.data.user.avatar_url || null,
               phone: response.data.user.phone,
               company_name: response.data.user.company_name,
               role_id: response.data.user.role_id,
@@ -138,6 +142,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               name: user.name,
               username: (user as any).username || null,
               email: user.email,
+              avatar: (user as any).avatar || null,
+              avatar_url: (user as any).avatar_url || null,
               phone: (user as any).phone,
               company_name: (user as any).company_name,
               role_id: (user as any).role_id,
@@ -180,6 +186,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               user: {
                 ...(token.user as any),
                 ...response.data.user,
+                avatar: response.data.user.avatar || null,
+                avatar_url: response.data.user.avatar_url || null,
                 roles: response.data.user.roles || [],
                 permissions: response.data.user.permissions || [],
                 all_permissions: response.data.user.all_permissions || [],

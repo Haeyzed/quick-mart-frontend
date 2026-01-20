@@ -32,7 +32,7 @@ export function AppSidebar() {
     ? {
         name: authUser.name || 'User',
         email: authUser.email || 'No email',
-        avatar: authUser.image || '/avatars/shadcn.jpg',
+        avatar: authUser.avatar_url || '/avatars/shadcn.jpg',
       }
     : {
         name: 'User',

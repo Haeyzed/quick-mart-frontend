@@ -35,7 +35,9 @@ export type LoginCredentials = {
 
 export type RegisterData = {
   name: string
+  username?: string | null
   email?: string | null
+  avatar?: File | null
   phone_number?: string | null
   company_name?: string | null
   password: string
@@ -45,7 +47,7 @@ export type RegisterData = {
   warehouse_id?: number | null
   customer_group_id?: number | null
   customer_name?: string | null
-}
+} | FormData
 
 export type ForgotPasswordData = {
   email: string
@@ -109,7 +111,11 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (data: RegisterData): Promise<User> => {
       // Use apiClient directly for register since we don't have a token yet
-      const response = await apiClient.post<User>('/auth/register', data)
+      // Handle FormData for file uploads
+      const isFormData = data instanceof FormData
+      const response = isFormData
+        ? await apiClient.postFormData<User>('/auth/register', data)
+        : await apiClient.post<User>('/auth/register', data)
 
       if (response.status && response.data) {
         return response.data

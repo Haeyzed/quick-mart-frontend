@@ -16,9 +16,22 @@ import {
   FieldGroup,
   FieldLabel,
   FieldError,
+  FieldDescription,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
+import {
+  FileUpload,
+  FileUploadDropzone,
+  FileUploadItem,
+  FileUploadItemDelete,
+  FileUploadItemMetadata,
+  FileUploadItemPreview,
+  FileUploadList,
+  FileUploadTrigger,
+} from '@/components/ui/file-upload'
+import { CloudUploadIcon, CancelCircleIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import {
   Stepper,
   StepperContent,
@@ -39,6 +52,7 @@ const formSchema = z
     name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
     username: z.string().regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens').max(255, 'Username is too long').optional().nullable(),
     email: z.string().email('Please enter a valid email address.').optional().nullable(),
+    avatar: z.array(z.custom<File>()).max(1, 'Please select only one image').optional(),
     password: z
       .string()
       .min(1, 'Please enter your password')
@@ -56,7 +70,7 @@ const steps = [
     value: 'personal',
     title: 'Personal Information',
     description: 'Enter your basic details',
-    fields: ['name', 'username', 'email'] as const,
+    fields: ['name', 'username', 'email', 'avatar'] as const,
   },
   {
     value: 'password',
@@ -80,6 +94,7 @@ export function SignUpForm({
       name: '',
       username: '',
       email: '',
+      avatar: [],
       password: '',
       confirmPassword: '',
       role_id: 1, // Default role
@@ -105,14 +120,18 @@ export function SignUpForm({
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
-      await registerMutation.mutateAsync({
-        name: data.name,
-        username: data.username || null,
-        email: data.email || null,
-        password: data.password,
-        password_confirmation: data.confirmPassword,
-        role_id: data.role_id,
-      })
+      const formData = new FormData()
+      formData.append('name', data.name)
+      if (data.username) formData.append('username', data.username)
+      if (data.email) formData.append('email', data.email)
+      if (data.avatar && data.avatar.length > 0) {
+        formData.append('avatar', data.avatar[0])
+      }
+      formData.append('password', data.password)
+      formData.append('password_confirmation', data.confirmPassword)
+      formData.append('role_id', String(data.role_id))
+
+      await registerMutation.mutateAsync(formData as any)
       toast.success('Registration successful! Please verify your email.')
       router.push('/sign-in')
     } catch (error: any) {
@@ -192,6 +211,60 @@ export function SignUpForm({
                     value={field.value || ''}
                     data-invalid={!!fieldState.error}
                   />
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
+            <Controller
+              control={form.control}
+              name='avatar'
+              render={({ field: { onChange, value, ...field }, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='signup-avatar'>Avatar (optional)</FieldLabel>
+                  <FileUpload
+                    value={value || []}
+                    onValueChange={onChange}
+                    accept='image/*'
+                    maxFiles={1}
+                    maxSize={5 * 1024 * 1024}
+                    onFileReject={(_, message) => {
+                      form.setError('avatar', {
+                        message,
+                      })
+                    }}
+                  >
+                    <FileUploadDropzone className='flex-row flex-wrap border-dotted text-center'>
+                      <HugeiconsIcon icon={CloudUploadIcon} className='size-4' />
+                      Drag and drop or
+                      <FileUploadTrigger asChild>
+                        <Button variant='link' size='sm' className='p-0'>
+                          choose file
+                        </Button>
+                      </FileUploadTrigger>
+                      to upload
+                    </FileUploadDropzone>
+                    <FileUploadList>
+                      {value?.map((file, index) => (
+                        <FileUploadItem key={index} value={file}>
+                          <FileUploadItemPreview />
+                          <FileUploadItemMetadata />
+                          <FileUploadItemDelete asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='size-7'
+                            >
+                              <HugeiconsIcon icon={CancelCircleIcon} className='size-4' />
+                              <span className='sr-only'>Delete</span>
+                            </Button>
+                          </FileUploadItemDelete>
+                        </FileUploadItem>
+                      ))}
+                    </FileUploadList>
+                  </FileUpload>
+                  <FieldDescription>
+                    JPEG, PNG, JPG, GIF, or WebP. Max 5MB.
+                  </FieldDescription>
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 </Field>
               )}
