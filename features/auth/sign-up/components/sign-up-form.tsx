@@ -46,6 +46,8 @@ import {
   StepperTitle,
   StepperTrigger,
 } from '@/components/ui/stepper'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { PhoneInput } from '@/components/phone-input'
 
 const formSchema = z
   .object({
@@ -53,6 +55,9 @@ const formSchema = z
     username: z.string().regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens').max(255, 'Username is too long').optional().nullable(),
     email: z.string().email('Please enter a valid email address.').optional().nullable(),
     avatar: z.array(z.custom<File>()).max(1, 'Please select only one image').optional(),
+    phone: z
+      .string()
+      .refine(isValidPhoneNumber, { message: "Invalid phone number" }),
     password: z
       .string()
       .min(1, 'Please enter your password')
@@ -64,13 +69,17 @@ const formSchema = z
     message: "Passwords don't match.",
     path: ['confirmPassword'],
   })
+  .refine((data) => data.phone.length > 0, {
+    message: "Phone number is required",
+    path: ['phone'],
+  })
 
 const steps = [
   {
     value: 'personal',
     title: 'Personal Information',
     description: 'Enter your basic details',
-    fields: ['name', 'username', 'email', 'avatar'] as const,
+    fields: ['name', 'username', 'email', 'avatar', 'phone'] as const,
   },
   {
     value: 'password',
@@ -95,6 +104,7 @@ export function SignUpForm({
       username: '',
       email: '',
       avatar: [],
+      phone: '',
       password: '',
       confirmPassword: '',
       role_id: 1, // Default role
@@ -127,6 +137,7 @@ export function SignUpForm({
       if (data.avatar && data.avatar.length > 0) {
         formData.append('avatar', data.avatar[0])
       }
+      if (data.phone) formData.append('phone', data.phone)
       formData.append('password', data.password)
       formData.append('password_confirmation', data.confirmPassword)
       formData.append('role_id', String(data.role_id))
@@ -265,6 +276,17 @@ export function SignUpForm({
                   <FieldDescription>
                     JPEG, PNG, JPG, GIF, or WebP. Max 5MB.
                   </FieldDescription>
+                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                </Field>
+              )}
+            />
+            <Controller
+              control={form.control}
+              name='phone'
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel htmlFor='signup-phone'>Phone (optional)</FieldLabel>
+                  <PhoneInput {...field} />
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 </Field>
               )}

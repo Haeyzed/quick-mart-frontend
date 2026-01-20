@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -33,7 +33,7 @@ import {
   FileUploadList,
   FileUploadTrigger,
 } from '@/components/ui/file-upload'
-import { CloudUploadIcon, CancelCircleIcon } from '@hugeicons/core-free-icons'
+import { CloudUploadIcon, CancelCircleIcon, Edit01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ImageZoom } from '@/components/ui/shadcn-io/image-zoom'
 import { useTheme } from '@/context/theme-provider'
@@ -44,6 +44,7 @@ import { toast } from 'sonner'
 import { handleApiError } from '@/lib/handle-api-error'
 import { type Brand } from '../data/schema'
 import { Spinner } from '@/components/ui/spinner'
+import { generateSlug } from '@/lib/slug'
 
 const brandSchema = z.object({
   name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
@@ -69,6 +70,7 @@ export function BrandsActionDialog({
   const updateBrand = useUpdateBrand()
   const { resolvedTheme } = useTheme()
   const isEdit = !!currentRow
+  const [isSlugDisabled, setIsSlugDisabled] = useState(true)
 
   const form = useForm<z.infer<typeof brandSchema>>({
     resolver: zodResolver(brandSchema),
@@ -178,6 +180,10 @@ export function BrandsActionDialog({
                       autoComplete='off'
                       {...field}
                       data-invalid={!!fieldState.error}
+                      onChange={(e) => {
+                        field.onChange(e.target.value)
+                        form.setValue('slug', generateSlug(e.target.value))
+                      }}
                     />
                     <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                   </Field>
@@ -189,14 +195,25 @@ export function BrandsActionDialog({
                 render={({ field, fieldState }) => (
                   <Field>
                     <FieldLabel htmlFor='brand-slug'>Slug</FieldLabel>
+                    <div className='flex gap-2'>
                     <Input
                       id='brand-slug'
                       placeholder='brand-slug'
                       autoComplete='off'
                       {...field}
-                      value={field.value || ''}
-                      data-invalid={!!fieldState.error}
-                    />
+                        value={field.value || ''}
+                        data-invalid={!!fieldState.error}
+                        disabled={isSlugDisabled}
+                      />
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='icon'
+                        onClick={() => setIsSlugDisabled(false)}
+                      >
+                        <HugeiconsIcon icon={Edit01Icon} className='size-4' />
+                      </Button>
+                    </div>
                     <FieldDescription>
                       URL-friendly version of the name (auto-generated if left empty)
                     </FieldDescription>

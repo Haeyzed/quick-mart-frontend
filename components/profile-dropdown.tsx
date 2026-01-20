@@ -19,7 +19,20 @@ import { SignOutDialog } from '@/components/sign-out-dialog'
 
 export function ProfileDropdown() {
   const [open, setOpen] = useState(false)
-  const { user } = useAuth()
+  const { user: authUser } = useAuth()
+
+  // Map auth user to sidebar user format
+  const user = authUser
+    ? {
+        name: authUser.name || 'User',
+        email: authUser.email || 'No email',
+        avatar: authUser.avatar_url || '/avatars/shadcn.jpg',
+      }
+    : {
+        name: 'User',
+        email: 'No email',
+        avatar: '/avatars/shadcn.jpg',
+      }
 
   const initials = user?.name
     ?.split(' ')
@@ -33,9 +46,9 @@ export function ProfileDropdown() {
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
-            <Avatar className='h-8 w-8'>
-              <AvatarImage src='/avatars/01.png' alt={user?.name || 'User'} />
-              <AvatarFallback>{initials}</AvatarFallback>
+            <Avatar className='h-8 w-8 rounded-lg'>
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback className='rounded-lg'>{initials}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
