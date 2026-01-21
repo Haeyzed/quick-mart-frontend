@@ -134,39 +134,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       // Initial sign in
       if (user) {
-          return {
-            ...token,
-            accessToken: (user as any).accessToken,
-            user: {
-              id: user.id,
-              name: user.name,
-              username: (user as any).username || null,
-              email: user.email,
-              avatar: (user as any).avatar || null,
-              avatar_url: (user as any).avatar_url || null,
-              phone: (user as any).phone,
-              company_name: (user as any).company_name,
-              role_id: (user as any).role_id,
-              biller_id: (user as any).biller_id,
-              warehouse_id: (user as any).warehouse_id,
-              is_active: (user as any).is_active,
-              is_deleted: (user as any).is_deleted,
-              email_verified_at: (user as any).email_verified_at,
-              created_at: (user as any).created_at,
-              updated_at: (user as any).updated_at,
-              roles: (user as any).roles || [],
-              permissions: (user as any).permissions || [],
-              all_permissions: (user as any).all_permissions || [],
-              role_names: (user as any).role_names || [],
-            },
-            tokenExpiry: Date.now() + (30 * 24 * 60 * 60 * 1000), // 30 days
-          }
+        return {
+          ...token,
+          accessToken: (user as any).accessToken,
+          user: {
+            id: user.id,
+            name: user.name,
+            username: (user as any).username || null,
+            email: user.email,
+            avatar: (user as any).avatar || null,
+            avatar_url: (user as any).avatar_url || null,
+            phone: (user as any).phone,
+            company_name: (user as any).company_name,
+            role_id: (user as any).role_id,
+            biller_id: (user as any).biller_id,
+            warehouse_id: (user as any).warehouse_id,
+            is_active: (user as any).is_active,
+            is_deleted: (user as any).is_deleted,
+            email_verified_at: (user as any).email_verified_at,
+            created_at: (user as any).created_at,
+            updated_at: (user as any).updated_at,
+            roles: (user as any).roles || [],
+            permissions: (user as any).permissions || [],
+            all_permissions: (user as any).all_permissions || [],
+            role_names: (user as any).role_names || [],
+          },
+          tokenExpiry: Date.now() + (30 * 24 * 60 * 60 * 1000), // 30 days
+        }
       }
 
       // Check if token needs refresh (refresh 1 day before expiry)
       const now = Date.now()
       const expiry = token.tokenExpiry as number | undefined
-      
+
       if (expiry && now > expiry - (24 * 60 * 60 * 1000)) {
         try {
           const response = await apiCall<LoginResponse>('/auth/refresh-token', {
@@ -222,7 +222,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           ...session.user,
           ...(token.user as any),
         }
-        ;(session as any).accessToken = token.accessToken
+          ; (session as any).accessToken = token.accessToken
       }
       return session
     },
