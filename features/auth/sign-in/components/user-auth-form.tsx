@@ -163,18 +163,27 @@ export function UserAuthForm({
         </div>
       </div>
 
-      <div className='grid grid-cols-2 gap-2'>
+      <div className='grid grid-cols-3 gap-2'>
         <Button 
           variant='outline' 
           type='button' 
           disabled={isLoading}
-          onClick={() => {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-            // Redirect to backend OAuth
-            // The backend should be configured to redirect to our callback URL
-            // If not, we'll handle it via the callback page
-            const callbackUrl = `${window.location.origin}/auth/callback/google`
-            window.location.href = `${baseUrl}/api/auth/google?redirect_uri=${encodeURIComponent(callbackUrl)}`
+          onClick={async () => {
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+              const response = await fetch(`${baseUrl}/api/auth/google`, {
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+                },
+              })
+              const data = await response.json()
+              if (data.url) {
+                window.location.href = data.url
+              }
+            } catch (error) {
+              console.error('Failed to get Google OAuth URL:', error)
+            }
           }}
         >
           <svg className='h-4 w-4' viewBox='0 0 24 24' fill='currentColor'>
@@ -189,12 +198,49 @@ export function UserAuthForm({
           variant='outline' 
           type='button' 
           disabled={isLoading}
-          onClick={() => {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-            window.location.href = `${baseUrl}/api/auth/facebook`
+          onClick={async () => {
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+              const response = await fetch(`${baseUrl}/api/auth/facebook`, {
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+                },
+              })
+              const data = await response.json()
+              if (data.url) {
+                window.location.href = data.url
+              }
+            } catch (error) {
+              console.error('Failed to get Facebook OAuth URL:', error)
+            }
           }}
         >
           <IconFacebook className='h-4 w-4' /> Facebook
+        </Button>
+        <Button 
+          variant='outline' 
+          type='button' 
+          disabled={isLoading}
+          onClick={async () => {
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+              const response = await fetch(`${baseUrl}/api/auth/github`, {
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+                },
+              })
+              const data = await response.json()
+              if (data.url) {
+                window.location.href = data.url
+              }
+            } catch (error) {
+              console.error('Failed to get GitHub OAuth URL:', error)
+            }
+          }}
+        >
+          <IconGithub className='h-4 w-4' /> GitHub
         </Button>
       </div>
     </form>

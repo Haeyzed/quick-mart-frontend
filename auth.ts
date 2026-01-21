@@ -81,8 +81,52 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
+        token: { label: "Auth Token", type: "text" }, // For social auth
       },
       async authorize(credentials) {
+        // Handle social auth with token
+        if (credentials?.token) {
+          try {
+            const response = await apiCall<User>('/auth/user', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${credentials.token}`,
+              },
+            })
+
+            if (response.status && response.data) {
+              const user = response.data
+              return {
+                id: String(user.id),
+                email: user.email || '',
+                name: user.name,
+                username: user.username || null,
+                avatar: user.avatar || null,
+                avatar_url: user.avatar_url || null,
+                phone: user.phone,
+                company_name: user.company_name,
+                role_id: user.role_id,
+                biller_id: user.biller_id,
+                warehouse_id: user.warehouse_id,
+                is_active: user.is_active,
+                is_deleted: user.is_deleted,
+                email_verified_at: user.email_verified_at,
+                created_at: user.created_at,
+                updated_at: user.updated_at,
+                roles: user.roles || [],
+                permissions: user.permissions || [],
+                all_permissions: user.all_permissions || [],
+                role_names: user.role_names || [],
+                accessToken: credentials.token,
+              }
+            }
+          } catch (error: any) {
+            console.error('Social auth error:', error)
+            throw new Error(error.message || 'Invalid token')
+          }
+        }
+
+        // Normal credentials login
         if (!credentials?.identifier || !credentials?.password) {
           throw new Error("Please provide both email/username and password")
         }
