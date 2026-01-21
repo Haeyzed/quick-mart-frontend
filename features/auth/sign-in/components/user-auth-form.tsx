@@ -178,8 +178,8 @@ export function UserAuthForm({
                 },
               })
               const data = await response.json()
-              if (data.url) {
-                window.location.href = data.url
+              if (data.status && data.data?.url) {
+                window.location.href = data.data.url
               }
             } catch (error) {
               console.error('Failed to get Google OAuth URL:', error)
@@ -208,8 +208,8 @@ export function UserAuthForm({
                 },
               })
               const data = await response.json()
-              if (data.url) {
-                window.location.href = data.url
+              if (data.status && data.data?.url) {
+                window.location.href = data.data.url
               }
             } catch (error) {
               console.error('Failed to get Facebook OAuth URL:', error)
@@ -232,8 +232,8 @@ export function UserAuthForm({
                 },
               })
               const data = await response.json()
-              if (data.url) {
-                window.location.href = data.url
+              if (data.status && data.data?.url) {
+                window.location.href = data.data.url
               }
             } catch (error) {
               console.error('Failed to get GitHub OAuth URL:', error)

@@ -40,15 +40,15 @@ export default function FacebookCallbackPage() {
 
         const data = await response.json()
 
-        if (!response.ok) {
-          throw new Error(data.message || data.error || 'Authentication failed')
+        if (!response.ok || !data.status) {
+          throw new Error(data.message || 'Authentication failed')
         }
 
         // Save to NextAuth using credentials provider
         const result = await signIn('credentials', {
-          identifier: data.user.email || data.user.username || String(data.user.id),
+          identifier: data.data.user.email || data.data.user.username || String(data.data.user.id),
           password: '',
-          token: data.access_token,
+          token: data.data.token,
           redirect: false,
         })
 
