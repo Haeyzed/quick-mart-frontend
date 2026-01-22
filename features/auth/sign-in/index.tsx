@@ -1,5 +1,6 @@
 "use client"
 
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
   Card,
@@ -23,7 +24,14 @@ export function SignIn() {
           <CardTitle className='text-lg tracking-tight'>Sign in</CardTitle>
           <CardDescription>
             Enter your email and password below to <br />
-            log into your account
+            log into your account. <br />
+            Don't have an account?{' '}
+            <Link
+              href='/sign-up'
+              className='underline underline-offset-4 hover:text-primary'
+            >
+              Sign up
+            </Link>
           </CardDescription>
         </CardHeader>
         <CardContent>

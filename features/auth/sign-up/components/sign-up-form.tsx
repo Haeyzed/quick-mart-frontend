@@ -19,7 +19,7 @@ import {
   FieldDescription,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { PasswordInput } from '@/components/password-input'
+import InputPassword from '@/components/input-password'
 import {
   FileUpload,
   FileUploadDropzone,
@@ -308,11 +308,12 @@ export function SignUpForm({
               render={({ field, fieldState }) => (
                 <Field>
                   <FieldLabel htmlFor='signup-password'>Password</FieldLabel>
-                  <PasswordInput
+                  <InputPassword
                     id='signup-password'
                     placeholder='********'
                     {...field}
                     data-invalid={!!fieldState.error}
+                    showStrengthIndicator={true}
                   />
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 </Field>
@@ -324,11 +325,12 @@ export function SignUpForm({
               render={({ field, fieldState }) => (
                 <Field>
                   <FieldLabel htmlFor='signup-confirm-password'>Confirm Password</FieldLabel>
-                  <PasswordInput
+                  <InputPassword
                     id='signup-confirm-password'
                     placeholder='********'
                     {...field}
                     data-invalid={!!fieldState.error}
+                    showStrengthIndicator={false}
                   />
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 </Field>

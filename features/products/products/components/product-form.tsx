@@ -15,8 +15,6 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Editor } from '@/components/blocks/editor-x/editor'
-import { SerializedEditorState } from 'lexical'
 import { Switch } from '@/components/ui/switch'
 import {
   Combobox,
@@ -73,12 +71,14 @@ import { UnitsActionDialog } from '../../units/components/units-action-dialog'
 import { Plus, Refresh01Icon, Trash, ZoomIn } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { UseFormReturn } from 'react-hook-form'
+import { Editor } from '@/components/blocks/editor-x/editor'
+import { SerializedEditorState } from 'lexical'
 
 // Existing Images Section Component
-function ExistingImagesSection({ 
-  product, 
-  form 
-}: { 
+function ExistingImagesSection({
+  product,
+  form
+}: {
   product: Product
   form: UseFormReturn<any>
 }) {
@@ -86,31 +86,31 @@ function ExistingImagesSection({
   const [imageUrls, setImageUrls] = useState<string[]>(product.image_url || [])
   const prevImgs = form.watch('prev_img') || product.image || []
   const reorderImagesMutation = useReorderProductImages()
-  
+
   // Update local state when product changes
   useEffect(() => {
     if (product.image_url && Array.isArray(product.image_url)) {
       setImageUrls(product.image_url)
     }
   }, [product.image_url])
-  
+
   const handleImageSort = async (sortedUrls: string[]) => {
     // Optimistically update local state
     setImageUrls(sortedUrls)
-    
+
     // Update form state
     form.setValue('image_url', sortedUrls)
-    
+
     // Update prev_img order to match
     const sortedPrevImgs = sortedUrls.map((url) => {
       const index = (product.image_url || []).indexOf(url)
       return index >= 0 && prevImgs[index] ? prevImgs[index] : null
     }).filter(Boolean) as string[]
-    
+
     if (sortedPrevImgs.length > 0) {
       form.setValue('prev_img', sortedPrevImgs)
     }
-    
+
     // Call API to persist the reorder
     try {
       await reorderImagesMutation.mutateAsync({
@@ -125,11 +125,11 @@ function ExistingImagesSection({
       console.error('Failed to reorder images:', error)
     }
   }
-  
+
   if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
     return null
   }
-  
+
   return (
     <div className='mt-4'>
       <Sortable value={imageUrls} onValueChange={handleImageSort} orientation="horizontal">
@@ -264,7 +264,8 @@ const productFormSchema = z.object({
   is_diff_price: z.boolean().optional(),
   is_imei: z.boolean().optional(),
   featured: z.boolean().optional(),
-  product_details: z.string().optional(),
+  // product_details: z.string().optional(),
+  product_details: z.union([z.string(), z.unknown()]).nullable(), // API returns object (SerializedEditorState), form uses string (JSON)
   short_description: z.string().optional(),
   specification: z.string().optional(),
   related_products: z.string().optional(),
@@ -400,6 +401,17 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   const product = isEdit ? productQuery.data : undefined
   const isLoadingProduct = isEdit ? productQuery.isLoading : false
 
+  // Console log product data for debugging
+  useEffect(() => {
+    if (isEdit && product) {
+      console.log('🔍 [ProductForm] Full Product Data:', product)
+      console.log('🔍 [ProductForm] Product Details Field:', product.product_details)
+      console.log('🔍 [ProductForm] Product Details Type:', typeof product.product_details)
+      console.log('🔍 [ProductForm] Product Details Is Array:', Array.isArray(product.product_details))
+      console.log('🔍 [ProductForm] Product Details Is Object:', typeof product.product_details === 'object' && product.product_details !== null)
+    }
+  }, [isEdit, product])
+
   // Fetch dropdown data
   const brandsQuery = useBrands({ is_active: true, per_page: 100, page: 1 })
   const categoriesQuery = useCategories({ is_active: true, per_page: 100, page: 1 })
@@ -446,7 +458,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       is_diff_price: false,
       is_imei: false,
       featured: false,
-      product_details: undefined,
+      product_details: null,
       short_description: undefined,
       specification: undefined,
       related_products: undefined,
@@ -496,7 +508,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   useEffect(() => {
     if (selectedUnitId && saleUnitsData && Object.keys(saleUnitsData).length > 0) {
       const saleUnitIds = Object.keys(saleUnitsData).map(id => parseInt(id))
-      
+
       // If no sale_unit_id is set, set the first available or base unit
       const currentSaleUnitId = form.watch('sale_unit_id')
       if (!currentSaleUnitId || !saleUnitIds.includes(currentSaleUnitId)) {
@@ -505,7 +517,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           form.setValue('sale_unit_id', firstSaleUnitId)
         }
       }
-      
+
       // If no purchase_unit_id is set, set the first available or base unit
       const currentPurchaseUnitId = form.watch('purchase_unit_id')
       if (!currentPurchaseUnitId || !saleUnitIds.includes(currentPurchaseUnitId)) {
@@ -524,6 +536,9 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   // Load product data when editing
   useEffect(() => {
     if (isEdit && product) {
+      console.log('📝 [ProductForm] Loading product data into form...')
+      console.log('📝 [ProductForm] product_details before form reset:', product.product_details)
+      
       // Transform menu_type from string | number[] | null to number[]
       const menuTypeArray: number[] = Array.isArray(product.menu_type)
         ? product.menu_type
@@ -552,8 +567,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         promotion_price: product.promotion_price || undefined,
         starting_date: product.starting_date || undefined,
         last_date: product.last_date || undefined,
-      tax_id: product.tax_id,
-      tax_method: product.tax_method || 1,
+        tax_id: product.tax_id,
+        tax_method: product.tax_method || 1,
         image: [],
         prev_img: product.image || [],
         file: undefined,
@@ -563,7 +578,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         is_diff_price: product.is_diff_price,
         is_imei: product.is_imei,
         featured: product.featured || false,
-        product_details: product.product_details || undefined,
+        product_details: product.product_details || null,
         short_description: product.short_description || undefined,
         specification: product.specification || undefined,
         related_products: product.related_products || undefined,
@@ -600,29 +615,35 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         product_id: Array.isArray((product as any).product_id)
           ? (product as any).product_id
           : (product as any).product_list
-          ? (product as any).product_list.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id))
-          : [],
+            ? (product as any).product_list.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id))
+            : [],
         variant_id: Array.isArray((product as any).variant_id)
           ? (product as any).variant_id
           : (product as any).variant_list
-          ? (product as any).variant_list.split(',').map((id: string) => {
+            ? (product as any).variant_list.split(',').map((id: string) => {
               const parsed = parseInt(id.trim())
               return isNaN(parsed) || parsed === 0 ? null : parsed
             }).filter((id: number | null) => id !== null) as number[]
-          : [],
+            : [],
         product_qty: Array.isArray((product as any).product_qty)
           ? (product as any).product_qty
           : (product as any).qty_list
-          ? (product as any).qty_list.split(',').map((qty: string) => parseFloat(qty.trim())).filter((qty: number) => !isNaN(qty))
-          : [],
+            ? (product as any).qty_list.split(',').map((qty: string) => parseFloat(qty.trim())).filter((qty: number) => !isNaN(qty))
+            : [],
         unit_price: Array.isArray((product as any).unit_price)
           ? (product as any).unit_price
           : (product as any).price_list
-          ? (product as any).price_list.split(',').map((price: string) => parseFloat(price.trim())).filter((price: number) => !isNaN(price))
-          : [],
+            ? (product as any).price_list.split(',').map((price: string) => parseFloat(price.trim())).filter((price: number) => !isNaN(price))
+            : [],
         wastage_percent: product.wastage_percent || undefined,
         combo_unit_id: product.combo_unit_id || undefined,
       })
+      
+      // Log what was set in the form
+      const formProductDetails = form.getValues('product_details')
+      console.log('✅ [ProductForm] Form reset completed')
+      console.log('✅ [ProductForm] product_details in form after reset:', formProductDetails)
+      console.log('✅ [ProductForm] product_details type in form:', typeof formProductDetails)
     }
   }, [isEdit, product, form])
 
@@ -688,7 +709,13 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       if (data.is_initial_stock) formData.append('is_initial_stock', '1')
 
       // Handle text fields
-      if (data.product_details) formData.append('product_details', data.product_details)
+      if (data.product_details) {
+        // product_details is already a JSON string from the form, so use it directly
+        const productDetailsValue = typeof data.product_details === 'string'
+          ? data.product_details
+          : JSON.stringify(data.product_details)
+        formData.append('product_details', productDetailsValue)
+      }
       if (data.short_description) formData.append('short_description', data.short_description)
       if (data.specification) formData.append('specification', data.specification)
       if (data.related_products) formData.append('related_products', data.related_products)
@@ -1270,15 +1297,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       // Use API data if available, otherwise filter from all units
                       const saleUnitItems = saleUnitsData && Object.keys(saleUnitsData).length > 0
                         ? Object.entries(saleUnitsData).map(([id, name]) => ({
-                            id: parseInt(id),
-                            name: String(name),
-                          }))
+                          id: parseInt(id),
+                          name: String(name),
+                        }))
                         : units
-                            .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
-                            .map((unit) => ({
-                              id: unit.id,
-                              name: unit.name,
-                            }))
+                          .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                          .map((unit) => ({
+                            id: unit.id,
+                            name: unit.name,
+                          }))
                       const selectedSaleUnit = saleUnitItems.find((unit) => unit.id === field.value)
 
                       return (
@@ -1324,15 +1351,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                       // Use API data if available, otherwise filter from all units
                       const purchaseUnitItems = saleUnitsData && Object.keys(saleUnitsData).length > 0
                         ? Object.entries(saleUnitsData).map(([id, name]) => ({
-                            id: parseInt(id),
-                            name: String(name),
-                          }))
+                          id: parseInt(id),
+                          name: String(name),
+                        }))
                         : units
-                            .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
-                            .map((unit) => ({
-                              id: unit.id,
-                              name: unit.name,
-                            }))
+                          .filter((u) => !selectedUnitId || u.base_unit === selectedUnitId || u.id === selectedUnitId)
+                          .map((unit) => ({
+                            id: unit.id,
+                            name: unit.name,
+                          }))
                       const selectedPurchaseUnit = purchaseUnitItems.find((unit) => unit.id === field.value)
 
                       return (
@@ -1886,8 +1913,8 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 </FileUploadList>
               </FileUpload>
               {isEdit && product?.image_url && Array.isArray(product.image_url) && product.image_url.length > 0 && (
-                <ExistingImagesSection 
-                  product={product} 
+                <ExistingImagesSection
+                  product={product}
                   form={form}
                 />
               )}
@@ -1931,119 +1958,119 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           </Field>
         )}
 
-            {productType === 'standard' && (
-              <>
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>Has Variants</FieldLabel>
-                      <FieldDescription>This product has variants (size, color, etc.)</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_variant'
-                      render={({ field }) => (
-                        <Switch 
-                          checked={field.value || false} 
-                          onCheckedChange={(checked) => {
-                            field.onChange(checked)
-                            if (checked) {
-                              // Uncheck initial_stock and featured when variant is enabled
-                              form.setValue('is_initial_stock', false)
-                              form.setValue('featured', false)
-                              form.setValue('is_batch', false)
-                            }
-                          }} 
-                        />
-                      )}
+        {productType === 'standard' && (
+          <>
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>Has Variants</FieldLabel>
+                  <FieldDescription>This product has variants (size, color, etc.)</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_variant'
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value || false}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked)
+                        if (checked) {
+                          // Uncheck initial_stock and featured when variant is enabled
+                          form.setValue('is_initial_stock', false)
+                          form.setValue('featured', false)
+                          form.setValue('is_batch', false)
+                        }
+                      }}
                     />
-                  </div>
-                </Field>
+                  )}
+                />
+              </div>
+            </Field>
 
-                {/* Variant Section - Only for standard products with variants enabled */}
-                {productType === 'standard' && form.watch('is_variant') && (
-                  <VariantSection
-                    control={form.control as any}
-                    watch={form.watch as any}
-                    setValue={form.setValue as any}
-                    productCode={form.watch('code') || ''}
-                  />
-                )}
-
-                <Field>
-                  <div className='flex items-center justify-between'>
-                    <div>
-                      <FieldLabel>This is Topping</FieldLabel>
-                      <FieldDescription>Check this if the item is a topping or extra or add-on only to be served with a main course</FieldDescription>
-                    </div>
-                    <Controller
-                      control={form.control}
-                      name='is_addon'
-                      render={({ field }) => (
-                        <Switch checked={field.value || false} onCheckedChange={field.onChange} />
-                      )}
-                    />
-                  </div>
-                </Field>
-
-                {!form.watch('is_variant') && (
-                  <Field>
-                    <div className='flex items-center justify-between'>
-                      <div>
-                        <FieldLabel>Has Batch/Expiry</FieldLabel>
-                        <FieldDescription>This product has batch and expiry dates</FieldDescription>
-                      </div>
-                      <Controller
-                        control={form.control}
-                        name='is_batch'
-                        render={({ field }) => (
-                          <Switch 
-                            checked={field.value || false} 
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked)
-                              if (checked) {
-                                // Uncheck initial_stock and featured when batch is enabled
-                                form.setValue('is_initial_stock', false)
-                                form.setValue('featured', false)
-                                form.setValue('is_variant', false)
-                              }
-                            }} 
-                          />
-                        )}
-                      />
-                    </div>
-                  </Field>
-                )}
-
-                {!form.watch('is_variant') && (
-                  <Field>
-                    <div className='flex items-center justify-between'>
-                      <div>
-                        <FieldLabel>Has IMEI/Serial</FieldLabel>
-                        <FieldDescription>This product has IMEI or serial numbers</FieldDescription>
-                      </div>
-                      <Controller
-                        control={form.control}
-                        name='is_imei'
-                        render={({ field }) => (
-                          <Switch 
-                            checked={field.value || false} 
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked)
-                              if (checked) {
-                                // Uncheck initial_stock and featured when imei is enabled
-                                form.setValue('is_initial_stock', false)
-                                form.setValue('featured', false)
-                              }
-                            }} 
-                          />
-                        )}
-                      />
-                    </div>
-                  </Field>
-                )}
-              </>
+            {/* Variant Section - Only for standard products with variants enabled */}
+            {productType === 'standard' && form.watch('is_variant') && (
+              <VariantSection
+                control={form.control as any}
+                watch={form.watch as any}
+                setValue={form.setValue as any}
+                productCode={form.watch('code') || ''}
+              />
             )}
+
+            <Field>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <FieldLabel>This is Topping</FieldLabel>
+                  <FieldDescription>Check this if the item is a topping or extra or add-on only to be served with a main course</FieldDescription>
+                </div>
+                <Controller
+                  control={form.control}
+                  name='is_addon'
+                  render={({ field }) => (
+                    <Switch checked={field.value || false} onCheckedChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+
+            {!form.watch('is_variant') && (
+              <Field>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <FieldLabel>Has Batch/Expiry</FieldLabel>
+                    <FieldDescription>This product has batch and expiry dates</FieldDescription>
+                  </div>
+                  <Controller
+                    control={form.control}
+                    name='is_batch'
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked)
+                          if (checked) {
+                            // Uncheck initial_stock and featured when batch is enabled
+                            form.setValue('is_initial_stock', false)
+                            form.setValue('featured', false)
+                            form.setValue('is_variant', false)
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+              </Field>
+            )}
+
+            {!form.watch('is_variant') && (
+              <Field>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <FieldLabel>Has IMEI/Serial</FieldLabel>
+                    <FieldDescription>This product has IMEI or serial numbers</FieldDescription>
+                  </div>
+                  <Controller
+                    control={form.control}
+                    name='is_imei'
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked)
+                          if (checked) {
+                            // Uncheck initial_stock and featured when imei is enabled
+                            form.setValue('is_initial_stock', false)
+                            form.setValue('featured', false)
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+              </Field>
+            )}
+          </>
+        )}
 
         {/* Promotional Pricing */}
         <Field>
@@ -2109,57 +2136,18 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           control={form.control}
           name='product_details'
           render={({ field, fieldState }) => {
-            // Parse product_details string to SerializedEditorState if it exists
-            let initialEditorState: SerializedEditorState | undefined
-            if (field.value) {
-              try {
-                initialEditorState = typeof field.value === 'string' 
-                  ? JSON.parse(field.value) 
-                  : field.value
-              } catch {
-                // If parsing fails, create a simple text node with the value
-                const textValue = String(field.value)
-                initialEditorState = {
-                  root: {
-                    children: [
-                      {
-                        children: [
-                          {
-                            detail: 0,
-                            format: 0,
-                            mode: "normal",
-                            style: "",
-                            text: textValue,
-                            type: "text",
-                            version: 1,
-                          },
-                        ],
-                        direction: "ltr",
-                        format: "",
-                        indent: 0,
-                        type: "paragraph",
-                        version: 1,
-                      },
-                    ],
-                    direction: "ltr",
-                    format: "",
-                    indent: 0,
-                    type: "root",
-                    version: 1,
-                  },
-                } as unknown as SerializedEditorState
-              }
+            // Console log for debugging product_details in editor
+            if (isEdit) {
+              console.log('📄 [ProductDetails Editor] field.value:', field.value)
+              console.log('📄 [ProductDetails Editor] field.value type:', typeof field.value)
+              console.log('📄 [ProductDetails Editor] field.value is object:', typeof field.value === 'object' && field.value !== null)
             }
-
             return (
               <Field>
                 <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
                 <Editor
-                  editorSerializedState={initialEditorState}
-                  onSerializedChange={(value) => {
-                    // Store as JSON string in the form
-                    field.onChange(JSON.stringify(value))
-                  }}
+                  editorSerializedState={field.value as unknown as SerializedEditorState}
+                  onSerializedChange={(value) => field.onChange(value)}
                 />
                 <FieldError errors={fieldState.error ? [fieldState.error] : []} />
               </Field>
@@ -2298,15 +2286,15 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     control={form.control}
                     name='is_initial_stock'
                     render={({ field }) => (
-                      <Switch 
-                        checked={field.value || false} 
+                      <Switch
+                        checked={field.value || false}
                         onCheckedChange={(checked) => {
                           field.onChange(checked)
                           if (checked && warehouses.length === 0) {
                             toast.error('Please create warehouse first before adding stock!')
                             field.onChange(false)
                           }
-                        }} 
+                        }}
                       />
                     )}
                   />

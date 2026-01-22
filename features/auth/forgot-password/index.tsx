@@ -22,7 +22,14 @@ export function ForgotPassword() {
           </CardTitle>
           <CardDescription>
             Enter your registered email and <br /> we will send you a link to
-            reset your password.
+            reset your password. <br />
+            Remember your password?{' '}
+            <Link
+              href='/sign-in'
+              className='underline underline-offset-4 hover:text-primary'
+            >
+              Sign in
+            </Link>
           </CardDescription>
         </CardHeader>
         <CardContent>
