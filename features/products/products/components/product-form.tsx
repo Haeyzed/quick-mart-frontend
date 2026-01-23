@@ -696,7 +696,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       // Handle text fields
       // product_details is stored as JSON string in form (standard approach)
       if (data.product_details) {
-        formData.append('product_details', data.product_details)
+        formData.append('product_details', JSON.stringify(data.product_details))
       }
       if (data.short_description) formData.append('short_description', data.short_description)
       if (data.specification) formData.append('specification', data.specification)
