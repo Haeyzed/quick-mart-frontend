@@ -73,6 +73,8 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { UseFormReturn } from 'react-hook-form'
 import { Editor } from '@/components/blocks/editor-x/editor'
 import { SerializedEditorState } from 'lexical'
+import { FormEditor } from '@/components/form-editor'
+
 
 // Existing Images Section Component
 function ExistingImagesSection({
@@ -401,17 +403,6 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   const product = isEdit ? productQuery.data : undefined
   const isLoadingProduct = isEdit ? productQuery.isLoading : false
 
-  // Console log product data for debugging
-  useEffect(() => {
-    if (isEdit && product) {
-      console.log('🔍 [ProductForm] Full Product Data:', product)
-      console.log('🔍 [ProductForm] Product Details Field:', product.product_details)
-      console.log('🔍 [ProductForm] Product Details Type:', typeof product.product_details)
-      console.log('🔍 [ProductForm] Product Details Is Array:', Array.isArray(product.product_details))
-      console.log('🔍 [ProductForm] Product Details Is Object:', typeof product.product_details === 'object' && product.product_details !== null)
-    }
-  }, [isEdit, product])
-
   // Fetch dropdown data
   const brandsQuery = useBrands({ is_active: true, per_page: 100, page: 1 })
   const categoriesQuery = useCategories({ is_active: true, per_page: 100, page: 1 })
@@ -536,9 +527,6 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
   // Load product data when editing
   useEffect(() => {
     if (isEdit && product) {
-      console.log('📝 [ProductForm] Loading product data into form...')
-      console.log('📝 [ProductForm] product_details before form reset:', product.product_details)
-      
       // Transform menu_type from string | number[] | null to number[]
       const menuTypeArray: number[] = Array.isArray(product.menu_type)
         ? product.menu_type
@@ -578,7 +566,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         is_diff_price: product.is_diff_price,
         is_imei: product.is_imei,
         featured: product.featured || false,
-        product_details: product.product_details || null,
+        // product_details is now a JSON string from API (standard approach)
+        product_details: typeof product.product_details === 'object' 
+        ? JSON.stringify(product.product_details) 
+        : product.product_details,
         short_description: product.short_description || undefined,
         specification: product.specification || undefined,
         related_products: product.related_products || undefined,
@@ -638,12 +629,6 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         wastage_percent: product.wastage_percent || undefined,
         combo_unit_id: product.combo_unit_id || undefined,
       })
-      
-      // Log what was set in the form
-      const formProductDetails = form.getValues('product_details')
-      console.log('✅ [ProductForm] Form reset completed')
-      console.log('✅ [ProductForm] product_details in form after reset:', formProductDetails)
-      console.log('✅ [ProductForm] product_details type in form:', typeof formProductDetails)
     }
   }, [isEdit, product, form])
 
@@ -709,12 +694,9 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       if (data.is_initial_stock) formData.append('is_initial_stock', '1')
 
       // Handle text fields
+      // product_details is stored as JSON string in form (standard approach)
       if (data.product_details) {
-        // product_details is already a JSON string from the form, so use it directly
-        const productDetailsValue = typeof data.product_details === 'string'
-          ? data.product_details
-          : JSON.stringify(data.product_details)
-        formData.append('product_details', productDetailsValue)
+        formData.append('product_details', data.product_details)
       }
       if (data.short_description) formData.append('short_description', data.short_description)
       if (data.specification) formData.append('specification', data.specification)
@@ -2136,19 +2118,17 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           control={form.control}
           name='product_details'
           render={({ field, fieldState }) => {
-            // Console log for debugging product_details in editor
-            if (isEdit) {
-              console.log('📄 [ProductDetails Editor] field.value:', field.value)
-              console.log('📄 [ProductDetails Editor] field.value type:', typeof field.value)
-              console.log('📄 [ProductDetails Editor] field.value is object:', typeof field.value === 'object' && field.value !== null)
-            }
             return (
               <Field>
                 <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
-                <Editor
-                  editorSerializedState={field.value as unknown as SerializedEditorState}
-                  onSerializedChange={(value) => field.onChange(value)}
-                />
+                  {/* <FormEditor 
+                    value={field.value || undefined} 
+                    onChange={field.onChange} 
+                  /> */}
+                  <Editor
+                    editorSerializedState={field.value as unknown as SerializedEditorState}
+                    onSerializedChange={(value) => field.onChange(value)}
+                  />
                 <FieldError errors={fieldState.error ? [fieldState.error] : []} />
               </Field>
             )
