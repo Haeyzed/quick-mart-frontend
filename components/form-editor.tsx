@@ -7,7 +7,7 @@ import { SerializedEditorState } from 'lexical';
 import { Editor } from '@/components/blocks/editor-x/editor'; 
 
 interface FormEditorProps {
-  value: string; // Expect the value from RHF as a JSON string
+  value: string | object | null | undefined; // Accept JSON string or object from RHF
   onChange: (value: string) => void; // Return a JSON string to RHF
 }
 
@@ -17,13 +17,21 @@ export function FormEditor({ value, onChange }: FormEditorProps) {
 
   // When RHF value changes (e.g., setting default values), update local state
   useEffect(() => {
-    if (value && typeof value === 'string') {
-        try {
-            const parsedState: SerializedEditorState = JSON.parse(value);
-            setEditorState(parsedState);
-        } catch (error) {
-            console.error("Error parsing editor value:", error);
+    if (value) {
+        if (typeof value === 'object') {
+            // Value is already an object (from API)
+            setEditorState(value as SerializedEditorState);
+        } else if (typeof value === 'string') {
+            // Value is a JSON string (from form state)
+            try {
+                const parsedState: SerializedEditorState = JSON.parse(value);
+                setEditorState(parsedState);
+            } catch (error) {
+                console.error("Error parsing editor value:", error);
+            }
         }
+    } else {
+        setEditorState(undefined);
     }
   }, [value]);
 

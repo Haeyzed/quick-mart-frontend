@@ -137,7 +137,7 @@ function ExistingImagesSection({
           {imageUrls.map((imageUrl, index) => {
             const filename = prevImgs[index]
             return (
-              <SortableItem key={imageUrl} value={imageUrl} asChild asHandle>
+              <SortableItem key={`${index}-${imageUrl}`} value={imageUrl} asChild asHandle>
                 <div className='relative group'>
                   <ImageZoom
                     backdropClassName={cn(
@@ -564,10 +564,18 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         is_diff_price: product.is_diff_price,
         is_imei: product.is_imei,
         featured: product.featured || false,
-        // product_details and specification are now JSON strings from API (standard approach)
-        product_details: product.product_details || null,
+        // product_details and specification: API returns objects, convert to JSON strings for form
+        product_details: product.product_details 
+          ? (typeof product.product_details === 'string' 
+              ? product.product_details 
+              : JSON.stringify(product.product_details as any))
+          : null,
         short_description: product.short_description || undefined,
-        specification: product.specification || null,
+        specification: product.specification
+          ? (typeof product.specification === 'string'
+              ? product.specification
+              : JSON.stringify(product.specification as any))
+          : null,
         related_products: product.related_products || undefined,
         is_addon: product.is_addon || false,
         extras: product.extras || undefined,
@@ -2128,7 +2136,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                 <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
                 <FormEditor
                   key={editorKey}
-                  value={typeof field.value === 'string' ? field.value : (field.value ? JSON.stringify(field.value) : '')}
+                  value={field.value || null}
                   onChange={(jsonString) => {
                     field.onChange(jsonString)
                   }}
@@ -2171,7 +2179,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
                     <FieldLabel htmlFor='product-specification'>Specification</FieldLabel>
                     <FormEditor
                       key={editorKey}
-                      value={typeof field.value === 'string' ? field.value : (field.value ? JSON.stringify(field.value) : '')}
+                      value={field.value || null}
                       onChange={(jsonString) => {
                         field.onChange(jsonString)
                       }}
