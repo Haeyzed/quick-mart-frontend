@@ -71,8 +71,6 @@ import { UnitsActionDialog } from '../../units/components/units-action-dialog'
 import { Plus, Refresh01Icon, Trash, ZoomIn } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { UseFormReturn } from 'react-hook-form'
-import { Editor } from '@/components/blocks/editor-x/editor'
-import { SerializedEditorState } from 'lexical'
 import { FormEditor } from '@/components/form-editor'
 
 
@@ -267,9 +265,9 @@ const productFormSchema = z.object({
   is_imei: z.boolean().optional(),
   featured: z.boolean().optional(),
   // product_details: z.string().optional(),
-  product_details: z.union([z.string(), z.unknown()]).nullable(), // API returns object (SerializedEditorState), form uses string (JSON)
+  product_details: z.string().nullable(), // API returns object (SerializedEditorState), form uses string (JSON)
   short_description: z.string().optional(),
-  specification: z.string().optional(),
+  specification: z.string().nullable(), // API returns JSON string (standard approach, same as product_details)
   related_products: z.string().optional(),
   is_addon: z.boolean().optional(),
   extras: z.string().optional(),
@@ -451,7 +449,7 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       featured: false,
       product_details: null,
       short_description: undefined,
-      specification: undefined,
+      specification: null,
       related_products: undefined,
       is_addon: false,
       extras: undefined,
@@ -566,12 +564,10 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
         is_diff_price: product.is_diff_price,
         is_imei: product.is_imei,
         featured: product.featured || false,
-        // product_details is now a JSON string from API (standard approach)
-        product_details: typeof product.product_details === 'object' 
-        ? JSON.stringify(product.product_details) 
-        : product.product_details,
+        // product_details and specification are now JSON strings from API (standard approach)
+        product_details: product.product_details || null,
         short_description: product.short_description || undefined,
-        specification: product.specification || undefined,
+        specification: product.specification || null,
         related_products: product.related_products || undefined,
         is_addon: product.is_addon || false,
         extras: product.extras || undefined,
@@ -694,12 +690,20 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
       if (data.is_initial_stock) formData.append('is_initial_stock', '1')
 
       // Handle text fields
-      // product_details is stored as JSON string in form (standard approach)
+      // product_details and specification are stored as JSON string in form (standard approach)
       if (data.product_details) {
-        formData.append('product_details', JSON.stringify(data.product_details))
+        const productDetailsValue = typeof data.product_details === 'string' 
+          ? data.product_details 
+          : JSON.stringify(data.product_details)
+        formData.append('product_details', productDetailsValue)
       }
       if (data.short_description) formData.append('short_description', data.short_description)
-      if (data.specification) formData.append('specification', data.specification)
+      if (data.specification) {
+        const specificationValue = typeof data.specification === 'string'
+          ? data.specification
+          : JSON.stringify(data.specification)
+        formData.append('specification', specificationValue)
+      }
       if (data.related_products) formData.append('related_products', data.related_products)
       if (data.extras) formData.append('extras', data.extras)
       if (data.tags) formData.append('tags', data.tags)
@@ -2118,17 +2122,17 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
           control={form.control}
           name='product_details'
           render={({ field, fieldState }) => {
+            const editorKey = isEdit ? `details-${product?.id ?? 'new'}` : 'details-create'
             return (
               <Field>
                 <FieldLabel htmlFor='product-details'>Product Details</FieldLabel>
-                  {/* <FormEditor 
-                    value={field.value || undefined} 
-                    onChange={field.onChange} 
-                  /> */}
-                  <Editor
-                    editorSerializedState={field.value as unknown as SerializedEditorState}
-                    onSerializedChange={(value) => field.onChange(value)}
-                  />
+                <FormEditor
+                  key={editorKey}
+                  value={typeof field.value === 'string' ? field.value : (field.value ? JSON.stringify(field.value) : '')}
+                  onChange={(jsonString) => {
+                    field.onChange(jsonString)
+                  }}
+                />
                 <FieldError errors={fieldState.error ? [fieldState.error] : []} />
               </Field>
             )
@@ -2160,21 +2164,22 @@ export function ProductForm({ productId, onSuccess }: ProductFormProps) {
             <Controller
               control={form.control}
               name='specification'
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel htmlFor='product-specification'>Specification</FieldLabel>
-                  <Textarea
-                    id='product-specification'
-                    placeholder='Enter product specifications'
-                    rows={4}
-                    autoComplete='off'
-                    {...field}
-                    value={field.value || ''}
-                    data-invalid={!!fieldState.error}
-                  />
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
+              render={({ field, fieldState }) => {
+                const editorKey = isEdit ? `spec-${product?.id ?? 'new'}` : 'spec-create'
+                return (
+                  <Field>
+                    <FieldLabel htmlFor='product-specification'>Specification</FieldLabel>
+                    <FormEditor
+                      key={editorKey}
+                      value={typeof field.value === 'string' ? field.value : (field.value ? JSON.stringify(field.value) : '')}
+                      onChange={(jsonString) => {
+                        field.onChange(jsonString)
+                      }}
+                    />
+                    <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                  </Field>
+                )
+              }}
             />
           </>
         )}

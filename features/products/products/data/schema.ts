@@ -84,7 +84,7 @@ export const productSchema = z.object({
   price_list: z.string().nullable(), // Comma-separated prices for combo
   product_details: z.string().nullable(), // API returns JSON string (standard approach)
   short_description: z.string().nullable(),
-  specification: z.string().nullable(),
+  specification: z.string().nullable(), // API returns JSON string (standard approach, same as product_details)
   related_products: z.string().nullable(), // Comma-separated product IDs
   is_addon: z.boolean().nullable(),
   extras: z.string().nullable(), // Comma-separated addon IDs
